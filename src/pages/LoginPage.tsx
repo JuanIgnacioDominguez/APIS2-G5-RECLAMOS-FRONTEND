@@ -1,0 +1,52 @@
+import {
+  Button,
+  Card,
+  Center,
+  Divider,
+  PasswordInput,
+  Stack,
+  Text,
+  TextInput,
+  Title,
+} from "@mantine/core";
+import { IconBuildingCommunity } from "@tabler/icons-react";
+import { useNavigate } from "react-router-dom";
+
+/**
+ * Login placeholder. The real flow authenticates against Group 2 (Login
+ * Federado LDAP + JWT); for now it just lets us into the app while the backend
+ * wiring is pending.
+ */
+export function LoginPage() {
+  const navigate = useNavigate();
+
+  return (
+    <Center mih="100vh" bg="gray.0">
+      <Card withBorder radius="md" padding="xl" w={400}>
+        <Stack gap="md">
+          <Stack gap={4} align="center">
+            <IconBuildingCommunity size={40} color="var(--mantine-color-azulUrbano-6)" />
+            <Title order={3}>
+              CityPass<span style={{ color: "var(--mantine-color-ambar-5)" }}>+</span>
+            </Title>
+            <Text c="dimmed" size="sm">
+              Reclamos y Participacion Ciudadana
+            </Text>
+          </Stack>
+
+          <TextInput label="Correo electronico" placeholder="vecino@ciudad.gov.ar" />
+          <PasswordInput label="Contrasena" placeholder="Tu contrasena" />
+
+          <Button color="azulUrbano" fullWidth onClick={() => navigate("/reclamos")}>
+            Ingresar
+          </Button>
+
+          <Divider label="o" labelPosition="center" />
+          <Button variant="default" fullWidth onClick={() => navigate("/reclamos")}>
+            Acceso institucional (LDAP)
+          </Button>
+        </Stack>
+      </Card>
+    </Center>
+  );
+}
