@@ -20,16 +20,16 @@ npm run dev                 # http://localhost:5173
 
 ## Scripts
 
-| Comando                | Que hace                                             |
-| ---------------------- | ---------------------------------------------------- |
-| `npm run dev`          | Servidor de desarrollo con HMR                       |
-| `npm run build`        | Typecheck (`tsc`) + bundle de produccion             |
-| `npm run preview`      | Sirve el build de produccion                         |
-| `npm run lint`         | ESLint                                               |
-| `npm run format`       | Prettier (escribe cambios)                           |
-| `npm run format:check` | Prettier en modo verificacion (igual que en CI)      |
-| `npm test`             | Corre la suite de Vitest                             |
-| `npm run test:cov`     | Tests + reporte de cobertura (gate **60%**)          |
+| Comando                | Que hace                                        |
+| ---------------------- | ----------------------------------------------- |
+| `npm run dev`          | Servidor de desarrollo con HMR                  |
+| `npm run build`        | Typecheck (`tsc`) + bundle de produccion        |
+| `npm run preview`      | Sirve el build de produccion                    |
+| `npm run lint`         | ESLint                                          |
+| `npm run format`       | Prettier (escribe cambios)                      |
+| `npm run format:check` | Prettier en modo verificacion (igual que en CI) |
+| `npm test`             | Corre la suite de Vitest                        |
+| `npm run test:cov`     | Tests + reporte de cobertura (gate **60%**)     |
 
 ## Cobertura de tests
 
