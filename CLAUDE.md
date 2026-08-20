@@ -8,17 +8,17 @@ Este es el **frontend**. El backend (FastAPI) vive en `APIS2-G5-RECLAMOS-BACKEND
 
 ## 1. Stack
 
-| Capa            | Eleccion                                          |
-| --------------- | ------------------------------------------------- |
-| Framework       | React 18 + TypeScript 5                           |
-| Build / dev     | Vite 5                                            |
-| UI              | Mantine 7 (`@mantine/core`, `form`, `notifications`) |
-| Iconos          | `@tabler/icons-react`                             |
-| Ruteo           | React Router 6                                    |
-| Tests           | Vitest + Testing Library, entorno jsdom           |
-| Cobertura       | `@vitest/coverage-v8`, gate 60% (rubrica)         |
-| Lint / format   | ESLint (flat config) + Prettier                   |
-| Identidad       | JWT emitido por el Grupo 2 (solo lo consumimos)   |
+| Capa          | Eleccion                                             |
+| ------------- | ---------------------------------------------------- |
+| Framework     | React 18 + TypeScript 5                              |
+| Build / dev   | Vite 5                                               |
+| UI            | Mantine 7 (`@mantine/core`, `form`, `notifications`) |
+| Iconos        | `@tabler/icons-react`                                |
+| Ruteo         | React Router 6                                       |
+| Tests         | Vitest + Testing Library, entorno jsdom              |
+| Cobertura     | `@vitest/coverage-v8`, gate 60% (rubrica)            |
+| Lint / format | ESLint (flat config) + Prettier                      |
+| Identidad     | JWT emitido por el Grupo 2 (solo lo consumimos)      |
 
 No agregar dependencias sin justificarlo en el PR. Preferir lo que ya trae
 Mantine antes de sumar otra libreria de UI.
@@ -29,13 +29,13 @@ Mantine antes de sumar otra libreria de UI.
 
 La regla que mas se olvida, asi que va primero:
 
-| Que                                                        | Idioma      |
-| --------------------------------------------------------- | ----------- |
-| Comentarios y JSDoc                                       | **Ingles**  |
-| Identificadores del dominio (`reclamo`, `EstadoReclamo`)  | **Espanol** |
-| Texto que ve el usuario (labels, botones, mensajes)       | **Espanol** |
-| Documentacion del repo (README, este archivo)             | **Espanol** |
-| Mensajes de commit y PR                                   | **Espanol** |
+| Que                                                      | Idioma      |
+| -------------------------------------------------------- | ----------- |
+| Comentarios y JSDoc                                      | **Ingles**  |
+| Identificadores del dominio (`reclamo`, `EstadoReclamo`) | **Espanol** |
+| Texto que ve el usuario (labels, botones, mensajes)      | **Espanol** |
+| Documentacion del repo (README, este archivo)            | **Espanol** |
+| Mensajes de commit y PR                                  | **Espanol** |
 
 El dominio es municipal argentino: traducir `reclamo` a `claim` rompe la
 trazabilidad con el enunciado, la rubrica y el backend. Los comentarios en
@@ -182,10 +182,10 @@ npm run preview               # sirve el build
 
 ## 8. Integracion con los otros grupos
 
-| Grupo              | Que nos da / que le damos                                    |
-| ------------------ | ------------------------------------------------------------ |
+| Grupo              | Que nos da / que le damos                                          |
+| ------------------ | ------------------------------------------------------------------ |
 | 2 — Login Federado | Emite los JWT. El front los guarda y los manda en `Authorization`. |
-| 5 — Backend propio | Expone la API REST de reclamos que este front consume.       |
+| 5 — Backend propio | Expone la API REST de reclamos que este front consume.             |
 
 El backend es la fuente de verdad del contrato. Ante una duda de forma de datos,
 se mira el OpenAPI del backend (`/docs`), no se adivina en el front.
