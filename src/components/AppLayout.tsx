@@ -1,58 +1,121 @@
-import { AppShell, Group, NavLink, Stack, Text, ThemeIcon, Title } from "@mantine/core";
-import { IconBuildingCommunity, IconMessageReport, IconPlus, IconList } from "@tabler/icons-react";
+import {
+  ActionIcon,
+  AppShell,
+  Avatar,
+  Badge,
+  Divider,
+  Group,
+  Indicator,
+  NavLink,
+  ScrollArea,
+  Stack,
+  Text,
+  TextInput,
+} from "@mantine/core";
+import { IconBell, IconSearch } from "@tabler/icons-react";
 import { NavLink as RouterNavLink, Outlet, useLocation } from "react-router-dom";
 
-const LINKS = [
-  { to: "/reclamos", label: "Mis reclamos", icon: IconList },
-  { to: "/reclamos/nuevo", label: "Nuevo reclamo", icon: IconPlus },
-];
+import { Logo } from "@/components/Logo";
+import { CUENTA, SERVICIOS, type NavItem } from "@/config/navigation";
+import { CitySkyline } from "@/components/CitySkyline";
+
+function SidebarLink({ item, active }: { item: NavItem; active: boolean }) {
+  const propio = item.ownerGroup === null;
+  return (
+    <NavLink
+      component={RouterNavLink}
+      to={item.to}
+      label={item.label}
+      leftSection={<item.icon size={19} stroke={1.6} />}
+      rightSection={
+        propio ? (
+          <Badge size="xs" variant="light" color="ambar" radius="sm">
+            activo
+          </Badge>
+        ) : undefined
+      }
+      active={active}
+      variant="filled"
+      color="azulUrbano"
+      c="gray.3"
+      styles={{
+        root: { borderRadius: "var(--mantine-radius-md)" },
+        label: { fontSize: "var(--mantine-font-size-sm)" },
+      }}
+    />
+  );
+}
 
 export function AppLayout() {
-  const location = useLocation();
+  const { pathname } = useLocation();
+  const isActive = (to: string) => pathname === to || pathname.startsWith(`${to}/`);
 
   return (
-    <AppShell header={{ height: 60 }} navbar={{ width: 260, breakpoint: "sm" }} padding="lg">
-      <AppShell.Header bg="azulNoche.9" c="white" withBorder={false}>
-        <Group h="100%" px="md" gap="sm">
-          <ThemeIcon variant="transparent" c="white" size="lg">
-            <IconBuildingCommunity />
-          </ThemeIcon>
-          <Title order={4} c="white">
-            CityPass<span style={{ color: "var(--mantine-color-ambar-5)" }}>+</span>
-          </Title>
-          <Text c="gray.4" size="sm">
-            Reclamos y Participacion Ciudadana
-          </Text>
+    <AppShell
+      header={{ height: 64 }}
+      navbar={{ width: 264, breakpoint: "sm" }}
+      padding="lg"
+      layout="alt"
+    >
+      <AppShell.Header withBorder>
+        <Group h="100%" px="lg" justify="space-between" wrap="nowrap">
+          <TextInput
+            flex={1}
+            maw={440}
+            radius="md"
+            placeholder="Buscar reclamos, categorias, ubicaciones..."
+            leftSection={<IconSearch size={16} />}
+          />
+          <Group gap="lg" wrap="nowrap">
+            <Indicator label="3" size={16} color="rojoEmergencia" offset={4}>
+              <ActionIcon variant="subtle" color="gray" size="lg" aria-label="Notificaciones">
+                <IconBell size={20} />
+              </ActionIcon>
+            </Indicator>
+            <Group gap="sm" wrap="nowrap">
+              <Avatar color="azulUrbano" radius="xl">
+                MG
+              </Avatar>
+              <div style={{ lineHeight: 1.15 }}>
+                <Text size="sm" fw={600}>
+                  Martin Gonzalez
+                </Text>
+                <Text size="xs" c="dimmed">
+                  Ciudadano verificado
+                </Text>
+              </div>
+            </Group>
+          </Group>
         </Group>
       </AppShell.Header>
 
-      <AppShell.Navbar bg="azulNoche.9" p="md">
-        <Stack gap={4}>
-          <Group gap="xs" mb="sm" c="white">
-            <IconMessageReport size={20} />
-            <Text fw={600}>Reclamos</Text>
-          </Group>
-          {LINKS.map((link) => {
-            const active =
-              link.to === "/reclamos"
-                ? location.pathname === "/reclamos"
-                : location.pathname.startsWith(link.to);
-            return (
-              <NavLink
-                key={link.to}
-                component={RouterNavLink}
-                to={link.to}
-                label={link.label}
-                leftSection={<link.icon size={18} />}
-                active={active}
-                variant="filled"
-                color="azulUrbano"
-                c="white"
-                styles={{ root: { borderRadius: "var(--mantine-radius-md)" } }}
-              />
-            );
-          })}
-        </Stack>
+      <AppShell.Navbar bg="azulNoche.9" style={{ border: "none" }}>
+        <AppShell.Section p="md">
+          <Logo size={34} wordmarkColor="white" />
+        </AppShell.Section>
+
+        <AppShell.Section grow component={ScrollArea} px="sm">
+          <Text size="xs" c="gray.6" fw={600} tt="uppercase" mb={6} px="xs">
+            Servicios
+          </Text>
+          <Stack gap={4}>
+            {SERVICIOS.map((item) => (
+              <SidebarLink key={item.to} item={item} active={isActive(item.to)} />
+            ))}
+          </Stack>
+
+          <Divider my="md" color="azulNoche.7" />
+
+          <Stack gap={4}>
+            {CUENTA.map((item) => (
+              <SidebarLink key={item.to} item={item} active={isActive(item.to)} />
+            ))}
+          </Stack>
+        </AppShell.Section>
+
+        <AppShell.Section>
+          <CitySkyline />
+        </AppShell.Section>
       </AppShell.Navbar>
 
       <AppShell.Main bg="gray.0">

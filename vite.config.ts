@@ -28,6 +28,9 @@ export default defineConfig({
         "src/test/**",
         "src/**/index.ts",
         "src/theme/**",
+        // Declaration-only: interfaces/types compile to nothing at runtime,
+        // so there is no executable code to cover.
+        "src/api/types.ts",
       ],
       thresholds: {
         lines: 60,

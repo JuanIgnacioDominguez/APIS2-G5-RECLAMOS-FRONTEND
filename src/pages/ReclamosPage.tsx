@@ -1,46 +1,79 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   Alert,
+  Badge,
   Button,
+  Card,
   Center,
   Grid,
   Group,
   Loader,
-  Select,
+  SimpleGrid,
   Stack,
+  Tabs,
   Text,
   TextInput,
+  ThemeIcon,
   Title,
 } from "@mantine/core";
-import { IconAlertTriangle, IconPlus, IconSearch } from "@tabler/icons-react";
+import {
+  IconAlertTriangle,
+  IconChecks,
+  IconInbox,
+  IconPlus,
+  IconProgress,
+  IconSearch,
+} from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
 
 import { listarReclamos } from "@/api/reclamos";
-import type { EstadoReclamo } from "@/domain/enums";
-import { opcionesEstado } from "@/domain/labels";
 import { useAsync } from "@/hooks/useAsync";
 import { ReclamoCard } from "@/features/reclamos/ReclamoCard";
+import { TABS, contarPorTab, filtrarReclamos, type TabReclamos } from "@/features/reclamos/filters";
+
+function StatTile({
+  label,
+  value,
+  color,
+  icon,
+}: {
+  label: string;
+  value: number;
+  color: string;
+  icon: ReactNode;
+}) {
+  return (
+    <Card withBorder radius="md" padding="md">
+      <Group justify="space-between" wrap="nowrap">
+        <div>
+          <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+            {label}
+          </Text>
+          <Text fz={28} fw={700} lh={1.1}>
+            {value}
+          </Text>
+        </div>
+        <ThemeIcon size={42} radius="md" variant="light" color={color}>
+          {icon}
+        </ThemeIcon>
+      </Group>
+    </Card>
+  );
+}
 
 export function ReclamosPage() {
   const navigate = useNavigate();
-  const [estado, setEstado] = useState<EstadoReclamo | null>(null);
+  const [tab, setTab] = useState<TabReclamos>("todos");
   const [texto, setTexto] = useState("");
 
-  const { data, loading, error } = useAsync(
-    () => listarReclamos({ estado: estado ?? undefined }),
-    [estado],
-  );
-
-  const items = useMemo(() => {
-    const all = data?.items ?? [];
-    const q = texto.trim().toLowerCase();
-    if (!q) return all;
-    return all.filter((r) => r.titulo.toLowerCase().includes(q));
-  }, [data, texto]);
+  const { data, loading, error } = useAsync(() => listarReclamos(), []);
+  const items = useMemo(() => data?.items ?? [], [data]);
+  const counts = useMemo(() => contarPorTab(items), [items]);
+  const visibles = useMemo(() => filtrarReclamos(items, tab, texto), [items, tab, texto]);
 
   return (
     <Stack gap="lg">
-      <Group justify="space-between">
+      <Group justify="space-between" align="flex-end">
         <div>
           <Title order={2}>Mis reclamos</Title>
           <Text c="dimmed">Crea, segui y gestiona tus reclamos en la ciudad.</Text>
@@ -54,53 +87,97 @@ export function ReclamosPage() {
         </Button>
       </Group>
 
-      <Group>
-        <TextInput
-          flex={1}
-          placeholder="Buscar por titulo"
-          leftSection={<IconSearch size={16} />}
-          value={texto}
-          onChange={(e) => setTexto(e.currentTarget.value)}
+      <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="md">
+        <StatTile
+          label="Total"
+          value={counts.todos}
+          color="azulUrbano"
+          icon={<IconInbox size={22} />}
         />
-        <Select
-          placeholder="Todos los estados"
-          clearable
-          data={opcionesEstado()}
-          value={estado}
-          onChange={(v) => setEstado(v as EstadoReclamo | null)}
-          w={220}
+        <StatTile
+          label="Abiertos"
+          value={counts.abiertos}
+          color="azulUrbano"
+          icon={<IconInbox size={22} />}
         />
-      </Group>
+        <StatTile
+          label="En proceso"
+          value={counts.en_proceso}
+          color="ambar"
+          icon={<IconProgress size={22} />}
+        />
+        <StatTile
+          label="Resueltos"
+          value={counts.resueltos}
+          color="verdeUrbano"
+          icon={<IconChecks size={22} />}
+        />
+      </SimpleGrid>
 
-      {loading && (
-        <Center py="xl">
-          <Loader color="azulUrbano" />
-        </Center>
-      )}
+      <Card withBorder radius="md" padding="md">
+        <Stack gap="md">
+          <Group justify="space-between" wrap="wrap">
+            <Tabs
+              value={tab}
+              onChange={(v) => setTab((v ?? "todos") as TabReclamos)}
+              variant="pills"
+            >
+              <Tabs.List>
+                {TABS.map((t) => (
+                  <Tabs.Tab
+                    key={t.value}
+                    value={t.value}
+                    rightSection={
+                      <Badge size="xs" variant="light" circle>
+                        {counts[t.value]}
+                      </Badge>
+                    }
+                  >
+                    {t.label}
+                  </Tabs.Tab>
+                ))}
+              </Tabs.List>
+            </Tabs>
+            <TextInput
+              w={260}
+              placeholder="Buscar por titulo"
+              leftSection={<IconSearch size={16} />}
+              value={texto}
+              onChange={(e) => setTexto(e.currentTarget.value)}
+            />
+          </Group>
 
-      {error && (
-        <Alert
-          color="rojoEmergencia"
-          icon={<IconAlertTriangle size={16} />}
-          title="No se pudo cargar"
-        >
-          {error}
-        </Alert>
-      )}
+          {loading && (
+            <Center py="xl">
+              <Loader color="azulUrbano" />
+            </Center>
+          )}
 
-      {!loading && !error && items.length === 0 && (
-        <Text c="dimmed" ta="center" py="xl">
-          No hay reclamos para mostrar.
-        </Text>
-      )}
+          {error && (
+            <Alert
+              color="rojoEmergencia"
+              icon={<IconAlertTriangle size={16} />}
+              title="No se pudo cargar"
+            >
+              {error}
+            </Alert>
+          )}
 
-      <Grid>
-        {items.map((reclamo) => (
-          <Grid.Col key={reclamo.id} span={{ base: 12, sm: 6, lg: 4 }}>
-            <ReclamoCard reclamo={reclamo} />
-          </Grid.Col>
-        ))}
-      </Grid>
+          {!loading && !error && visibles.length === 0 && (
+            <Text c="dimmed" ta="center" py="xl">
+              No hay reclamos para mostrar.
+            </Text>
+          )}
+
+          <Grid>
+            {visibles.map((reclamo) => (
+              <Grid.Col key={reclamo.id} span={{ base: 12, sm: 6, lg: 4 }}>
+                <ReclamoCard reclamo={reclamo} />
+              </Grid.Col>
+            ))}
+          </Grid>
+        </Stack>
+      </Card>
     </Stack>
   );
 }

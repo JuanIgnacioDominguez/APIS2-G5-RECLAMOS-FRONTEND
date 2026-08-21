@@ -7,10 +7,10 @@ import {
   Stack,
   Text,
   TextInput,
-  Title,
 } from "@mantine/core";
-import { IconBuildingCommunity } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
+
+import { Logo } from "@/components/Logo";
 
 /**
  * Login placeholder. The real flow authenticates against Group 2 (Login
@@ -24,11 +24,8 @@ export function LoginPage() {
     <Center mih="100vh" bg="gray.0">
       <Card withBorder radius="md" padding="xl" w={400}>
         <Stack gap="md">
-          <Stack gap={4} align="center">
-            <IconBuildingCommunity size={40} color="var(--mantine-color-azulUrbano-6)" />
-            <Title order={3}>
-              CityPass<span style={{ color: "var(--mantine-color-ambar-5)" }}>+</span>
-            </Title>
+          <Stack gap={8} align="center">
+            <Logo size={44} />
             <Text c="dimmed" size="sm">
               Reclamos y Participacion Ciudadana
             </Text>
