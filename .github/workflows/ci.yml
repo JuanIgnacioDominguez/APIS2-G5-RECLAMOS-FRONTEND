@@ -60,3 +60,14 @@ jobs:
       # The production build must typecheck and bundle cleanly, not only pass tests.
       - name: Build
         run: npm run build
+
+  docker:
+    name: Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The image must build end to end (npm ci + vite build + nginx stage),
+      # not only the local `npm run build`.
+      - name: Build image
+        run: docker build -t citypass-reclamos-frontend:${{ github.sha }} .
