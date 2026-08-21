@@ -1,25 +1,36 @@
 import { describe, expect, it } from "vitest";
 
-import { CUENTA, SERVICIOS, navItemPorRuta } from "./navigation";
+import { Rol } from "@/auth/roles";
+import { CUENTA, OTROS_SERVICIOS, homePorRol, navItemPorRuta, navModulo } from "./navigation";
 
 describe("navegacion", () => {
-  it("Reclamos es el unico servicio propio (ownerGroup null)", () => {
-    const propios = SERVICIOS.filter((s) => s.ownerGroup === null);
-    expect(propios).toHaveLength(1);
-    expect(propios[0].to).toBe("/reclamos");
+  it("las otras secciones pertenecen a otro grupo (son placeholders)", () => {
+    expect(OTROS_SERVICIOS.every((s) => s.ownerGroup !== null)).toBe(true);
+    expect(OTROS_SERVICIOS.some((s) => s.to === "/movilidad")).toBe(true);
   });
 
-  it("el resto de los servicios pertenece a otro grupo", () => {
-    const ajenos = SERVICIOS.filter((s) => s.to !== "/reclamos");
-    expect(ajenos.every((s) => s.ownerGroup !== null)).toBe(true);
+  it("el menu del modulo cambia por rol", () => {
+    const ciudadano = navModulo(Rol.CIUDADANO).map((i) => i.to);
+    expect(ciudadano).toContain("/reclamos");
+    expect(ciudadano).toContain("/reclamos/nuevo");
+
+    const operador = navModulo(Rol.OPERADOR).map((i) => i.to);
+    expect(operador).toEqual(["/backoffice"]);
+
+    const admin = navModulo(Rol.ADMIN).map((i) => i.to);
+    expect(admin).toContain("/backoffice");
+    expect(admin).toContain("/panel");
   });
 
-  it("navItemPorRuta encuentra items en ambos grupos de links", () => {
-    expect(navItemPorRuta("/reclamos")?.label).toBe("Reclamos");
+  it("cada rol aterriza en su home", () => {
+    expect(homePorRol(Rol.CIUDADANO)).toBe("/reclamos");
+    expect(homePorRol(Rol.OPERADOR)).toBe("/backoffice");
+    expect(homePorRol(Rol.ADMIN)).toBe("/backoffice");
+  });
+
+  it("navItemPorRuta encuentra las secciones placeholder", () => {
+    expect(navItemPorRuta("/movilidad")?.label).toBe("Movilidad");
     expect(navItemPorRuta(CUENTA[0].to)?.label).toBe(CUENTA[0].label);
-  });
-
-  it("devuelve undefined para una ruta desconocida", () => {
     expect(navItemPorRuta("/no-existe")).toBeUndefined();
   });
 });

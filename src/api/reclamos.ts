@@ -4,6 +4,7 @@ import { request } from "./client";
 import type {
   CambioEstado,
   ComentarioOut,
+  Estadisticas,
   FiltroReclamos,
   HistorialOut,
   Page,
@@ -53,4 +54,8 @@ export function adherir(id: string): Promise<{ reclamo_id: string; adhesiones_co
 
 export function historial(id: string): Promise<HistorialOut[]> {
   return request<HistorialOut[]>(`/reclamos/${id}/historial`);
+}
+
+export function estadisticas(): Promise<Estadisticas> {
+  return request<Estadisticas>("/reclamos/estadisticas");
 }

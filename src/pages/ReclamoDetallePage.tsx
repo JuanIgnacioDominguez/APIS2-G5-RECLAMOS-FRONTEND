@@ -22,7 +22,10 @@ import { adherir, obtenerReclamo } from "@/api/reclamos";
 import { ESTADO_LABEL } from "@/domain/labels";
 import { formatFecha, idCorto } from "@/lib/format";
 import { useAsync } from "@/hooks/useAsync";
+import { useAuth } from "@/auth/AuthContext";
+import { esStaff } from "@/auth/roles";
 import { CategoriaBadge, EstadoBadge, PrioridadBadge } from "@/features/reclamos/Badges";
+import { GestionarEstado } from "@/features/reclamos/GestionarEstado";
 
 function DatoFila({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   return (
@@ -40,9 +43,11 @@ function DatoFila({ etiqueta, valor }: { etiqueta: string; valor: string }) {
 export function ReclamoDetallePage() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
-  const { data: reclamo, loading, error } = useAsync(() => obtenerReclamo(id), [id]);
+  const { usuario } = useAuth();
+  const { data: reclamo, loading, error, reload } = useAsync(() => obtenerReclamo(id), [id]);
   const [adhiriendo, setAdhiriendo] = useState(false);
   const [adhesiones, setAdhesiones] = useState<number | null>(null);
+  const staff = usuario ? esStaff(usuario.rol) : false;
 
   async function handleAdherir() {
     setAdhiriendo(true);
@@ -151,6 +156,14 @@ export function ReclamoDetallePage() {
 
         <Grid.Col span={{ base: 12, md: 5 }}>
           <Stack gap="lg">
+            {staff && (
+              <GestionarEstado
+                reclamoId={reclamo.id}
+                estadoActual={reclamo.estado}
+                onActualizado={reload}
+              />
+            )}
+
             <Card withBorder radius="md" padding="lg">
               <Title order={5} mb="md">
                 Detalles
