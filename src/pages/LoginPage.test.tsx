@@ -17,21 +17,24 @@ function renderLogin() {
 }
 
 describe("LoginPage", () => {
-  it("muestra los campos de acceso", () => {
+  it("muestra los campos de acceso y los accesos rapidos por rol", () => {
     renderLogin();
     expect(screen.getByLabelText(/correo electronico/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/contrasena/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Ciudadano" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Operador" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Administrador" })).toBeInTheDocument();
   });
 
-  it("entra a la app al ingresar", async () => {
+  it("entra con el boton Ingresar", async () => {
     renderLogin();
     await userEvent.click(screen.getByRole("button", { name: /^ingresar$/i }));
     expect(screen.getByText("listado de reclamos")).toBeInTheDocument();
   });
 
-  it("tambien entra por acceso institucional (LDAP)", async () => {
+  it("entra por acceso rapido como operador", async () => {
     renderLogin();
-    await userEvent.click(screen.getByRole("button", { name: /acceso institucional/i }));
+    await userEvent.click(screen.getByRole("button", { name: "Operador" }));
     expect(screen.getByText("listado de reclamos")).toBeInTheDocument();
   });
 });

@@ -1,8 +1,10 @@
+import { useState } from "react";
 import {
   Button,
   Card,
   Center,
   Divider,
+  Group,
   PasswordInput,
   Stack,
   Text,
@@ -11,18 +13,33 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import { Logo } from "@/components/Logo";
+import { useAuth } from "@/auth/AuthContext";
+import { ROL_LABEL } from "@/auth/roles";
+import { USUARIOS_DEMO, type Usuario } from "@/auth/users";
 
 /**
- * Login placeholder. The real flow authenticates against Group 2 (Login
- * Federado LDAP + JWT); for now it just lets us into the app while the backend
- * wiring is pending.
+ * Hardcoded login. Authenticates against the demo users until Group 2's
+ * federated login (LDAP + JWT) is wired in; then this form calls that service
+ * instead. The quick-access buttons make it easy to try each role.
  */
 export function LoginPage() {
   const navigate = useNavigate();
+  const { login, loginComo } = useAuth();
+  const [email, setEmail] = useState("");
+
+  function entrar(u: Usuario) {
+    loginComo(u);
+    navigate("/reclamos");
+  }
+
+  function entrarConEmail() {
+    login(email || "vecino@ciudad.gob.ar");
+    navigate("/reclamos");
+  }
 
   return (
     <Center mih="100vh" bg="gray.0">
-      <Card withBorder radius="md" padding="xl" w={400}>
+      <Card withBorder radius="md" padding="xl" w={420}>
         <Stack gap="md">
           <Stack gap={8} align="center">
             <Logo size={44} />
@@ -31,17 +48,35 @@ export function LoginPage() {
             </Text>
           </Stack>
 
-          <TextInput label="Correo electronico" placeholder="vecino@ciudad.gov.ar" />
+          <TextInput
+            label="Correo electronico"
+            placeholder="vecino@ciudad.gob.ar"
+            value={email}
+            onChange={(e) => setEmail(e.currentTarget.value)}
+          />
           <PasswordInput label="Contrasena" placeholder="Tu contrasena" />
 
-          <Button color="azulUrbano" fullWidth onClick={() => navigate("/reclamos")}>
+          <Button color="azulUrbano" fullWidth onClick={entrarConEmail}>
             Ingresar
           </Button>
 
-          <Divider label="o" labelPosition="center" />
-          <Button variant="default" fullWidth onClick={() => navigate("/reclamos")}>
-            Acceso institucional (LDAP)
-          </Button>
+          <Divider label="Acceso rapido (demo)" labelPosition="center" />
+          <Text c="dimmed" size="xs" ta="center">
+            Login hardcodeado hasta integrar el Login Federado (Grupo 2). Elegi un rol para probar:
+          </Text>
+          <Group grow>
+            {USUARIOS_DEMO.map((u) => (
+              <Button
+                key={u.id}
+                variant="light"
+                color="azulUrbano"
+                size="xs"
+                onClick={() => entrar(u)}
+              >
+                {ROL_LABEL[u.rol]}
+              </Button>
+            ))}
+          </Group>
         </Stack>
       </Card>
     </Center>

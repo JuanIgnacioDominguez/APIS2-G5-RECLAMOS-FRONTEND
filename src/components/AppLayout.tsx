@@ -6,18 +6,30 @@ import {
   Divider,
   Group,
   Indicator,
+  Menu,
   NavLink,
   ScrollArea,
   Stack,
   Text,
   TextInput,
+  UnstyledButton,
 } from "@mantine/core";
-import { IconBell, IconSearch } from "@tabler/icons-react";
-import { NavLink as RouterNavLink, Outlet, useLocation } from "react-router-dom";
+import { IconBell, IconLogout, IconSearch } from "@tabler/icons-react";
+import { NavLink as RouterNavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 
 import { Logo } from "@/components/Logo";
 import { CUENTA, SERVICIOS, type NavItem } from "@/config/navigation";
 import { CitySkyline } from "@/components/CitySkyline";
+import { useAuth } from "@/auth/AuthContext";
+import { ROL_LABEL } from "@/auth/roles";
+
+function iniciales(nombre: string): string {
+  return nombre
+    .split(" ")
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .join("");
+}
 
 function SidebarLink({ item, active }: { item: NavItem; active: boolean }) {
   const propio = item.ownerGroup === null;
@@ -48,7 +60,14 @@ function SidebarLink({ item, active }: { item: NavItem; active: boolean }) {
 
 export function AppLayout() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const { usuario, logout } = useAuth();
   const isActive = (to: string) => pathname === to || pathname.startsWith(`${to}/`);
+
+  function salir() {
+    logout();
+    navigate("/login");
+  }
 
   return (
     <AppShell
@@ -72,19 +91,31 @@ export function AppLayout() {
                 <IconBell size={20} />
               </ActionIcon>
             </Indicator>
-            <Group gap="sm" wrap="nowrap">
-              <Avatar color="azulUrbano" radius="xl">
-                MG
-              </Avatar>
-              <div style={{ lineHeight: 1.15 }}>
-                <Text size="sm" fw={600}>
-                  Martin Gonzalez
-                </Text>
-                <Text size="xs" c="dimmed">
-                  Ciudadano verificado
-                </Text>
-              </div>
-            </Group>
+            <Menu position="bottom-end" withArrow>
+              <Menu.Target>
+                <UnstyledButton aria-label="Cuenta">
+                  <Group gap="sm" wrap="nowrap">
+                    <Avatar color="azulUrbano" radius="xl">
+                      {usuario ? iniciales(usuario.nombre) : "?"}
+                    </Avatar>
+                    <div style={{ lineHeight: 1.15 }}>
+                      <Text size="sm" fw={600}>
+                        {usuario?.nombre ?? "Invitado"}
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        {usuario ? ROL_LABEL[usuario.rol] : "Sin sesion"}
+                      </Text>
+                    </div>
+                  </Group>
+                </UnstyledButton>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Label>{usuario?.email}</Menu.Label>
+                <Menu.Item leftSection={<IconLogout size={16} />} onClick={salir}>
+                  Cerrar sesion
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
           </Group>
         </Group>
       </AppShell.Header>
