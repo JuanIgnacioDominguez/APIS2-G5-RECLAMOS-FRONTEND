@@ -30,4 +30,5 @@ window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
 afterEach(() => {
   cleanup();
+  localStorage.clear();
 });

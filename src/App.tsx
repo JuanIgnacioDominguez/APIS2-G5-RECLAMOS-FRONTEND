@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { AppLayout } from "@/components/AppLayout";
+import { RequireAuth } from "@/auth/RequireAuth";
 import { CUENTA, SERVICIOS } from "@/config/navigation";
 import { LoginPage } from "@/pages/LoginPage";
 import { ReclamosPage } from "@/pages/ReclamosPage";
@@ -16,14 +17,16 @@ export function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      <Route element={<AppLayout />}>
-        <Route index element={<Navigate to="/reclamos" replace />} />
-        <Route path="/reclamos" element={<ReclamosPage />} />
-        <Route path="/reclamos/nuevo" element={<NuevoReclamoPage />} />
-        <Route path="/reclamos/:id" element={<ReclamoDetallePage />} />
-        {placeholderRoutes.map((item) => (
-          <Route key={item.to} path={item.to} element={<SectionPlaceholder />} />
-        ))}
+      <Route element={<RequireAuth />}>
+        <Route element={<AppLayout />}>
+          <Route index element={<Navigate to="/reclamos" replace />} />
+          <Route path="/reclamos" element={<ReclamosPage />} />
+          <Route path="/reclamos/nuevo" element={<NuevoReclamoPage />} />
+          <Route path="/reclamos/:id" element={<ReclamoDetallePage />} />
+          {placeholderRoutes.map((item) => (
+            <Route key={item.to} path={item.to} element={<SectionPlaceholder />} />
+          ))}
+        </Route>
       </Route>
       <Route path="*" element={<Navigate to="/reclamos" replace />} />
     </Routes>
