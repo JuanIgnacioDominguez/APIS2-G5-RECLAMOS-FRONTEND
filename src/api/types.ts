@@ -101,6 +101,19 @@ export interface Page<T> {
   size: number;
 }
 
+export interface ConteoPorClave {
+  clave: string;
+  cantidad: number;
+}
+
+export interface Estadisticas {
+  total: number;
+  por_estado: ConteoPorClave[];
+  por_categoria: ConteoPorClave[];
+  por_prioridad: ConteoPorClave[];
+  tiempo_resolucion_horas_promedio: number | null;
+}
+
 export interface FiltroReclamos {
   estado?: EstadoReclamo;
   categoria?: CategoriaReclamo;

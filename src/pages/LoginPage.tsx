@@ -16,6 +16,7 @@ import { Logo } from "@/components/Logo";
 import { useAuth } from "@/auth/AuthContext";
 import { ROL_LABEL } from "@/auth/roles";
 import { USUARIOS_DEMO, type Usuario } from "@/auth/users";
+import { homePorRol } from "@/config/navigation";
 
 /**
  * Hardcoded login. Authenticates against the demo users until Group 2's
@@ -29,12 +30,12 @@ export function LoginPage() {
 
   function entrar(u: Usuario) {
     loginComo(u);
-    navigate("/reclamos");
+    navigate(homePorRol(u.rol));
   }
 
   function entrarConEmail() {
-    login(email || "vecino@ciudad.gob.ar");
-    navigate("/reclamos");
+    const u = login(email || "vecino@ciudad.gob.ar");
+    navigate(homePorRol(u.rol));
   }
 
   return (
