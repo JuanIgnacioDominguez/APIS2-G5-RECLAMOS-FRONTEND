@@ -1,0 +1,4 @@
+# Normalize line endings to LF for all text files.
+# Prettier expects LF, so this keeps the format check green on every OS
+# (Windows, macOS, Linux) without each dev having to configure autocrlf.
+* text=auto eol=lf
