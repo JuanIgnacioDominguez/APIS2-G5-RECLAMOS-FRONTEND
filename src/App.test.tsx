@@ -28,11 +28,6 @@ describe("App", () => {
     expect(screen.getByRole("heading", { name: /mis reclamos/i })).toBeInTheDocument();
   });
 
-  it("con sesion, muestra el placeholder de otra seccion", () => {
-    renderWithProviders(<App />, { route: "/residuos", usuario: USUARIOS_DEMO[0] });
-    expect(screen.getByRole("heading", { name: "Residuos" })).toBeInTheDocument();
-  });
-
   it("un operador aterriza en la bandeja de backoffice", async () => {
     vi.spyOn(reclamosApi, "listarReclamos").mockResolvedValue({
       items: [],

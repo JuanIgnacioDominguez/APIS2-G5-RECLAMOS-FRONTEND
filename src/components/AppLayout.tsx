@@ -2,8 +2,6 @@ import {
   ActionIcon,
   AppShell,
   Avatar,
-  Badge,
-  Divider,
   Group,
   Indicator,
   Menu,
@@ -18,7 +16,7 @@ import { IconBell, IconLogout, IconSearch } from "@tabler/icons-react";
 import { NavLink as RouterNavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 
 import { Logo } from "@/components/Logo";
-import { CUENTA, OTROS_SERVICIOS, navModulo, type NavItem } from "@/config/navigation";
+import { navModulo, type NavItem } from "@/config/navigation";
 import { CitySkyline } from "@/components/CitySkyline";
 import { useAuth } from "@/auth/AuthContext";
 import { ROL_LABEL } from "@/auth/roles";
@@ -32,20 +30,12 @@ function iniciales(nombre: string): string {
 }
 
 function SidebarLink({ item, active }: { item: NavItem; active: boolean }) {
-  const propio = item.ownerGroup === null;
   return (
     <NavLink
       component={RouterNavLink}
       to={item.to}
       label={item.label}
       leftSection={<item.icon size={19} stroke={1.6} />}
-      rightSection={
-        propio ? (
-          <Badge size="xs" variant="light" color="ambar" radius="sm">
-            activo
-          </Badge>
-        ) : undefined
-      }
       active={active}
       variant="filled"
       color="azulUrbano"
@@ -131,25 +121,6 @@ export function AppLayout() {
           </Text>
           <Stack gap={4}>
             {(usuario ? navModulo(usuario.rol) : []).map((item) => (
-              <SidebarLink key={item.to} item={item} active={isActive(item.to)} />
-            ))}
-          </Stack>
-
-          <Divider my="md" color="azulNoche.7" />
-
-          <Text size="xs" c="gray.6" fw={600} tt="uppercase" mb={6} px="xs">
-            Otros servicios
-          </Text>
-          <Stack gap={4}>
-            {OTROS_SERVICIOS.map((item) => (
-              <SidebarLink key={item.to} item={item} active={isActive(item.to)} />
-            ))}
-          </Stack>
-
-          <Divider my="md" color="azulNoche.7" />
-
-          <Stack gap={4}>
-            {CUENTA.map((item) => (
               <SidebarLink key={item.to} item={item} active={isActive(item.to)} />
             ))}
           </Stack>
