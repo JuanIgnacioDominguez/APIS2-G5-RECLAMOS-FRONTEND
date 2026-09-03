@@ -8,6 +8,7 @@ import {
   Grid,
   Group,
   Loader,
+  Select,
   SimpleGrid,
   Stack,
   Tabs,
@@ -27,6 +28,8 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import { listarReclamos } from "@/api/reclamos";
+import type { CategoriaReclamo } from "@/domain/enums";
+import { opcionesCategoria } from "@/domain/labels";
 import { useAsync } from "@/hooks/useAsync";
 import { ReclamoCard } from "@/features/reclamos/ReclamoCard";
 import { TABS, contarPorTab, filtrarReclamos, type TabReclamos } from "@/features/reclamos/filters";
@@ -65,11 +68,15 @@ export function ReclamosPage() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<TabReclamos>("todos");
   const [texto, setTexto] = useState("");
+  const [categoria, setCategoria] = useState<CategoriaReclamo | null>(null);
 
   const { data, loading, error } = useAsync(() => listarReclamos(), []);
   const items = useMemo(() => data?.items ?? [], [data]);
   const counts = useMemo(() => contarPorTab(items), [items]);
-  const visibles = useMemo(() => filtrarReclamos(items, tab, texto), [items, tab, texto]);
+  const visibles = useMemo(
+    () => filtrarReclamos(items, tab, texto, categoria),
+    [items, tab, texto, categoria],
+  );
 
   return (
     <Stack gap="lg">
@@ -138,13 +145,24 @@ export function ReclamosPage() {
                 ))}
               </Tabs.List>
             </Tabs>
-            <TextInput
-              w={260}
-              placeholder="Buscar por titulo"
-              leftSection={<IconSearch size={16} />}
-              value={texto}
-              onChange={(e) => setTexto(e.currentTarget.value)}
-            />
+            <Group gap="sm">
+              <Select
+                w={190}
+                placeholder="Todas las categorias"
+                clearable
+                data={opcionesCategoria()}
+                value={categoria}
+                onChange={(v) => setCategoria(v as CategoriaReclamo | null)}
+                aria-label="Filtrar por categoria"
+              />
+              <TextInput
+                w={220}
+                placeholder="Buscar por titulo"
+                leftSection={<IconSearch size={16} />}
+                value={texto}
+                onChange={(e) => setTexto(e.currentTarget.value)}
+              />
+            </Group>
           </Group>
 
           {loading && (

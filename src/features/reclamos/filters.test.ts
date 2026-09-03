@@ -59,6 +59,19 @@ describe("filtrarReclamos", () => {
   it("combina tab y texto", () => {
     expect(filtrarReclamos(lista, "abiertos", "agua").map((r) => r.id)).toEqual(["5"]);
   });
+
+  it("filtra por categoria", () => {
+    const conCategorias: ReclamoResumen[] = [
+      { ...reclamo("a", "Bache", EstadoReclamo.RECIBIDO), categoria: CategoriaReclamo.BACHES },
+      { ...reclamo("b", "Luz", EstadoReclamo.RECIBIDO), categoria: CategoriaReclamo.ALUMBRADO },
+      { ...reclamo("c", "Pozo", EstadoReclamo.RECIBIDO), categoria: CategoriaReclamo.BACHES },
+    ];
+    expect(
+      filtrarReclamos(conCategorias, "todos", "", CategoriaReclamo.BACHES).map((r) => r.id),
+    ).toEqual(["a", "c"]);
+    // Sin categoria devuelve todo.
+    expect(filtrarReclamos(conCategorias, "todos", "", null)).toHaveLength(3);
+  });
 });
 
 describe("contarPorTab", () => {
