@@ -1,7 +1,9 @@
 /**
- * Hardcoded users for development, one per role. TEMPORARY: they stand in for
- * Group 2's federated login (LDAP + JWT) until that module is integrated over
- * HTTPS. When it is, `login` fetches a real JWT and these presets go away.
+ * The logged-in user and the demo credentials for the quick-access buttons.
+ *
+ * These credentials match the backend's dev login (`app/api/v1/auth_dev.py`):
+ * one user per role, password equal to the username. TEMPORARY until Group 2's
+ * federated login is integrated.
  */
 
 import { Rol } from "./roles";
@@ -13,14 +15,14 @@ export interface Usuario {
   rol: Rol;
 }
 
-export const USUARIOS_DEMO: Usuario[] = [
-  { id: "vecino-1", nombre: "Martin Gonzalez", email: "vecino@ciudad.gob.ar", rol: Rol.CIUDADANO },
-  { id: "operador-1", nombre: "Ana Operadora", email: "operador@ciudad.gob.ar", rol: Rol.OPERADOR },
-  { id: "admin-1", nombre: "Admin CityPass", email: "admin@ciudad.gob.ar", rol: Rol.ADMIN },
-];
-
-/** Find a demo user by email (case-insensitive), used by the hardcoded login. */
-export function buscarUsuarioDemo(email: string): Usuario | undefined {
-  const normalizado = email.trim().toLowerCase();
-  return USUARIOS_DEMO.find((u) => u.email.toLowerCase() === normalizado);
+export interface CredencialDemo {
+  usuario: string;
+  password: string;
+  rol: Rol;
 }
+
+export const CREDENCIALES_DEMO: CredencialDemo[] = [
+  { usuario: "vecino1", password: "vecino1", rol: Rol.CIUDADANO },
+  { usuario: "operador1", password: "operador1", rol: Rol.OPERADOR },
+  { usuario: "admin1", password: "admin1", rol: Rol.ADMIN },
+];
