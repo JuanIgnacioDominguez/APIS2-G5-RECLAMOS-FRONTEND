@@ -61,6 +61,34 @@ jobs:
       - name: Build
         run: npm run build
 
+  sonarcloud:
+    name: SonarCloud
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # SonarCloud needs full history for accurate new-code and blame.
+          fetch-depth: 0
+
+      - name: Download coverage report
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage
+          path: coverage
+
+      # Quality gate: bugs, vulnerabilities, code smells and the coverage from
+      # the previous job. Runs only once SONAR_TOKEN is configured, so the CI
+      # stays green until SonarCloud is set up (see README).
+      - name: SonarCloud scan
+        if: ${{ env.SONAR_TOKEN != '' }}
+        uses: SonarSource/sonarcloud-github-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
   docker:
     name: Docker image
     runs-on: ubuntu-latest
