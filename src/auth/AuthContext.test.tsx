@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
+import * as authApi from "@/api/auth";
 import { getAuthToken, setAuthToken } from "@/api/client";
 import { renderWithProviders } from "@/test/render";
 import { useAuth } from "./AuthContext";
@@ -10,17 +11,30 @@ function Harness() {
   const { usuario, login, logout } = useAuth();
   return (
     <div>
-      <span data-testid="user">{usuario?.nombre ?? "nadie"}</span>
-      <button onClick={() => login("operador@ciudad.gob.ar")}>login</button>
+      <span data-testid="user">{usuario ? `${usuario.nombre} (${usuario.rol})` : "nadie"}</span>
+      <button onClick={() => login("operador1", "operador1").catch(() => {})}>login</button>
       <button onClick={() => logout()}>logout</button>
     </div>
   );
 }
 
+const tokenOut: authApi.TokenOut = {
+  access_token: "jwt-real-123",
+  token_type: "bearer",
+  expires_in: 3600,
+  usuario: {
+    id: "operador-1",
+    nombre: "Operador Municipal",
+    email: "operador1@citypass.local",
+    roles: ["operador"],
+  },
+};
+
 describe("AuthContext", () => {
   beforeEach(() => {
     localStorage.clear();
     setAuthToken(null);
+    vi.restoreAllMocks();
   });
 
   it("empieza sin sesion", () => {
@@ -29,32 +43,40 @@ describe("AuthContext", () => {
     expect(getAuthToken()).toBeNull();
   });
 
-  it("login setea el usuario y el token bearer", async () => {
+  it("login guarda el usuario y el JWT real del backend", async () => {
+    vi.spyOn(authApi, "loginDev").mockResolvedValue(tokenOut);
     renderWithProviders(<Harness />);
+
     await userEvent.click(screen.getByRole("button", { name: "login" }));
 
-    expect(screen.getByTestId("user")).toHaveTextContent("Ana Operadora");
-    expect(getAuthToken()).toMatch(/^dev\./);
-    expect(localStorage.getItem("citypass.auth.usuario")).toContain("operador");
+    expect(await screen.findByText(/Operador Municipal \(operador\)/)).toBeInTheDocument();
+    expect(getAuthToken()).toBe("jwt-real-123");
+    expect(localStorage.getItem("citypass.auth.sesion")).toContain("jwt-real-123");
+    expect(authApi.loginDev).toHaveBeenCalledWith("operador1", "operador1");
   });
 
-  it("logout limpia la sesion, el token y el storage", async () => {
+  it("logout limpia sesion, token y storage", async () => {
+    vi.spyOn(authApi, "loginDev").mockResolvedValue(tokenOut);
     renderWithProviders(<Harness />);
     await userEvent.click(screen.getByRole("button", { name: "login" }));
+    await screen.findByText(/Operador Municipal/);
     await userEvent.click(screen.getByRole("button", { name: "logout" }));
 
     expect(screen.getByTestId("user")).toHaveTextContent("nadie");
     expect(getAuthToken()).toBeNull();
-    expect(localStorage.getItem("citypass.auth.usuario")).toBeNull();
+    expect(localStorage.getItem("citypass.auth.sesion")).toBeNull();
   });
 
   it("restaura la sesion desde localStorage al montar", () => {
     localStorage.setItem(
-      "citypass.auth.usuario",
-      JSON.stringify({ id: "x", nombre: "Guardado", email: "g@x.com", rol: "ciudadano" }),
+      "citypass.auth.sesion",
+      JSON.stringify({
+        usuario: { id: "x", nombre: "Guardado", email: "g@x.com", rol: "ciudadano" },
+        token: "jwt-guardado",
+      }),
     );
     renderWithProviders(<Harness />);
     expect(screen.getByTestId("user")).toHaveTextContent("Guardado");
-    expect(getAuthToken()).toMatch(/^dev\./);
+    expect(getAuthToken()).toBe("jwt-guardado");
   });
 });

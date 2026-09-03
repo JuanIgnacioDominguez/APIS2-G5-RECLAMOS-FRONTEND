@@ -3,10 +3,11 @@ import { screen } from "@testing-library/react";
 import { Route, Routes } from "react-router-dom";
 
 import { renderWithProviders } from "@/test/render";
-import { USUARIOS_DEMO } from "./users";
+import { ADMIN, CIUDADANO, OPERADOR } from "@/test/usuarios";
+import type { Usuario } from "./users";
 import { RequireAuth } from "./RequireAuth";
 
-function renderGuard(ruta: string, opts: { usuario?: (typeof USUARIOS_DEMO)[number] | null } = {}) {
+function renderGuard(ruta: string, opts: { usuario?: Usuario | null } = {}) {
   return renderWithProviders(
     <Routes>
       <Route path="/login" element={<div>pantalla de login</div>} />
@@ -32,29 +33,29 @@ describe("RequireAuth", () => {
   });
 
   it("con sesion, deja pasar", () => {
-    renderGuard("/privado", { usuario: USUARIOS_DEMO[0] });
+    renderGuard("/privado", { usuario: CIUDADANO });
     expect(screen.getByText("contenido privado")).toBeInTheDocument();
   });
 
   it("una seccion soloStaff rechaza a un ciudadano", () => {
-    renderGuard("/backoffice", { usuario: USUARIOS_DEMO[0] }); // ciudadano
+    renderGuard("/backoffice", { usuario: CIUDADANO }); // ciudadano
     expect(screen.getByText("reclamos")).toBeInTheDocument();
     expect(screen.queryByText("backoffice")).not.toBeInTheDocument();
   });
 
   it("una seccion soloStaff acepta a un operador", () => {
-    renderGuard("/backoffice", { usuario: USUARIOS_DEMO[1] }); // operador
+    renderGuard("/backoffice", { usuario: OPERADOR }); // operador
     expect(screen.getByText("backoffice")).toBeInTheDocument();
   });
 
   it("una seccion soloAdmin rechaza a un operador", () => {
-    renderGuard("/panel", { usuario: USUARIOS_DEMO[1] }); // operador
+    renderGuard("/panel", { usuario: OPERADOR }); // operador
     expect(screen.queryByText("panel admin")).not.toBeInTheDocument();
     expect(screen.getByText("reclamos")).toBeInTheDocument();
   });
 
   it("una seccion soloAdmin acepta a un admin", () => {
-    renderGuard("/panel", { usuario: USUARIOS_DEMO[2] }); // admin
+    renderGuard("/panel", { usuario: ADMIN }); // admin
     expect(screen.getByText("panel admin")).toBeInTheDocument();
   });
 });

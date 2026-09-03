@@ -3,7 +3,7 @@ import { screen } from "@testing-library/react";
 import { Route, Routes } from "react-router-dom";
 
 import { renderWithProviders } from "@/test/render";
-import { USUARIOS_DEMO } from "@/auth/users";
+import { CIUDADANO } from "@/test/usuarios";
 import { AppLayout } from "./AppLayout";
 
 function renderLayout(ruta = "/reclamos") {
@@ -13,7 +13,7 @@ function renderLayout(ruta = "/reclamos") {
         <Route path="/reclamos" element={<div>contenido de reclamos</div>} />
       </Route>
     </Routes>,
-    { route: ruta, usuario: USUARIOS_DEMO[0] },
+    { route: ruta, usuario: CIUDADANO },
   );
 }
 
@@ -34,7 +34,7 @@ describe("AppLayout", () => {
 
   it("muestra el usuario autenticado y su rol", () => {
     renderLayout();
-    expect(screen.getByText(USUARIOS_DEMO[0].nombre)).toBeInTheDocument();
+    expect(screen.getByText(CIUDADANO.nombre)).toBeInTheDocument();
     expect(screen.getByText("Ciudadano")).toBeInTheDocument();
   });
 });

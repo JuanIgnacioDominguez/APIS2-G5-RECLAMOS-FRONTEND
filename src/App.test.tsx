@@ -3,7 +3,7 @@ import { screen } from "@testing-library/react";
 
 import * as reclamosApi from "@/api/reclamos";
 import { renderWithProviders } from "@/test/render";
-import { USUARIOS_DEMO } from "@/auth/users";
+import { ADMIN, CIUDADANO, OPERADOR } from "@/test/usuarios";
 import { App } from "./App";
 
 describe("App", () => {
@@ -24,7 +24,7 @@ describe("App", () => {
       page: 1,
       size: 20,
     });
-    renderWithProviders(<App />, { route: "/", usuario: USUARIOS_DEMO[0] });
+    renderWithProviders(<App />, { route: "/", usuario: CIUDADANO });
     expect(screen.getByRole("heading", { name: /mis reclamos/i })).toBeInTheDocument();
   });
 
@@ -35,7 +35,7 @@ describe("App", () => {
       page: 1,
       size: 20,
     });
-    renderWithProviders(<App />, { route: "/", usuario: USUARIOS_DEMO[1] }); // operador
+    renderWithProviders(<App />, { route: "/", usuario: OPERADOR }); // operador
     expect(
       await screen.findByRole("heading", { name: /bandeja de reclamos/i }),
     ).toBeInTheDocument();
@@ -48,7 +48,7 @@ describe("App", () => {
       page: 1,
       size: 20,
     });
-    renderWithProviders(<App />, { route: "/backoffice", usuario: USUARIOS_DEMO[0] }); // ciudadano
+    renderWithProviders(<App />, { route: "/backoffice", usuario: CIUDADANO }); // ciudadano
     expect(screen.getByRole("heading", { name: /mis reclamos/i })).toBeInTheDocument();
   });
 
@@ -60,7 +60,7 @@ describe("App", () => {
       por_prioridad: [],
       tiempo_resolucion_horas_promedio: null,
     });
-    renderWithProviders(<App />, { route: "/panel", usuario: USUARIOS_DEMO[2] }); // admin
+    renderWithProviders(<App />, { route: "/panel", usuario: ADMIN }); // admin
     expect(await screen.findByRole("heading", { name: /panel de metricas/i })).toBeInTheDocument();
   });
 });

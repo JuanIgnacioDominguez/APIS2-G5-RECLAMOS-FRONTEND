@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  Alert,
   Box,
   Button,
   Divider,
@@ -11,16 +12,16 @@ import {
   TextInput,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { notifications } from "@mantine/notifications";
+import { IconAlertTriangle } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
 
 import { Logo } from "@/components/Logo";
 import { LoginAside } from "@/components/LoginAside";
 import { useAuth } from "@/auth/AuthContext";
 import { ROL_LABEL } from "@/auth/roles";
-import { USUARIOS_DEMO, type Usuario } from "@/auth/users";
+import { CREDENCIALES_DEMO, type CredencialDemo } from "@/auth/users";
 import { homePorRol } from "@/config/navigation";
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function GoogleIcon() {
   return (
@@ -46,36 +47,44 @@ function GoogleIcon() {
 }
 
 /**
- * Login page. Authentication is hardcoded (any credentials pass; the role comes
- * from the demo users by email) until Group 2's federated login is integrated;
- * then `login` calls that service and the "Continuar con Google" flow is wired.
+ * Login page. Authenticates against the backend dev endpoint
+ * (`POST /auth/dev/login`), which returns a real JWT with hardcoded users until
+ * Group 2's federated login is integrated. The Google button is a placeholder
+ * for that future flow.
  */
 export function LoginPage() {
   const navigate = useNavigate();
-  const { login, loginComo } = useAuth();
+  const { login } = useAuth();
   const [cargando, setCargando] = useState(false);
+  const [errorLogin, setErrorLogin] = useState<string | null>(null);
 
   const form = useForm({
-    initialValues: { email: "", password: "" },
+    initialValues: { usuario: "", password: "" },
     validateInputOnBlur: true,
     validate: {
-      email: (v) =>
-        EMAIL_RE.test(v.trim()) ? null : "Ingresa un email valido, como vecino@ciudad.gob.ar",
+      usuario: (v) => (v.trim() ? null : "Ingresa tu usuario"),
       password: (v) => (v.length > 0 ? null : "Ingresa tu contrasena"),
     },
   });
 
-  function entrar(u: Usuario) {
-    loginComo(u);
-    navigate(homePorRol(u.rol));
+  async function ingresar(usuario: string, password: string) {
+    setCargando(true);
+    setErrorLogin(null);
+    try {
+      const u = await login(usuario, password);
+      navigate(homePorRol(u.rol));
+    } catch (err) {
+      setErrorLogin(err instanceof Error ? err.message : "No se pudo iniciar sesion");
+    } finally {
+      setCargando(false);
+    }
   }
 
-  const ingresar = form.onSubmit((values) => {
-    setCargando(true);
-    // Hardcoded: the email decides the role (falls back to a citizen).
-    const u = login(values.email.trim());
-    navigate(homePorRol(u.rol));
-  });
+  const onSubmit = form.onSubmit((values) => ingresar(values.usuario.trim(), values.password));
+
+  function entrarDemo(c: CredencialDemo) {
+    ingresar(c.usuario, c.password);
+  }
 
   return (
     <Flex mih="100vh">
@@ -98,15 +107,20 @@ export function LoginPage() {
               </Text>
             </div>
 
-            <form onSubmit={ingresar} noValidate>
+            {errorLogin && (
+              <Alert color="rojoEmergencia" icon={<IconAlertTriangle size={16} />} py="xs">
+                {errorLogin}
+              </Alert>
+            )}
+
+            <form onSubmit={onSubmit} noValidate>
               <Stack gap="sm">
                 <TextInput
-                  label="Correo electronico"
-                  placeholder="vecino@ciudad.gob.ar"
-                  type="email"
-                  autoComplete="email"
+                  label="Usuario"
+                  placeholder="vecino1"
+                  autoComplete="username"
                   withAsterisk
-                  {...form.getInputProps("email")}
+                  {...form.getInputProps("usuario")}
                 />
                 <PasswordInput
                   label="Contrasena"
@@ -127,7 +141,13 @@ export function LoginPage() {
               variant="default"
               fullWidth
               leftSection={<GoogleIcon />}
-              onClick={() => entrar(USUARIOS_DEMO[0])}
+              onClick={() =>
+                notifications.show({
+                  color: "azulUrbano",
+                  title: "Proximamente",
+                  message: "Se habilita al integrar el Login Federado (Grupo 2).",
+                })
+              }
             >
               Continuar con Google
             </Button>
@@ -137,15 +157,16 @@ export function LoginPage() {
                 Acceso rapido (demo, hasta integrar el Login Federado del Grupo 2)
               </Text>
               <Group grow gap="xs">
-                {USUARIOS_DEMO.map((u) => (
+                {CREDENCIALES_DEMO.map((c) => (
                   <Button
-                    key={u.id}
+                    key={c.usuario}
                     variant="light"
                     color="azulUrbano"
                     size="xs"
-                    onClick={() => entrar(u)}
+                    disabled={cargando}
+                    onClick={() => entrarDemo(c)}
                   >
-                    {ROL_LABEL[u.rol]}
+                    {ROL_LABEL[c.rol]}
                   </Button>
                 ))}
               </Group>

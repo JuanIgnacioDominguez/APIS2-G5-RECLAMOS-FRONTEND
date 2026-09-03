@@ -23,3 +23,14 @@ export const ROL_LABEL: Record<Rol, string> = {
 export function esStaff(rol: Rol): boolean {
   return rol === Rol.OPERADOR || rol === Rol.ADMIN;
 }
+
+/**
+ * Reduce the JWT's `roles` array to the single most privileged role the UI uses
+ * (admin > operador > ciudadano). The backend can send several (admin also has
+ * operador); the frontend routes on the highest one.
+ */
+export function rolPrincipal(roles: string[]): Rol {
+  if (roles.includes(Rol.ADMIN)) return Rol.ADMIN;
+  if (roles.includes(Rol.OPERADOR)) return Rol.OPERADOR;
+  return Rol.CIUDADANO;
+}
