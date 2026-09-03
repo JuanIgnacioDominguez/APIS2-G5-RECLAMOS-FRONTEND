@@ -18,16 +18,12 @@ function renderLayout(ruta = "/reclamos") {
 }
 
 describe("AppLayout", () => {
-  it("muestra el menu del ciudadano y las otras secciones", () => {
+  it("muestra el menu del ciudadano (solo reclamos)", () => {
     renderLayout();
-    for (const label of ["Mis reclamos", "Nuevo reclamo", "Movilidad", "Residuos", "Emergencias"]) {
-      expect(screen.getByRole("link", { name: new RegExp(label, "i") })).toBeInTheDocument();
-    }
-  });
-
-  it("marca el modulo propio como activo", () => {
-    renderLayout();
-    expect(screen.getAllByText("activo").length).toBeGreaterThan(0);
+    expect(screen.getByRole("link", { name: /mis reclamos/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /nuevo reclamo/i })).toBeInTheDocument();
+    // Otros modulos no pertenecen a este sistema.
+    expect(screen.queryByRole("link", { name: /movilidad/i })).not.toBeInTheDocument();
   });
 
   it("renderiza el contenido de la ruta hija y la barra de busqueda", () => {
