@@ -1,0 +1,81 @@
+.loginAside {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(160deg, #142430 0%, #1c3a57 55%, #2563a6 120%);
+  color: #fff;
+}
+
+/* Soft ambient glows that drift very slowly. */
+.loginAside__glow {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(60px);
+  opacity: 0.35;
+}
+.loginAside__glow--a {
+  width: 340px;
+  height: 340px;
+  top: -80px;
+  right: -60px;
+  background: #2563a6;
+  animation: aside-drift 14s ease-in-out infinite;
+}
+.loginAside__glow--b {
+  width: 300px;
+  height: 300px;
+  bottom: 40px;
+  left: -70px;
+  background: #4f8a72;
+  animation: aside-drift 18s ease-in-out infinite reverse;
+}
+
+/* Floating location pins. */
+.loginAside__pin {
+  position: absolute;
+  color: rgba(255, 255, 255, 0.55);
+  animation: aside-float 6s ease-in-out infinite;
+}
+.loginAside__pin--1 {
+  top: 22%;
+  left: 18%;
+  animation-delay: 0s;
+}
+.loginAside__pin--2 {
+  top: 38%;
+  right: 22%;
+  animation-delay: 1.2s;
+  color: rgba(217, 152, 56, 0.75);
+}
+.loginAside__pin--3 {
+  top: 58%;
+  left: 30%;
+  animation-delay: 2.1s;
+  color: rgba(143, 184, 216, 0.8);
+}
+
+@keyframes aside-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-16px);
+  }
+}
+
+@keyframes aside-drift {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(20px, 24px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loginAside__glow,
+  .loginAside__pin {
+    animation: none !important;
+  }
+}
