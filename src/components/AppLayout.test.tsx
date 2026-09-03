@@ -18,23 +18,16 @@ function renderLayout(ruta = "/reclamos") {
 }
 
 describe("AppLayout", () => {
-  it("muestra todas las secciones de CityPass+ en el sidebar", () => {
+  it("muestra el menu del ciudadano y las otras secciones", () => {
     renderLayout();
-    for (const label of [
-      "Inicio",
-      "Movilidad",
-      "Residuos",
-      "Reclamos",
-      "Emergencias",
-      "Analitica Urbana",
-    ]) {
+    for (const label of ["Mis reclamos", "Nuevo reclamo", "Movilidad", "Residuos", "Emergencias"]) {
       expect(screen.getByRole("link", { name: new RegExp(label, "i") })).toBeInTheDocument();
     }
   });
 
-  it("marca Reclamos como el modulo activo", () => {
+  it("marca el modulo propio como activo", () => {
     renderLayout();
-    expect(screen.getByText("activo")).toBeInTheDocument();
+    expect(screen.getAllByText("activo").length).toBeGreaterThan(0);
   });
 
   it("renderiza el contenido de la ruta hija y la barra de busqueda", () => {

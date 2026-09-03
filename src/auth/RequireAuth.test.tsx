@@ -17,6 +17,9 @@ function renderGuard(ruta: string, opts: { usuario?: (typeof USUARIOS_DEMO)[numb
       <Route element={<RequireAuth soloStaff />}>
         <Route path="/backoffice" element={<div>backoffice</div>} />
       </Route>
+      <Route element={<RequireAuth soloAdmin />}>
+        <Route path="/panel" element={<div>panel admin</div>} />
+      </Route>
     </Routes>,
     { route: ruta, usuario: opts.usuario ?? null },
   );
@@ -42,5 +45,16 @@ describe("RequireAuth", () => {
   it("una seccion soloStaff acepta a un operador", () => {
     renderGuard("/backoffice", { usuario: USUARIOS_DEMO[1] }); // operador
     expect(screen.getByText("backoffice")).toBeInTheDocument();
+  });
+
+  it("una seccion soloAdmin rechaza a un operador", () => {
+    renderGuard("/panel", { usuario: USUARIOS_DEMO[1] }); // operador
+    expect(screen.queryByText("panel admin")).not.toBeInTheDocument();
+    expect(screen.getByText("reclamos")).toBeInTheDocument();
+  });
+
+  it("una seccion soloAdmin acepta a un admin", () => {
+    renderGuard("/panel", { usuario: USUARIOS_DEMO[2] }); // admin
+    expect(screen.getByText("panel admin")).toBeInTheDocument();
   });
 });

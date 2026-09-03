@@ -11,6 +11,7 @@ function renderLogin() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/reclamos" element={<div>listado de reclamos</div>} />
+      <Route path="/backoffice" element={<div>bandeja de backoffice</div>} />
     </Routes>,
     { route: "/login" },
   );
@@ -32,9 +33,9 @@ describe("LoginPage", () => {
     expect(screen.getByText("listado de reclamos")).toBeInTheDocument();
   });
 
-  it("entra por acceso rapido como operador", async () => {
+  it("entra por acceso rapido como operador y aterriza en el backoffice", async () => {
     renderLogin();
     await userEvent.click(screen.getByRole("button", { name: "Operador" }));
-    expect(screen.getByText("listado de reclamos")).toBeInTheDocument();
+    expect(screen.getByText("bandeja de backoffice")).toBeInTheDocument();
   });
 });

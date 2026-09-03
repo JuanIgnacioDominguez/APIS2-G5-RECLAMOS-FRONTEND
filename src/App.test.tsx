@@ -32,4 +32,40 @@ describe("App", () => {
     renderWithProviders(<App />, { route: "/residuos", usuario: USUARIOS_DEMO[0] });
     expect(screen.getByRole("heading", { name: "Residuos" })).toBeInTheDocument();
   });
+
+  it("un operador aterriza en la bandeja de backoffice", async () => {
+    vi.spyOn(reclamosApi, "listarReclamos").mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 1,
+      size: 20,
+    });
+    renderWithProviders(<App />, { route: "/", usuario: USUARIOS_DEMO[1] }); // operador
+    expect(
+      await screen.findByRole("heading", { name: /bandeja de reclamos/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("un ciudadano no puede entrar al backoffice", () => {
+    vi.spyOn(reclamosApi, "listarReclamos").mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 1,
+      size: 20,
+    });
+    renderWithProviders(<App />, { route: "/backoffice", usuario: USUARIOS_DEMO[0] }); // ciudadano
+    expect(screen.getByRole("heading", { name: /mis reclamos/i })).toBeInTheDocument();
+  });
+
+  it("un admin accede al panel de metricas", async () => {
+    vi.spyOn(reclamosApi, "estadisticas").mockResolvedValue({
+      total: 0,
+      por_estado: [],
+      por_categoria: [],
+      por_prioridad: [],
+      tiempo_resolucion_horas_promedio: null,
+    });
+    renderWithProviders(<App />, { route: "/panel", usuario: USUARIOS_DEMO[2] }); // admin
+    expect(await screen.findByRole("heading", { name: /panel de metricas/i })).toBeInTheDocument();
+  });
 });

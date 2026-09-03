@@ -6,13 +6,18 @@ import {
   IconChartHistogram,
   IconHelpCircle,
   IconHome,
+  IconInbox,
+  IconList,
   IconMasksTheater,
-  IconMessageReport,
+  IconPlus,
   IconSettings,
   IconShieldExclamation,
   IconTrash,
   IconUser,
 } from "@tabler/icons-react";
+
+import { Rol } from "@/auth/roles";
+
 export interface NavItem {
   label: string;
   to: string;
@@ -21,12 +26,11 @@ export interface NavItem {
   ownerGroup: number | null;
 }
 
-/** Primary services shown in the sidebar. Only Reclamos is implemented here. */
-export const SERVICIOS: NavItem[] = [
+/** Platform sections owned by other groups; shown as placeholders for everyone. */
+export const OTROS_SERVICIOS: NavItem[] = [
   { label: "Inicio", to: "/inicio", icon: IconHome, ownerGroup: 0 },
   { label: "Movilidad", to: "/movilidad", icon: IconBike, ownerGroup: 3 },
   { label: "Residuos", to: "/residuos", icon: IconTrash, ownerGroup: 4 },
-  { label: "Reclamos", to: "/reclamos", icon: IconMessageReport, ownerGroup: null },
   { label: "Emergencias", to: "/emergencias", icon: IconShieldExclamation, ownerGroup: 6 },
   { label: "Espacios Publicos", to: "/espacios", icon: IconBuildingEstate, ownerGroup: 7 },
   { label: "Cultura y Eventos", to: "/cultura", icon: IconMasksTheater, ownerGroup: 7 },
@@ -41,6 +45,32 @@ export const CUENTA: NavItem[] = [
   { label: "Ayuda", to: "/ayuda", icon: IconHelpCircle, ownerGroup: 0 },
 ];
 
+/**
+ * Our module's navigation, which differs by role: a citizen manages their own
+ * claims, an operator works the backoffice inbox, and an admin also gets the
+ * metrics panel.
+ */
+export function navModulo(rol: Rol): NavItem[] {
+  if (rol === Rol.CIUDADANO) {
+    return [
+      { label: "Mis reclamos", to: "/reclamos", icon: IconList, ownerGroup: null },
+      { label: "Nuevo reclamo", to: "/reclamos/nuevo", icon: IconPlus, ownerGroup: null },
+    ];
+  }
+  const items: NavItem[] = [
+    { label: "Bandeja", to: "/backoffice", icon: IconInbox, ownerGroup: null },
+  ];
+  if (rol === Rol.ADMIN) {
+    items.push({ label: "Panel", to: "/panel", icon: IconChartHistogram, ownerGroup: null });
+  }
+  return items;
+}
+
+/** Landing route after login, by role. */
+export function homePorRol(rol: Rol): string {
+  return rol === Rol.CIUDADANO ? "/reclamos" : "/backoffice";
+}
+
 /** Human name of the group that owns a not-yet-integrated section. */
 export const GRUPO_NOMBRE: Record<number, string> = {
   0: "la plataforma CityPass+",
@@ -52,7 +82,7 @@ export const GRUPO_NOMBRE: Record<number, string> = {
   8: "el Grupo 8 (Analitica Urbana e IA)",
 };
 
-/** Look up a nav item by its route, across both groups of links. */
+/** Look up a placeholder section by its route (used by SectionPlaceholder). */
 export function navItemPorRuta(ruta: string): NavItem | undefined {
-  return [...SERVICIOS, ...CUENTA].find((item) => item.to === ruta);
+  return [...OTROS_SERVICIOS, ...CUENTA].find((item) => item.to === ruta);
 }

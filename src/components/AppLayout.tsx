@@ -18,7 +18,7 @@ import { IconBell, IconLogout, IconSearch } from "@tabler/icons-react";
 import { NavLink as RouterNavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 
 import { Logo } from "@/components/Logo";
-import { CUENTA, SERVICIOS, type NavItem } from "@/config/navigation";
+import { CUENTA, OTROS_SERVICIOS, navModulo, type NavItem } from "@/config/navigation";
 import { CitySkyline } from "@/components/CitySkyline";
 import { useAuth } from "@/auth/AuthContext";
 import { ROL_LABEL } from "@/auth/roles";
@@ -127,10 +127,21 @@ export function AppLayout() {
 
         <AppShell.Section grow component={ScrollArea} px="sm">
           <Text size="xs" c="gray.6" fw={600} tt="uppercase" mb={6} px="xs">
-            Servicios
+            Reclamos
           </Text>
           <Stack gap={4}>
-            {SERVICIOS.map((item) => (
+            {(usuario ? navModulo(usuario.rol) : []).map((item) => (
+              <SidebarLink key={item.to} item={item} active={isActive(item.to)} />
+            ))}
+          </Stack>
+
+          <Divider my="md" color="azulNoche.7" />
+
+          <Text size="xs" c="gray.6" fw={600} tt="uppercase" mb={6} px="xs">
+            Otros servicios
+          </Text>
+          <Stack gap={4}>
+            {OTROS_SERVICIOS.map((item) => (
               <SidebarLink key={item.to} item={item} active={isActive(item.to)} />
             ))}
           </Stack>
