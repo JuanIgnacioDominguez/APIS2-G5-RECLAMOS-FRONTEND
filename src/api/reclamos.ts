@@ -8,10 +8,12 @@ import type {
   FiltroReclamos,
   HistorialOut,
   Page,
+  ReclamoBandeja,
   ReclamoCrear,
   ReclamoDetalle,
   ReclamoOut,
   ReclamoResumen,
+  ReclasificacionPedido,
   SugerenciaClasificacion,
 } from "./types";
 
@@ -29,6 +31,16 @@ export function crearReclamo(datos: ReclamoCrear): Promise<ReclamoOut> {
 
 export function cambiarEstado(id: string, cambio: CambioEstado): Promise<ReclamoOut> {
   return request<ReclamoOut>(`/reclamos/${id}/estado`, { method: "PATCH", body: cambio });
+}
+
+/** Backoffice inbox: incoming claims to triage (operador/admin). */
+export function bandeja(page = 1, size = 20): Promise<Page<ReclamoBandeja>> {
+  return request<Page<ReclamoBandeja>>("/reclamos/bandeja", { query: { page, size } });
+}
+
+/** Correct a claim's category/priority without changing its state (operador/admin). */
+export function reclasificar(id: string, cambio: ReclasificacionPedido): Promise<ReclamoOut> {
+  return request<ReclamoOut>(`/reclamos/${id}/clasificacion`, { method: "PATCH", body: cambio });
 }
 
 export function sugerirClasificacion(

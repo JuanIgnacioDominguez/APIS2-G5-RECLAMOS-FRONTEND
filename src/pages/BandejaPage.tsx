@@ -1,60 +1,41 @@
-import { useMemo, useState } from "react";
 import {
   Alert,
+  Badge,
   Card,
   Center,
   Group,
   Loader,
-  SegmentedControl,
   Stack,
   Table,
   Text,
   Title,
 } from "@mantine/core";
-import { IconAlertTriangle, IconUsers } from "@tabler/icons-react";
+import { IconAlertTriangle, IconSparkles, IconUsers } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
 
-import { listarReclamos } from "@/api/reclamos";
-import { EstadoReclamo } from "@/domain/enums";
+import { bandeja } from "@/api/reclamos";
+import { OrigenClasificacion } from "@/domain/enums";
+import { ORIGEN_LABEL } from "@/domain/labels";
 import { haceCuanto, idCorto } from "@/lib/format";
 import { useAsync } from "@/hooks/useAsync";
 import { CategoriaBadge, EstadoBadge, PrioridadBadge } from "@/features/reclamos/Badges";
 
-const ENTRANTES = new Set<EstadoReclamo>([EstadoReclamo.RECIBIDO, EstadoReclamo.EN_REVISION]);
-
 /**
- * Backoffice inbox for operators and admins (US-13). Lists incoming claims to
- * triage, newest first, with category, priority and support count, and opens
- * the detail where the state can be managed.
+ * Backoffice inbox for operators and admins (US-13). Reads the dedicated
+ * `/reclamos/bandeja` endpoint: incoming claims (recibido / en revision) newest
+ * first, with the AI-suggested category, priority and support count.
  */
 export function BandejaPage() {
   const navigate = useNavigate();
-  const [filtro, setFiltro] = useState<"entrantes" | "todos">("entrantes");
-
-  const { data, loading, error } = useAsync(() => listarReclamos({ orden: "recientes" }), []);
-
-  const filas = useMemo(() => {
-    const items = data?.items ?? [];
-    const visibles = filtro === "entrantes" ? items.filter((r) => ENTRANTES.has(r.estado)) : items;
-    return [...visibles].sort((a, b) => b.created_at.localeCompare(a.created_at));
-  }, [data, filtro]);
+  const { data, loading, error } = useAsync(() => bandeja(), []);
+  const filas = data?.items ?? [];
 
   return (
     <Stack gap="lg">
-      <Group justify="space-between" align="flex-end">
-        <div>
-          <Title order={2}>Bandeja de reclamos</Title>
-          <Text c="dimmed">Gestion de reclamos entrantes. Priorizacion y seguimiento.</Text>
-        </div>
-        <SegmentedControl
-          value={filtro}
-          onChange={(v) => setFiltro(v as "entrantes" | "todos")}
-          data={[
-            { label: "Entrantes", value: "entrantes" },
-            { label: "Todos", value: "todos" },
-          ]}
-        />
-      </Group>
+      <div>
+        <Title order={2}>Bandeja de reclamos</Title>
+        <Text c="dimmed">Reclamos entrantes pendientes de clasificar, mas recientes primero.</Text>
+      </div>
 
       {loading && (
         <Center py="xl">
@@ -98,11 +79,24 @@ export function BandejaPage() {
                         {r.titulo}
                       </Text>
                       <Text size="xs" c="dimmed" ff="monospace">
-                        {idCorto(r.id)} · {r.barrio ?? "Sin barrio"}
+                        {idCorto(r.id)}
                       </Text>
                     </Table.Td>
                     <Table.Td>
-                      <CategoriaBadge categoria={r.categoria} />
+                      <Group gap={6} wrap="nowrap">
+                        <CategoriaBadge categoria={r.categoria} />
+                        {r.origen_clasificacion === OrigenClasificacion.MODELO && (
+                          <Badge
+                            size="xs"
+                            variant="light"
+                            color="azulUrbano"
+                            leftSection={<IconSparkles size={11} />}
+                            radius="sm"
+                          >
+                            {ORIGEN_LABEL[OrigenClasificacion.MODELO]}
+                          </Badge>
+                        )}
+                      </Group>
                     </Table.Td>
                     <Table.Td>
                       <PrioridadBadge prioridad={r.prioridad} />
@@ -128,7 +122,7 @@ export function BandejaPage() {
           </Table.ScrollContainer>
           {filas.length === 0 && (
             <Text c="dimmed" ta="center" py="xl">
-              No hay reclamos para mostrar.
+              No hay reclamos entrantes.
             </Text>
           )}
         </Card>

@@ -101,6 +101,22 @@ export interface Page<T> {
   size: number;
 }
 
+export interface ReclamoBandeja {
+  id: string;
+  titulo: string;
+  categoria: CategoriaReclamo;
+  origen_clasificacion: OrigenClasificacion;
+  prioridad: PrioridadReclamo;
+  estado: EstadoReclamo;
+  adhesiones_count: number;
+  created_at: string;
+}
+
+export interface ReclasificacionPedido {
+  categoria?: CategoriaReclamo | null;
+  prioridad?: PrioridadReclamo | null;
+}
+
 export interface ConteoPorClave {
   clave: string;
   cantidad: number;
