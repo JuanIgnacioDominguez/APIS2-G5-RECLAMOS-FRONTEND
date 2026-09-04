@@ -29,12 +29,7 @@ describe("App", () => {
   });
 
   it("un operador aterriza en la bandeja de backoffice", async () => {
-    vi.spyOn(reclamosApi, "listarReclamos").mockResolvedValue({
-      items: [],
-      total: 0,
-      page: 1,
-      size: 20,
-    });
+    vi.spyOn(reclamosApi, "bandeja").mockResolvedValue({ items: [], total: 0, page: 1, size: 20 });
     renderWithProviders(<App />, { route: "/", usuario: OPERADOR }); // operador
     expect(
       await screen.findByRole("heading", { name: /bandeja de reclamos/i }),

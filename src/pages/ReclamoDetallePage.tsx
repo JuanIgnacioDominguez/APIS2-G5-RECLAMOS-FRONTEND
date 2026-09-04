@@ -26,6 +26,7 @@ import { useAuth } from "@/auth/AuthContext";
 import { esStaff } from "@/auth/roles";
 import { CategoriaBadge, EstadoBadge, PrioridadBadge } from "@/features/reclamos/Badges";
 import { GestionarEstado } from "@/features/reclamos/GestionarEstado";
+import { ClasificarReclamo } from "@/features/reclamos/ClasificarReclamo";
 
 function DatoFila({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   return (
@@ -157,11 +158,19 @@ export function ReclamoDetallePage() {
         <Grid.Col span={{ base: 12, md: 5 }}>
           <Stack gap="lg">
             {staff && (
-              <GestionarEstado
-                reclamoId={reclamo.id}
-                estadoActual={reclamo.estado}
-                onActualizado={reload}
-              />
+              <>
+                <GestionarEstado
+                  reclamoId={reclamo.id}
+                  estadoActual={reclamo.estado}
+                  onActualizado={reload}
+                />
+                <ClasificarReclamo
+                  reclamoId={reclamo.id}
+                  categoriaActual={reclamo.categoria}
+                  prioridadActual={reclamo.prioridad}
+                  onActualizado={reload}
+                />
+              </>
             )}
 
             <Card withBorder radius="md" padding="lg">

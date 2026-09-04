@@ -3,12 +3,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as client from "./client";
 import {
   adherir,
+  bandeja,
   cambiarEstado,
   comentar,
   crearReclamo,
   historial,
   listarReclamos,
   obtenerReclamo,
+  reclasificar,
   sugerirClasificacion,
 } from "./reclamos";
 
@@ -43,6 +45,19 @@ describe("endpoints de reclamos", () => {
     expect(requestSpy).toHaveBeenCalledWith("/reclamos/1/estado", {
       method: "PATCH",
       body: { estado: "ASIGNADO" },
+    });
+  });
+
+  it("bandeja hace GET sobre /reclamos/bandeja con paginado", () => {
+    bandeja(2, 50);
+    expect(requestSpy).toHaveBeenCalledWith("/reclamos/bandeja", { query: { page: 2, size: 50 } });
+  });
+
+  it("reclasificar hace PATCH sobre /clasificacion", () => {
+    reclasificar("1", { categoria: "BACHES" } as never);
+    expect(requestSpy).toHaveBeenCalledWith("/reclamos/1/clasificacion", {
+      method: "PATCH",
+      body: { categoria: "BACHES" },
     });
   });
 

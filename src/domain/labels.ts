@@ -6,7 +6,7 @@
  * theme palette (see `src/theme/theme.ts`).
  */
 
-import { CategoriaReclamo, EstadoReclamo, PrioridadReclamo } from "./enums";
+import { CategoriaReclamo, EstadoReclamo, OrigenClasificacion, PrioridadReclamo } from "./enums";
 
 export const ESTADO_LABEL: Record<EstadoReclamo, string> = {
   [EstadoReclamo.RECIBIDO]: "Recibido",
@@ -54,6 +54,13 @@ export const CATEGORIA_LABEL: Record<CategoriaReclamo, string> = {
   [CategoriaReclamo.ESPACIOS_PUBLICOS]: "Espacios publicos",
   [CategoriaReclamo.SEGURIDAD]: "Seguridad",
   [CategoriaReclamo.OTROS]: "Otros",
+};
+
+/** Who decided the claim's category/priority. */
+export const ORIGEN_LABEL: Record<OrigenClasificacion, string> = {
+  [OrigenClasificacion.CIUDADANO]: "Ciudadano",
+  [OrigenClasificacion.MODELO]: "IA",
+  [OrigenClasificacion.OPERADOR]: "Operador",
 };
 
 /** Options ready for a Mantine `Select` (value + label). */
