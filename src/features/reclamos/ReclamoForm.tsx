@@ -1,5 +1,15 @@
 import { useState } from "react";
-import { Alert, Button, Group, Select, Stack, Text, Textarea, TextInput } from "@mantine/core";
+import {
+  Alert,
+  Button,
+  Grid,
+  Group,
+  Select,
+  Stack,
+  Text,
+  Textarea,
+  TextInput,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { IconCurrentLocation, IconSparkles } from "@tabler/icons-react";
 
@@ -78,96 +88,103 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <Stack gap="md">
-        <TextInput
-          label="Titulo"
-          placeholder="Luminaria apagada en la plaza"
-          withAsterisk
-          {...form.getInputProps("titulo")}
-        />
-        <Textarea
-          label="Descripcion"
-          placeholder="Contanos que pasa, hace cuanto y donde."
-          minRows={4}
-          autosize
-          withAsterisk
-          {...form.getInputProps("descripcion")}
-        />
-        {sugerencia && (
-          <Alert
-            color="azulUrbano"
-            variant="light"
-            icon={<IconSparkles size={16} />}
-            title="Sugerencia automatica"
-          >
-            <Group justify="space-between" wrap="wrap" gap="xs">
-              <span>
-                Categoria <b>{CATEGORIA_LABEL[sugerencia.categoria]}</b>, prioridad{" "}
-                <b>{PRIORIDAD_LABEL[sugerencia.prioridad]}</b> (
-                {formatConfianza(sugerencia.confianza)} de confianza).
-              </span>
-              <Button size="xs" variant="light" color="azulUrbano" onClick={aplicarSugerencia}>
-                Aplicar
+      <Grid gutter="xl">
+        <Grid.Col span={{ base: 12, md: 7 }}>
+          <Stack gap="md">
+            <TextInput
+              label="Titulo"
+              placeholder="Luminaria apagada en la plaza"
+              withAsterisk
+              {...form.getInputProps("titulo")}
+            />
+            <Textarea
+              label="Descripcion"
+              placeholder="Contanos que pasa, hace cuanto y donde."
+              minRows={4}
+              autosize
+              withAsterisk
+              {...form.getInputProps("descripcion")}
+            />
+            {sugerencia && (
+              <Alert
+                color="azulUrbano"
+                variant="light"
+                icon={<IconSparkles size={16} />}
+                title="Sugerencia automatica"
+              >
+                <Group justify="space-between" wrap="wrap" gap="xs">
+                  <span>
+                    Categoria <b>{CATEGORIA_LABEL[sugerencia.categoria]}</b>, prioridad{" "}
+                    <b>{PRIORIDAD_LABEL[sugerencia.prioridad]}</b> (
+                    {formatConfianza(sugerencia.confianza)} de confianza).
+                  </span>
+                  <Button size="xs" variant="light" color="azulUrbano" onClick={aplicarSugerencia}>
+                    Aplicar
+                  </Button>
+                </Group>
+              </Alert>
+            )}
+            <Group grow>
+              <Select
+                label="Categoria"
+                placeholder="La sugiere el clasificador"
+                clearable
+                data={opcionesCategoria()}
+                {...form.getInputProps("categoria")}
+              />
+              <Select
+                label="Prioridad"
+                placeholder="La sugiere el clasificador"
+                clearable
+                data={opcionesPrioridad()}
+                {...form.getInputProps("prioridad")}
+              />
+            </Group>
+            <Group grow>
+              <TextInput label="Direccion" {...form.getInputProps("direccion")} />
+              <TextInput label="Barrio" {...form.getInputProps("barrio")} />
+            </Group>
+          </Stack>
+        </Grid.Col>
+
+        <Grid.Col span={{ base: 12, md: 5 }}>
+          <Stack gap="xs">
+            <Group justify="space-between">
+              <Text fw={500} size="sm">
+                Ubicacion en el mapa
+              </Text>
+              <Button
+                size="xs"
+                variant="light"
+                color="azulUrbano"
+                leftSection={<IconCurrentLocation size={14} />}
+                loading={ubicando}
+                onClick={usarMiUbicacion}
+              >
+                Usar mi ubicacion
               </Button>
             </Group>
-          </Alert>
-        )}
-
-        <Group grow>
-          <Select
-            label="Categoria"
-            placeholder="La sugiere el clasificador"
-            clearable
-            data={opcionesCategoria()}
-            {...form.getInputProps("categoria")}
-          />
-          <Select
-            label="Prioridad"
-            placeholder="La sugiere el clasificador"
-            clearable
-            data={opcionesPrioridad()}
-            {...form.getInputProps("prioridad")}
-          />
-        </Group>
-        <Group grow>
-          <TextInput label="Direccion" {...form.getInputProps("direccion")} />
-          <TextInput label="Barrio" {...form.getInputProps("barrio")} />
-        </Group>
-
-        <Stack gap="xs">
-          <Group justify="space-between">
-            <Text fw={500} size="sm">
-              Ubicacion en el mapa
+            <MapaSelector
+              lat={form.values.latitud}
+              lng={form.values.longitud}
+              onPick={fijarUbicacion}
+            />
+            <Text size="xs" c="dimmed">
+              {form.values.latitud !== null && form.values.longitud !== null
+                ? `Lat ${form.values.latitud.toFixed(5)}, Lng ${form.values.longitud.toFixed(5)}`
+                : "Toca el mapa o usa tu ubicacion para marcar el punto."}
             </Text>
-            <Button
-              size="xs"
-              variant="light"
-              color="azulUrbano"
-              leftSection={<IconCurrentLocation size={14} />}
-              loading={ubicando}
-              onClick={usarMiUbicacion}
-            >
-              Usar mi ubicacion
+          </Stack>
+        </Grid.Col>
+
+        <Grid.Col span={12}>
+          <Group justify="flex-end">
+            <Button type="submit" loading={loading} color="azulUrbano" size="md">
+              Enviar reclamo
             </Button>
           </Group>
-          <MapaSelector
-            lat={form.values.latitud}
-            lng={form.values.longitud}
-            onPick={fijarUbicacion}
-          />
-          <Text size="xs" c="dimmed">
-            {form.values.latitud !== null && form.values.longitud !== null
-              ? `Lat ${form.values.latitud.toFixed(5)}, Lng ${form.values.longitud.toFixed(5)}`
-              : "Toca el mapa o usa tu ubicacion para marcar el punto."}
-          </Text>
-        </Stack>
-
-        <Group justify="flex-end">
-          <Button type="submit" loading={loading} color="azulUrbano">
-            Enviar reclamo
-          </Button>
-        </Group>
-      </Stack>
+        </Grid.Col>
+      </Grid>
     </form>
   );
 }

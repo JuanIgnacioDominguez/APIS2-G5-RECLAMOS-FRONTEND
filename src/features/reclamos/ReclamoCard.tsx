@@ -14,8 +14,10 @@ export function ReclamoCard({ reclamo }: { reclamo: ReclamoResumen }) {
       withBorder
       radius="md"
       padding="md"
+      className="card-interactive"
       onClick={() => navigate(`/reclamos/${reclamo.id}`)}
       style={{ cursor: "pointer" }}
+      h="100%"
     >
       <Stack gap="xs">
         <Group justify="space-between" wrap="nowrap">

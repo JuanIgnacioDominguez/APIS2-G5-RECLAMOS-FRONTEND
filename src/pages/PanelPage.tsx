@@ -1,16 +1,7 @@
-import {
-  Alert,
-  Card,
-  Center,
-  Grid,
-  Group,
-  Loader,
-  Progress,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
-import { IconAlertTriangle, IconClockHour4, IconInbox } from "@tabler/icons-react";
+import { Card, Center, Grid, Group, Loader, Progress, Stack, Text, Title } from "@mantine/core";
+import { IconClockHour4, IconInbox } from "@tabler/icons-react";
+
+import { EstadoError } from "@/components/EstadoError";
 
 import { estadisticas } from "@/api/reclamos";
 import type { ConteoPorClave } from "@/api/types";
@@ -46,7 +37,7 @@ function Distribucion({ titulo, datos }: { titulo: string; datos: ConteoPorClave
  * (the same endpoint that serves Group 8's Urban Analytics).
  */
 export function PanelPage() {
-  const { data, loading, error } = useAsync(() => estadisticas(), []);
+  const { data, loading, error, reload } = useAsync(() => estadisticas(), []);
 
   if (loading) {
     return (
@@ -57,15 +48,7 @@ export function PanelPage() {
   }
 
   if (error || !data) {
-    return (
-      <Alert
-        color="rojoEmergencia"
-        icon={<IconAlertTriangle size={16} />}
-        title="No se pudo cargar"
-      >
-        {error ?? "Sin datos"}
-      </Alert>
-    );
+    return <EstadoError mensaje={error ?? "Sin datos"} onReintentar={reload} />;
   }
 
   const horas = data.tiempo_resolucion_horas_promedio;

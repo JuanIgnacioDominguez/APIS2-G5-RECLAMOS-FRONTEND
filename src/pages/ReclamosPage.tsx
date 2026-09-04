@@ -1,6 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
 import {
-  Alert,
   Badge,
   Button,
   Card,
@@ -17,20 +16,14 @@ import {
   ThemeIcon,
   Title,
 } from "@mantine/core";
-import {
-  IconAlertTriangle,
-  IconChecks,
-  IconInbox,
-  IconPlus,
-  IconProgress,
-  IconSearch,
-} from "@tabler/icons-react";
+import { IconChecks, IconInbox, IconPlus, IconProgress, IconSearch } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
 
 import { listarReclamos } from "@/api/reclamos";
 import type { CategoriaReclamo } from "@/domain/enums";
 import { opcionesCategoria } from "@/domain/labels";
 import { useAsync } from "@/hooks/useAsync";
+import { EstadoError } from "@/components/EstadoError";
 import { ReclamoCard } from "@/features/reclamos/ReclamoCard";
 import { TABS, contarPorTab, filtrarReclamos, type TabReclamos } from "@/features/reclamos/filters";
 
@@ -70,7 +63,7 @@ export function ReclamosPage() {
   const [texto, setTexto] = useState("");
   const [categoria, setCategoria] = useState<CategoriaReclamo | null>(null);
 
-  const { data, loading, error } = useAsync(() => listarReclamos(), []);
+  const { data, loading, error, reload } = useAsync(() => listarReclamos(), []);
   const items = useMemo(() => data?.items ?? [], [data]);
   const counts = useMemo(() => contarPorTab(items), [items]);
   const visibles = useMemo(
@@ -171,15 +164,7 @@ export function ReclamosPage() {
             </Center>
           )}
 
-          {error && (
-            <Alert
-              color="rojoEmergencia"
-              icon={<IconAlertTriangle size={16} />}
-              title="No se pudo cargar"
-            >
-              {error}
-            </Alert>
-          )}
+          {error && <EstadoError mensaje={error} onReintentar={reload} />}
 
           {!loading && !error && visibles.length === 0 && (
             <Text c="dimmed" ta="center" py="xl">
