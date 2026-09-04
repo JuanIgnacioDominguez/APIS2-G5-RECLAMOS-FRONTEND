@@ -1,5 +1,10 @@
 /* Smooth, subtle interactions shared across the app. */
 
+:root {
+  --app-ground: var(--mantine-color-gray-0);
+}
+
+/* Cards that are whole clickable surfaces: a restrained lift, brand-tinted. */
 .card-interactive {
   transition:
     transform 160ms ease,
@@ -8,7 +13,7 @@
 }
 .card-interactive:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(20, 36, 48, 0.1);
+  box-shadow: var(--mantine-shadow-md);
   border-color: var(--mantine-color-azulUrbano-3);
 }
 .card-interactive:active {
@@ -18,14 +23,65 @@
 /* Clickable table rows get a clear affordance on hover. */
 .row-interactive {
   transition: background-color 120ms ease;
+  cursor: pointer;
+}
+.row-interactive:hover > td {
+  background-color: var(--mantine-color-azulUrbano-0);
+}
+
+/*
+ * Tactile press on every button and action icon: a 1px physical push. Mantine
+ * ships the hover color already; this adds the missing "down" feel site-wide.
+ */
+.mantine-Button-root,
+.mantine-ActionIcon-root {
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease,
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+.mantine-Button-root:active:not([data-disabled]):not(:disabled),
+.mantine-ActionIcon-root:active:not([data-disabled]):not(:disabled) {
+  transform: translateY(1px);
+}
+
+/*
+ * Sidebar nav links live on a dark navy background, so Mantine's default light
+ * hover reads as a jarring white flash. Use a subtle translucent-white overlay
+ * instead, and never override the active (filled) item's brand background.
+ */
+.sidebar-link {
+  transition: background-color 150ms ease;
+}
+.sidebar-link:not([data-active]):hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+.sidebar-link:not([data-active]):hover :where(.mantine-NavLink-label) {
+  color: var(--mantine-color-white);
+}
+
+/* Leaflet popups picked up to match the app's card language. */
+.leaflet-popup-content-wrapper {
+  border-radius: var(--mantine-radius-md);
+  box-shadow: var(--mantine-shadow-md);
+}
+.leaflet-popup-content {
+  font-family: var(--mantine-font-family);
+  font-size: var(--mantine-font-size-sm);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .card-interactive,
-  .row-interactive {
+  .row-interactive,
+  .sidebar-link,
+  .mantine-Button-root,
+  .mantine-ActionIcon-root {
     transition: none;
   }
-  .card-interactive:hover {
+  .card-interactive:hover,
+  .mantine-Button-root:active,
+  .mantine-ActionIcon-root:active {
     transform: none;
   }
 }

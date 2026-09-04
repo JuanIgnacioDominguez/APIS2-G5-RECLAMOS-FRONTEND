@@ -1,13 +1,23 @@
 import { useMemo, useState } from "react";
-import { Card, Center, Group, Loader, Select, Stack, Text, Title } from "@mantine/core";
+import { Badge, Card, Center, Group, Loader, Select, Stack, Text } from "@mantine/core";
+import { IconMap2 } from "@tabler/icons-react";
 
 import { listarReclamos } from "@/api/reclamos";
-import type { CategoriaReclamo, EstadoReclamo } from "@/domain/enums";
-import { opcionesCategoria, opcionesEstado } from "@/domain/labels";
+import { EstadoReclamo, type CategoriaReclamo } from "@/domain/enums";
+import { ESTADO_COLOR, ESTADO_LABEL, opcionesCategoria, opcionesEstado } from "@/domain/labels";
 import { useAsync } from "@/hooks/useAsync";
 import { EstadoError } from "@/components/EstadoError";
+import { PageHeader } from "@/components/PageHeader";
 import { MapaReclamos } from "@/features/mapa/MapaReclamos";
 import { reclamosUbicados } from "@/features/mapa/coords";
+
+/** States worth surfacing in the map legend, in lifecycle order. */
+const ESTADOS_LEYENDA: EstadoReclamo[] = [
+  EstadoReclamo.RECIBIDO,
+  EstadoReclamo.EN_PROCESO,
+  EstadoReclamo.RESUELTO,
+  EstadoReclamo.RECHAZADO,
+];
 
 /**
  * Public map of geolocated claims (US-11), filterable by category and state.
@@ -30,37 +40,42 @@ export function MapaPublicoPage() {
 
   return (
     <Stack gap="lg">
-      <div>
-        <Title order={2}>Mapa de reclamos</Title>
-        <Text c="dimmed">Reclamos publicos reportados en la ciudad.</Text>
-      </div>
+      <PageHeader
+        icono={IconMap2}
+        titulo="Mapa de reclamos"
+        descripcion="Reclamos publicos reportados en la ciudad, sin datos personales."
+      />
 
-      <Group>
-        <Select
-          w={200}
-          placeholder="Todas las categorias"
-          clearable
-          data={opcionesCategoria()}
-          value={categoria}
-          onChange={(v) => setCategoria(v as CategoriaReclamo | null)}
-          aria-label="Filtrar por categoria"
-        />
-        <Select
-          w={200}
-          placeholder="Todos los estados"
-          clearable
-          data={opcionesEstado()}
-          value={estado}
-          onChange={(v) => setEstado(v as EstadoReclamo | null)}
-          aria-label="Filtrar por estado"
-        />
-        <Text size="sm" c="dimmed">
-          {puntos.length} en el mapa
-        </Text>
-      </Group>
+      <Card withBorder radius="md" padding="md">
+        <Group justify="space-between" align="center" wrap="wrap" gap="md">
+          <Group gap="sm" wrap="wrap">
+            <Select
+              w={200}
+              placeholder="Todas las categorias"
+              clearable
+              data={opcionesCategoria()}
+              value={categoria}
+              onChange={(v) => setCategoria(v as CategoriaReclamo | null)}
+              aria-label="Filtrar por categoria"
+            />
+            <Select
+              w={200}
+              placeholder="Todos los estados"
+              clearable
+              data={opcionesEstado()}
+              value={estado}
+              onChange={(v) => setEstado(v as EstadoReclamo | null)}
+              aria-label="Filtrar por estado"
+            />
+          </Group>
+          <Badge size="lg" variant="light" color="azulUrbano" radius="sm">
+            {puntos.length} en el mapa
+          </Badge>
+        </Group>
+      </Card>
 
       {loading && (
-        <Center py="xl">
+        <Center py={64}>
           <Loader color="azulUrbano" />
         </Center>
       )}
@@ -70,6 +85,23 @@ export function MapaPublicoPage() {
       {!loading && !error && (
         <Card withBorder radius="md" padding="xs">
           <MapaReclamos reclamos={puntos} />
+          <Group gap="lg" px="sm" py="xs" mt={4} wrap="wrap">
+            {ESTADOS_LEYENDA.map((e) => (
+              <Group key={e} gap={6} wrap="nowrap">
+                <span
+                  style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: "50%",
+                    backgroundColor: `var(--mantine-color-${ESTADO_COLOR[e]}-6)`,
+                  }}
+                />
+                <Text size="xs" c="dimmed">
+                  {ESTADO_LABEL[e]}
+                </Text>
+              </Group>
+            ))}
+          </Group>
         </Card>
       )}
     </Stack>

@@ -1,5 +1,5 @@
-import { Badge, Card, Center, Group, Loader, Stack, Table, Text, Title } from "@mantine/core";
-import { IconSparkles, IconUsers } from "@tabler/icons-react";
+import { Badge, Card, Center, Group, Loader, Stack, Table, Text } from "@mantine/core";
+import { IconInbox, IconSparkles, IconUsers } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
 
 import { bandeja } from "@/api/reclamos";
@@ -8,6 +8,8 @@ import { ORIGEN_LABEL } from "@/domain/labels";
 import { haceCuanto, idCorto } from "@/lib/format";
 import { useAsync } from "@/hooks/useAsync";
 import { EstadoError } from "@/components/EstadoError";
+import { EstadoVacio } from "@/components/EstadoVacio";
+import { PageHeader } from "@/components/PageHeader";
 import { CategoriaBadge, EstadoBadge, PrioridadBadge } from "@/features/reclamos/Badges";
 
 /**
@@ -22,24 +24,43 @@ export function BandejaPage() {
 
   return (
     <Stack gap="lg">
-      <div>
-        <Title order={2}>Bandeja de reclamos</Title>
-        <Text c="dimmed">Reclamos entrantes pendientes de clasificar, mas recientes primero.</Text>
-      </div>
+      <PageHeader
+        icono={IconInbox}
+        titulo="Bandeja de reclamos"
+        descripcion="Reclamos entrantes pendientes de clasificar, mas recientes primero."
+        accion={
+          !loading &&
+          !error && (
+            <Badge size="lg" variant="light" color="azulUrbano" radius="sm">
+              {filas.length} {filas.length === 1 ? "reclamo" : "reclamos"}
+            </Badge>
+          )
+        }
+      />
 
       {loading && (
-        <Center py="xl">
+        <Center py={64}>
           <Loader color="azulUrbano" />
         </Center>
       )}
 
       {error && <EstadoError mensaje={error} onReintentar={reload} />}
 
-      {!loading && !error && (
+      {!loading && !error && filas.length === 0 && (
+        <Card withBorder radius="md" padding="xl">
+          <EstadoVacio
+            icono={IconInbox}
+            titulo="Bandeja al dia"
+            mensaje="No hay reclamos entrantes pendientes de clasificar en este momento."
+          />
+        </Card>
+      )}
+
+      {!loading && !error && filas.length > 0 && (
         <Card withBorder radius="md" padding={0}>
           <Table.ScrollContainer minWidth={720}>
-            <Table highlightOnHover verticalSpacing="sm">
-              <Table.Thead>
+            <Table highlightOnHover verticalSpacing="md">
+              <Table.Thead bg="gray.0">
                 <Table.Tr>
                   <Table.Th>Reclamo</Table.Th>
                   <Table.Th>Categoria</Table.Th>
@@ -53,8 +74,8 @@ export function BandejaPage() {
                 {filas.map((r) => (
                   <Table.Tr
                     key={r.id}
+                    className="row-interactive"
                     onClick={() => navigate(`/reclamos/${r.id}`)}
-                    style={{ cursor: "pointer" }}
                   >
                     <Table.Td>
                       <Text fw={600} lineClamp={1}>
@@ -102,11 +123,6 @@ export function BandejaPage() {
               </Table.Tbody>
             </Table>
           </Table.ScrollContainer>
-          {filas.length === 0 && (
-            <Text c="dimmed" ta="center" py="xl">
-              No hay reclamos entrantes.
-            </Text>
-          )}
         </Card>
       )}
     </Stack>

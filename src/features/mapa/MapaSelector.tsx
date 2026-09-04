@@ -11,6 +11,11 @@ function ClickHandler({ onPick }: { onPick: (lat: number, lng: number) => void }
 
 function Recenter({ lat, lng }: { lat: number | null; lng: number | null }) {
   const map = useMap();
+  // Recompute the size once mounted so no tiles stay unloaded (see MapaReclamos).
+  useEffect(() => {
+    const t = setTimeout(() => map.invalidateSize(), 150);
+    return () => clearTimeout(t);
+  }, [map]);
   useEffect(() => {
     if (lat !== null && lng !== null) map.setView([lat, lng], map.getZoom());
   }, [lat, lng, map]);
