@@ -1,16 +1,5 @@
-import {
-  Alert,
-  Badge,
-  Card,
-  Center,
-  Group,
-  Loader,
-  Stack,
-  Table,
-  Text,
-  Title,
-} from "@mantine/core";
-import { IconAlertTriangle, IconSparkles, IconUsers } from "@tabler/icons-react";
+import { Badge, Card, Center, Group, Loader, Stack, Table, Text, Title } from "@mantine/core";
+import { IconSparkles, IconUsers } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
 
 import { bandeja } from "@/api/reclamos";
@@ -18,6 +7,7 @@ import { OrigenClasificacion } from "@/domain/enums";
 import { ORIGEN_LABEL } from "@/domain/labels";
 import { haceCuanto, idCorto } from "@/lib/format";
 import { useAsync } from "@/hooks/useAsync";
+import { EstadoError } from "@/components/EstadoError";
 import { CategoriaBadge, EstadoBadge, PrioridadBadge } from "@/features/reclamos/Badges";
 
 /**
@@ -27,7 +17,7 @@ import { CategoriaBadge, EstadoBadge, PrioridadBadge } from "@/features/reclamos
  */
 export function BandejaPage() {
   const navigate = useNavigate();
-  const { data, loading, error } = useAsync(() => bandeja(), []);
+  const { data, loading, error, reload } = useAsync(() => bandeja(), []);
   const filas = data?.items ?? [];
 
   return (
@@ -43,15 +33,7 @@ export function BandejaPage() {
         </Center>
       )}
 
-      {error && (
-        <Alert
-          color="rojoEmergencia"
-          icon={<IconAlertTriangle size={16} />}
-          title="No se pudo cargar"
-        >
-          {error}
-        </Alert>
-      )}
+      {error && <EstadoError mensaje={error} onReintentar={reload} />}
 
       {!loading && !error && (
         <Card withBorder radius="md" padding={0}>

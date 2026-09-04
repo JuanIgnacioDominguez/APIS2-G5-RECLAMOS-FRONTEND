@@ -1,0 +1,31 @@
+/* Smooth, subtle interactions shared across the app. */
+
+.card-interactive {
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
+}
+.card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(20, 36, 48, 0.1);
+  border-color: var(--mantine-color-azulUrbano-3);
+}
+.card-interactive:active {
+  transform: translateY(0);
+}
+
+/* Clickable table rows get a clear affordance on hover. */
+.row-interactive {
+  transition: background-color 120ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-interactive,
+  .row-interactive {
+    transition: none;
+  }
+  .card-interactive:hover {
+    transform: none;
+  }
+}

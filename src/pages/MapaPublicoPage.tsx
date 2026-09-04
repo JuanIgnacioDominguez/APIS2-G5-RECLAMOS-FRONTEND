@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
-import { Alert, Card, Center, Group, Loader, Select, Stack, Text, Title } from "@mantine/core";
-import { IconAlertTriangle } from "@tabler/icons-react";
+import { Card, Center, Group, Loader, Select, Stack, Text, Title } from "@mantine/core";
 
 import { listarReclamos } from "@/api/reclamos";
 import type { CategoriaReclamo, EstadoReclamo } from "@/domain/enums";
 import { opcionesCategoria, opcionesEstado } from "@/domain/labels";
 import { useAsync } from "@/hooks/useAsync";
+import { EstadoError } from "@/components/EstadoError";
 import { MapaReclamos } from "@/features/mapa/MapaReclamos";
 import { reclamosUbicados } from "@/features/mapa/coords";
 
@@ -17,7 +17,7 @@ export function MapaPublicoPage() {
   const [categoria, setCategoria] = useState<CategoriaReclamo | null>(null);
   const [estado, setEstado] = useState<EstadoReclamo | null>(null);
 
-  const { data, loading, error } = useAsync(() => listarReclamos({ size: 100 }), []);
+  const { data, loading, error, reload } = useAsync(() => listarReclamos({ size: 100 }), []);
 
   const puntos = useMemo(() => {
     const ubicados = reclamosUbicados(data?.items ?? []);
@@ -65,15 +65,7 @@ export function MapaPublicoPage() {
         </Center>
       )}
 
-      {error && (
-        <Alert
-          color="rojoEmergencia"
-          icon={<IconAlertTriangle size={16} />}
-          title="No se pudo cargar"
-        >
-          {error}
-        </Alert>
-      )}
+      {error && <EstadoError mensaje={error} onReintentar={reload} />}
 
       {!loading && !error && (
         <Card withBorder radius="md" padding="xs">

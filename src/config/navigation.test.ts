@@ -9,10 +9,10 @@ describe("navegacion del modulo de reclamos", () => {
     expect(ciudadano).toEqual(["/reclamos", "/reclamos/nuevo", "/mapa"]);
 
     const operador = navModulo(Rol.OPERADOR).map((i) => i.to);
-    expect(operador).toEqual(["/backoffice"]);
+    expect(operador).toEqual(["/backoffice", "/mapa"]);
 
     const admin = navModulo(Rol.ADMIN).map((i) => i.to);
-    expect(admin).toEqual(["/backoffice", "/panel"]);
+    expect(admin).toEqual(["/backoffice", "/panel", "/mapa"]);
   });
 
   it("cada rol aterriza en su home", () => {

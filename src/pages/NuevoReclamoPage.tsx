@@ -33,7 +33,7 @@ export function NuevoReclamoPage() {
   }
 
   return (
-    <Stack gap="lg" maw={720}>
+    <Stack gap="lg">
       <Breadcrumbs>
         <Anchor onClick={() => navigate("/reclamos")}>Reclamos</Anchor>
         <Text>Nuevo</Text>
@@ -46,7 +46,7 @@ export function NuevoReclamoPage() {
         </Text>
       </div>
 
-      <Card withBorder radius="md" padding="lg">
+      <Card withBorder radius="md" padding="xl">
         <ReclamoForm onSubmit={handleSubmit} loading={loading} />
       </Card>
     </Stack>

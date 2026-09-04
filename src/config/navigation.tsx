@@ -26,6 +26,7 @@ export function navModulo(rol: Rol): NavItem[] {
   if (rol === Rol.ADMIN) {
     items.push({ label: "Panel", to: "/panel", icon: IconChartHistogram });
   }
+  items.push({ label: "Mapa", to: "/mapa", icon: IconMapPin });
   return items;
 }
 

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  Alert,
   Anchor,
   Breadcrumbs,
   Button,
@@ -14,7 +13,7 @@ import {
   Timeline,
   Title,
 } from "@mantine/core";
-import { IconAlertTriangle, IconClockHour4, IconMapPin, IconUsers } from "@tabler/icons-react";
+import { IconClockHour4, IconMapPin, IconUsers } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -22,6 +21,7 @@ import { adherir, obtenerReclamo } from "@/api/reclamos";
 import { ESTADO_LABEL } from "@/domain/labels";
 import { formatFecha, idCorto } from "@/lib/format";
 import { useAsync } from "@/hooks/useAsync";
+import { EstadoError } from "@/components/EstadoError";
 import { useAuth } from "@/auth/AuthContext";
 import { esStaff } from "@/auth/roles";
 import { CategoriaBadge, EstadoBadge, PrioridadBadge } from "@/features/reclamos/Badges";
@@ -81,21 +81,13 @@ export function ReclamoDetallePage() {
   }
 
   if (error || !reclamo) {
-    return (
-      <Alert
-        color="rojoEmergencia"
-        icon={<IconAlertTriangle size={16} />}
-        title="No se pudo cargar"
-      >
-        {error ?? "Reclamo no encontrado"}
-      </Alert>
-    );
+    return <EstadoError mensaje={error ?? "Reclamo no encontrado"} onReintentar={reload} />;
   }
 
   const totalAdhesiones = adhesiones ?? reclamo.adhesiones_count;
 
   return (
-    <Stack gap="lg" maw={980}>
+    <Stack gap="lg">
       <Breadcrumbs>
         <Anchor onClick={() => navigate("/reclamos")}>Reclamos</Anchor>
         <Text ff="monospace">{idCorto(reclamo.id)}</Text>
