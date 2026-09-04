@@ -1,6 +1,7 @@
-import { Alert, Button, Group, Select, Stack, Textarea, TextInput } from "@mantine/core";
+import { useState } from "react";
+import { Alert, Button, Group, Select, Stack, Text, Textarea, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { IconSparkles } from "@tabler/icons-react";
+import { IconCurrentLocation, IconSparkles } from "@tabler/icons-react";
 
 import type { ReclamoCrear } from "@/api/types";
 import type { CategoriaReclamo, PrioridadReclamo } from "@/domain/enums";
@@ -11,6 +12,7 @@ import {
   opcionesPrioridad,
 } from "@/domain/labels";
 import { formatConfianza } from "@/lib/format";
+import { MapaSelector } from "@/features/mapa/MapaSelector";
 import { reclamoValidators, type ReclamoFormValues } from "./validation";
 import { useSugerenciaClasificacion } from "./useSugerencia";
 
@@ -28,17 +30,37 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
       prioridad: null,
       direccion: "",
       barrio: "",
+      latitud: null,
+      longitud: null,
     },
     validate: reclamoValidators,
     validateInputOnBlur: true,
   });
 
   const { sugerencia } = useSugerenciaClasificacion(form.values.titulo, form.values.descripcion);
+  const [ubicando, setUbicando] = useState(false);
 
   function aplicarSugerencia() {
     if (!sugerencia) return;
     form.setFieldValue("categoria", sugerencia.categoria);
     form.setFieldValue("prioridad", sugerencia.prioridad);
+  }
+
+  function fijarUbicacion(lat: number, lng: number) {
+    form.setFieldValue("latitud", lat);
+    form.setFieldValue("longitud", lng);
+  }
+
+  function usarMiUbicacion() {
+    if (!navigator.geolocation) return;
+    setUbicando(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        fijarUbicacion(pos.coords.latitude, pos.coords.longitude);
+        setUbicando(false);
+      },
+      () => setUbicando(false),
+    );
   }
 
   const handleSubmit = form.onSubmit((values) => {
@@ -49,6 +71,8 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
       prioridad: (values.prioridad as PrioridadReclamo | null) ?? null,
       direccion: values.direccion.trim() || null,
       barrio: values.barrio.trim() || null,
+      latitud: values.latitud,
+      longitud: values.longitud,
     });
   });
 
@@ -109,6 +133,35 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
           <TextInput label="Direccion" {...form.getInputProps("direccion")} />
           <TextInput label="Barrio" {...form.getInputProps("barrio")} />
         </Group>
+
+        <Stack gap="xs">
+          <Group justify="space-between">
+            <Text fw={500} size="sm">
+              Ubicacion en el mapa
+            </Text>
+            <Button
+              size="xs"
+              variant="light"
+              color="azulUrbano"
+              leftSection={<IconCurrentLocation size={14} />}
+              loading={ubicando}
+              onClick={usarMiUbicacion}
+            >
+              Usar mi ubicacion
+            </Button>
+          </Group>
+          <MapaSelector
+            lat={form.values.latitud}
+            lng={form.values.longitud}
+            onPick={fijarUbicacion}
+          />
+          <Text size="xs" c="dimmed">
+            {form.values.latitud !== null && form.values.longitud !== null
+              ? `Lat ${form.values.latitud.toFixed(5)}, Lng ${form.values.longitud.toFixed(5)}`
+              : "Toca el mapa o usa tu ubicacion para marcar el punto."}
+          </Text>
+        </Stack>
+
         <Group justify="flex-end">
           <Button type="submit" loading={loading} color="azulUrbano">
             Enviar reclamo

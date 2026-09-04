@@ -47,6 +47,8 @@ describe("esFormularioValido", () => {
     prioridad: null,
     direccion: "",
     barrio: "",
+    latitud: null,
+    longitud: null,
   };
 
   it("es verdadero cuando titulo y descripcion son validos", () => {

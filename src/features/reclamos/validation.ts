@@ -13,6 +13,8 @@ export interface ReclamoFormValues {
   prioridad: string | null;
   direccion: string;
   barrio: string;
+  latitud: number | null;
+  longitud: number | null;
 }
 
 export function validarTitulo(titulo: string): string | null {

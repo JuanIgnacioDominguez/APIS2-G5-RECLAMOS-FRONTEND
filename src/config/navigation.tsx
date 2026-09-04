@@ -1,5 +1,5 @@
 import type { Icon } from "@tabler/icons-react";
-import { IconChartHistogram, IconInbox, IconList, IconPlus } from "@tabler/icons-react";
+import { IconChartHistogram, IconInbox, IconList, IconMapPin, IconPlus } from "@tabler/icons-react";
 
 import { Rol } from "@/auth/roles";
 
@@ -19,6 +19,7 @@ export function navModulo(rol: Rol): NavItem[] {
     return [
       { label: "Mis reclamos", to: "/reclamos", icon: IconList },
       { label: "Nuevo reclamo", to: "/reclamos/nuevo", icon: IconPlus },
+      { label: "Mapa", to: "/mapa", icon: IconMapPin },
     ];
   }
   const items: NavItem[] = [{ label: "Bandeja", to: "/backoffice", icon: IconInbox }];
