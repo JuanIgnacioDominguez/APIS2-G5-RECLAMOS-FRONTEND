@@ -1,10 +1,18 @@
-import { Button, Group, Select, Stack, Textarea, TextInput } from "@mantine/core";
+import { Alert, Button, Group, Select, Stack, Textarea, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { IconSparkles } from "@tabler/icons-react";
 
 import type { ReclamoCrear } from "@/api/types";
 import type { CategoriaReclamo, PrioridadReclamo } from "@/domain/enums";
-import { opcionesCategoria, opcionesPrioridad } from "@/domain/labels";
+import {
+  CATEGORIA_LABEL,
+  PRIORIDAD_LABEL,
+  opcionesCategoria,
+  opcionesPrioridad,
+} from "@/domain/labels";
+import { formatConfianza } from "@/lib/format";
 import { reclamoValidators, type ReclamoFormValues } from "./validation";
+import { useSugerenciaClasificacion } from "./useSugerencia";
 
 interface Props {
   onSubmit: (datos: ReclamoCrear) => void;
@@ -24,6 +32,14 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
     validate: reclamoValidators,
     validateInputOnBlur: true,
   });
+
+  const { sugerencia } = useSugerenciaClasificacion(form.values.titulo, form.values.descripcion);
+
+  function aplicarSugerencia() {
+    if (!sugerencia) return;
+    form.setFieldValue("categoria", sugerencia.categoria);
+    form.setFieldValue("prioridad", sugerencia.prioridad);
+  }
 
   const handleSubmit = form.onSubmit((values) => {
     onSubmit({
@@ -53,6 +69,26 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
           withAsterisk
           {...form.getInputProps("descripcion")}
         />
+        {sugerencia && (
+          <Alert
+            color="azulUrbano"
+            variant="light"
+            icon={<IconSparkles size={16} />}
+            title="Sugerencia automatica"
+          >
+            <Group justify="space-between" wrap="wrap" gap="xs">
+              <span>
+                Categoria <b>{CATEGORIA_LABEL[sugerencia.categoria]}</b>, prioridad{" "}
+                <b>{PRIORIDAD_LABEL[sugerencia.prioridad]}</b> (
+                {formatConfianza(sugerencia.confianza)} de confianza).
+              </span>
+              <Button size="xs" variant="light" color="azulUrbano" onClick={aplicarSugerencia}>
+                Aplicar
+              </Button>
+            </Group>
+          </Alert>
+        )}
+
         <Group grow>
           <Select
             label="Categoria"

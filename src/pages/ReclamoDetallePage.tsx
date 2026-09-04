@@ -27,6 +27,7 @@ import { esStaff } from "@/auth/roles";
 import { CategoriaBadge, EstadoBadge, PrioridadBadge } from "@/features/reclamos/Badges";
 import { GestionarEstado } from "@/features/reclamos/GestionarEstado";
 import { ClasificarReclamo } from "@/features/reclamos/ClasificarReclamo";
+import { ComentariosReclamo } from "@/features/reclamos/ComentariosReclamo";
 
 function DatoFila({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   return (
@@ -210,6 +211,12 @@ export function ReclamoDetallePage() {
           </Stack>
         </Grid.Col>
       </Grid>
+
+      <ComentariosReclamo
+        reclamoId={reclamo.id}
+        comentarios={reclamo.comentarios}
+        onComentado={reload}
+      />
     </Stack>
   );
 }

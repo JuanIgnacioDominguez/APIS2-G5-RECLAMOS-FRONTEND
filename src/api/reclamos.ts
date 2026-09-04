@@ -60,6 +60,10 @@ export function comentar(id: string, texto: string): Promise<ComentarioOut> {
   });
 }
 
+export function listarComentarios(id: string): Promise<ComentarioOut[]> {
+  return request<ComentarioOut[]>(`/reclamos/${id}/comentarios`);
+}
+
 export function adherir(id: string): Promise<{ reclamo_id: string; adhesiones_count: number }> {
   return request(`/reclamos/${id}/adhesiones`, { method: "POST" });
 }
