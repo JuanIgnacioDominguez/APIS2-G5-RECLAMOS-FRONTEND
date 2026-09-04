@@ -8,6 +8,7 @@ import {
   comentar,
   crearReclamo,
   historial,
+  listarComentarios,
   listarReclamos,
   obtenerReclamo,
   reclasificar,
@@ -75,6 +76,11 @@ describe("endpoints de reclamos", () => {
       method: "POST",
       body: { texto: "hola" },
     });
+  });
+
+  it("listarComentarios hace GET sobre /comentarios", () => {
+    listarComentarios("1");
+    expect(requestSpy).toHaveBeenCalledWith("/reclamos/1/comentarios");
   });
 
   it("adherir hace POST sobre /adhesiones", () => {
