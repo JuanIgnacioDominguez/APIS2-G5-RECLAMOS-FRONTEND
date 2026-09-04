@@ -10,6 +10,7 @@ import { NuevoReclamoPage } from "@/pages/NuevoReclamoPage";
 import { ReclamoDetallePage } from "@/pages/ReclamoDetallePage";
 import { BandejaPage } from "@/pages/BandejaPage";
 import { PanelPage } from "@/pages/PanelPage";
+import { MapaPublicoPage } from "@/pages/MapaPublicoPage";
 
 // Land each role on its own home (citizen: their claims; staff: the backoffice).
 function InicioSegunRol() {
@@ -27,6 +28,7 @@ export function App() {
           <Route path="/reclamos" element={<ReclamosPage />} />
           <Route path="/reclamos/nuevo" element={<NuevoReclamoPage />} />
           <Route path="/reclamos/:id" element={<ReclamoDetallePage />} />
+          <Route path="/mapa" element={<MapaPublicoPage />} />
           <Route element={<RequireAuth soloStaff />}>
             <Route path="/backoffice" element={<BandejaPage />} />
           </Route>

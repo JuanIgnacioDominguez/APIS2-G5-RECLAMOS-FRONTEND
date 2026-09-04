@@ -6,7 +6,7 @@ import { homePorRol, navModulo } from "./navigation";
 describe("navegacion del modulo de reclamos", () => {
   it("el menu cambia por rol", () => {
     const ciudadano = navModulo(Rol.CIUDADANO).map((i) => i.to);
-    expect(ciudadano).toEqual(["/reclamos", "/reclamos/nuevo"]);
+    expect(ciudadano).toEqual(["/reclamos", "/reclamos/nuevo", "/mapa"]);
 
     const operador = navModulo(Rol.OPERADOR).map((i) => i.to);
     expect(operador).toEqual(["/backoffice"]);
