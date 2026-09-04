@@ -88,7 +88,63 @@ export const theme = createTheme({
     fontFamily:
       '"Space Grotesk", Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, sans-serif',
     fontWeight: "700",
+    sizes: {
+      h1: { fontSize: "2rem", lineHeight: "1.2" },
+      h2: { fontSize: "1.55rem", lineHeight: "1.25" },
+      h3: { fontSize: "1.25rem", lineHeight: "1.3" },
+      h4: { fontSize: "1.05rem", lineHeight: "1.35" },
+      h5: { fontSize: "0.9rem", lineHeight: "1.4" },
+    },
   },
   fontFamilyMonospace: '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace',
   defaultRadius: "md",
+
+  // Shadows tinted toward the deep-navy brand ground instead of neutral black,
+  // so elevation reads as part of the palette (trust-first, low glare).
+  shadows: {
+    xs: "0 1px 2px rgba(20, 36, 48, 0.06)",
+    sm: "0 2px 8px rgba(20, 36, 48, 0.07)",
+    md: "0 8px 24px rgba(20, 36, 48, 0.09)",
+    lg: "0 14px 36px rgba(20, 36, 48, 0.11)",
+    xl: "0 24px 52px rgba(20, 36, 48, 0.14)",
+  },
+
+  components: {
+    Button: {
+      defaultProps: { radius: "md", fw: 600 },
+    },
+    ActionIcon: {
+      defaultProps: { radius: "md" },
+    },
+    Card: {
+      defaultProps: { shadow: "xs" },
+    },
+    Paper: {
+      defaultProps: { radius: "md" },
+    },
+    TextInput: {
+      defaultProps: { radius: "md" },
+    },
+    PasswordInput: {
+      defaultProps: { radius: "md" },
+    },
+    Select: {
+      defaultProps: { radius: "md", checkIconPosition: "right" },
+    },
+    Textarea: {
+      defaultProps: { radius: "md" },
+    },
+    Badge: {
+      defaultProps: { radius: "sm" },
+    },
+    Table: {
+      defaultProps: { verticalSpacing: "sm", horizontalSpacing: "lg" },
+    },
+    Tabs: {
+      defaultProps: { radius: "md" },
+    },
+    Tooltip: {
+      defaultProps: { withArrow: true, color: "azulNoche.8" },
+    },
+  },
 });

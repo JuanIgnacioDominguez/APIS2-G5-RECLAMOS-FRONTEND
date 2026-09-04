@@ -43,6 +43,7 @@ function SidebarLink({
 }) {
   return (
     <NavLink
+      className="sidebar-link"
       component={RouterNavLink}
       to={item.to}
       label={item.label}
@@ -51,13 +52,10 @@ function SidebarLink({
       active={active}
       variant="filled"
       color="azulUrbano"
-      c="gray.3"
+      c={active ? "white" : "gray.4"}
       styles={{
-        root: {
-          borderRadius: "var(--mantine-radius-md)",
-          transition: "background-color 150ms ease",
-        },
-        label: { fontSize: "var(--mantine-font-size-sm)" },
+        root: { borderRadius: "var(--mantine-radius-md)" },
+        label: { fontSize: "var(--mantine-font-size-sm)", fontWeight: 500 },
       }}
     />
   );
@@ -79,6 +77,7 @@ export function AppLayout() {
 
   return (
     <AppShell
+      layout="alt"
       header={{ height: 64 }}
       navbar={{
         width: 264,
@@ -93,8 +92,9 @@ export function AppLayout() {
             <Burger opened={mobileOpened} onClick={toggleMobile} hiddenFrom="sm" size="sm" />
             <Burger opened={desktopOpened} onClick={toggleDesktop} visibleFrom="sm" size="sm" />
             <TextInput
-              w={{ base: 0, xs: 220, md: 360 }}
+              w={{ base: 0, xs: 240, md: 380 }}
               radius="md"
+              variant="filled"
               placeholder="Buscar reclamos..."
               leftSection={<IconSearch size={16} />}
               visibleFrom="xs"
