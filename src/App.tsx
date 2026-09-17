@@ -6,6 +6,7 @@ import { useAuth } from "@/auth/AuthContext";
 import { homePorRol } from "@/config/navigation";
 import { LoginPage } from "@/pages/LoginPage";
 import { ReclamosPage } from "@/pages/ReclamosPage";
+import { FeedPublicoPage } from "@/pages/FeedPublicoPage";
 import { NuevoReclamoPage } from "@/pages/NuevoReclamoPage";
 import { ReclamoDetallePage } from "@/pages/ReclamoDetallePage";
 import { BandejaPage } from "@/pages/BandejaPage";
@@ -27,6 +28,7 @@ export function App() {
         <Route element={<AppLayout />}>
           <Route index element={<InicioSegunRol />} />
           <Route path="/reclamos" element={<ReclamosPage />} />
+          <Route path="/feed" element={<FeedPublicoPage />} />
           <Route path="/reclamos/nuevo" element={<NuevoReclamoPage />} />
           <Route path="/reclamos/:id" element={<ReclamoDetallePage />} />
           <Route path="/mapa" element={<MapaPublicoPage />} />

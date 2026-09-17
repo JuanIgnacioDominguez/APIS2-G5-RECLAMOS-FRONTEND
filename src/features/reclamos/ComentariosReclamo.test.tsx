@@ -34,7 +34,8 @@ describe("ComentariosReclamo", () => {
       />,
     );
     expect(screen.getByText("Recibido, lo derivamos.")).toBeInTheDocument();
-    expect(screen.getByText("Oficial")).toBeInTheDocument();
+    expect(screen.getByText("Respuesta oficial")).toBeInTheDocument();
+    expect(screen.getByTestId("comentario-oficial")).toBeInTheDocument();
     expect(screen.getByText("Gracias!")).toBeInTheDocument();
   });
 
