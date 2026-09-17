@@ -6,13 +6,13 @@ import { homePorRol, migasPara, navModulo } from "./navigation";
 describe("navegacion del modulo de reclamos", () => {
   it("el menu cambia por rol", () => {
     const ciudadano = navModulo(Rol.CIUDADANO).map((i) => i.to);
-    expect(ciudadano).toEqual(["/reclamos", "/reclamos/nuevo", "/mapa"]);
+    expect(ciudadano).toEqual(["/feed", "/reclamos", "/reclamos/nuevo", "/mapa"]);
 
     const operador = navModulo(Rol.OPERADOR).map((i) => i.to);
-    expect(operador).toEqual(["/backoffice", "/reclamos", "/mapa"]);
+    expect(operador).toEqual(["/backoffice", "/feed", "/reclamos", "/mapa"]);
 
     const admin = navModulo(Rol.ADMIN).map((i) => i.to);
-    expect(admin).toEqual(["/backoffice", "/reclamos", "/panel", "/mapa"]);
+    expect(admin).toEqual(["/backoffice", "/feed", "/reclamos", "/panel", "/mapa"]);
   });
 
   it("cada rol aterriza en su home", () => {
@@ -32,6 +32,7 @@ describe("navegacion del modulo de reclamos", () => {
       { label: "Reclamos", to: "/reclamos" },
       { label: "#abcd1234" },
     ]);
+    expect(migasPara("/feed", false)).toEqual([{ label: "Reclamos de la ciudad" }]);
     expect(migasPara("/backoffice", true)).toEqual([{ label: "Bandeja de reclamos" }]);
     expect(migasPara("/panel", true)).toEqual([{ label: "Panel de metricas" }]);
     expect(migasPara("/mapa", false)).toEqual([{ label: "Mapa de reclamos" }]);

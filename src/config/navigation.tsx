@@ -1,5 +1,12 @@
 import type { Icon } from "@tabler/icons-react";
-import { IconChartHistogram, IconInbox, IconList, IconMapPin, IconPlus } from "@tabler/icons-react";
+import {
+  IconChartHistogram,
+  IconInbox,
+  IconList,
+  IconMapPin,
+  IconNews,
+  IconPlus,
+} from "@tabler/icons-react";
 
 import { Rol } from "@/auth/roles";
 import { idCorto } from "@/lib/format";
@@ -24,6 +31,7 @@ export interface Miga {
 export function navModulo(rol: Rol): NavItem[] {
   if (rol === Rol.CIUDADANO) {
     return [
+      { label: "Reclamos de la ciudad", to: "/feed", icon: IconNews },
       { label: "Mis reclamos", to: "/reclamos", icon: IconList },
       { label: "Nuevo reclamo", to: "/reclamos/nuevo", icon: IconPlus },
       { label: "Mapa", to: "/mapa", icon: IconMapPin },
@@ -31,6 +39,7 @@ export function navModulo(rol: Rol): NavItem[] {
   }
   const items: NavItem[] = [
     { label: "Bandeja", to: "/backoffice", icon: IconInbox },
+    { label: "Reclamos de la ciudad", to: "/feed", icon: IconNews },
     { label: "Todos los reclamos", to: "/reclamos", icon: IconList },
   ];
   if (rol === Rol.ADMIN) {
@@ -60,6 +69,7 @@ export function migasPara(pathname: string, staff: boolean): Miga[] {
   if (detalle) {
     return [{ label: "Reclamos", to: "/reclamos" }, { label: idCorto(detalle[1]) }];
   }
+  if (pathname === "/feed") return [{ label: "Reclamos de la ciudad" }];
   if (pathname === "/backoffice") return [{ label: "Bandeja de reclamos" }];
   if (pathname === "/panel") return [{ label: "Panel de metricas" }];
   if (pathname === "/mapa") return [{ label: "Mapa de reclamos" }];
