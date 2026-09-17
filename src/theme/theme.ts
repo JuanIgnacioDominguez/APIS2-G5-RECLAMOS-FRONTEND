@@ -82,11 +82,11 @@ export const theme = createTheme({
     rojoEmergencia,
     azulNoche,
   },
+  // System font first, so Apple devices render SF and the UI feels native.
   fontFamily:
-    'Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+    '-apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, "Segoe UI", Roboto, Arial, sans-serif',
   headings: {
-    fontFamily:
-      '"Space Grotesk", Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, sans-serif',
+    fontFamily: '"Space Grotesk", -apple-system, BlinkMacSystemFont, Inter, "Segoe UI", sans-serif',
     fontWeight: "700",
     sizes: {
       h1: { fontSize: "2rem", lineHeight: "1.2" },
@@ -97,6 +97,9 @@ export const theme = createTheme({
     },
   },
   fontFamilyMonospace: '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace',
+
+  // Rounder corners across the board for an Apple-like softness.
+  radius: { xs: "6px", sm: "9px", md: "12px", lg: "16px", xl: "22px" },
   defaultRadius: "md",
 
   // Shadows tinted toward the deep-navy brand ground instead of neutral black,
@@ -123,16 +126,22 @@ export const theme = createTheme({
       defaultProps: { radius: "md" },
     },
     TextInput: {
-      defaultProps: { radius: "md" },
+      defaultProps: { radius: "md", variant: "filled" },
     },
     PasswordInput: {
-      defaultProps: { radius: "md" },
+      defaultProps: { radius: "md", variant: "filled" },
     },
     Select: {
-      defaultProps: { radius: "md", checkIconPosition: "right" },
+      defaultProps: { radius: "md", variant: "filled", checkIconPosition: "right" },
+    },
+    Autocomplete: {
+      defaultProps: { radius: "md", variant: "filled" },
     },
     Textarea: {
-      defaultProps: { radius: "md" },
+      defaultProps: { radius: "md", variant: "filled" },
+    },
+    NumberInput: {
+      defaultProps: { radius: "md", variant: "filled" },
     },
     Badge: {
       defaultProps: { radius: "sm" },

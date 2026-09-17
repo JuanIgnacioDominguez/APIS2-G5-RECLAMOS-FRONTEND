@@ -1,23 +1,22 @@
 import { Card, Group, Stack, Text, Badge } from "@mantine/core";
 import { IconMapPin, IconUsers } from "@tabler/icons-react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import type { ReclamoResumen } from "@/api/types";
 import { haceCuanto, idCorto } from "@/lib/format";
 import { CategoriaBadge, EstadoBadge, PrioridadBadge } from "./Badges";
 
 export function ReclamoCard({ reclamo }: { reclamo: ReclamoResumen }) {
-  const navigate = useNavigate();
-
   return (
     <Card
+      component={Link}
+      to={`/reclamos/${reclamo.id}`}
       withBorder
       radius="md"
       padding="md"
       className="card-interactive"
-      onClick={() => navigate(`/reclamos/${reclamo.id}`)}
-      style={{ cursor: "pointer" }}
       h="100%"
+      style={{ display: "block", textDecoration: "none", color: "inherit" }}
     >
       <Stack gap="xs">
         <Group justify="space-between" wrap="nowrap">

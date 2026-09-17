@@ -13,6 +13,7 @@ vi.mock("react-leaflet", () => ({
   Popup: ({ children }: { children?: ReactNode }) => createElement("div", null, children),
   useMap: () => ({
     setView: vi.fn(),
+    flyTo: vi.fn(),
     getZoom: () => 13,
     invalidateSize: vi.fn(),
     fitBounds: vi.fn(),

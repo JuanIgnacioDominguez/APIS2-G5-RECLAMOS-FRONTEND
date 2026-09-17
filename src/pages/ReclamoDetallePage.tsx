@@ -1,7 +1,5 @@
 import { useState } from "react";
 import {
-  Anchor,
-  Breadcrumbs,
   Button,
   Card,
   Center,
@@ -15,11 +13,11 @@ import {
 } from "@mantine/core";
 import { IconClockHour4, IconMapPin, IconUsers } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 import { adherir, obtenerReclamo } from "@/api/reclamos";
 import { ESTADO_LABEL } from "@/domain/labels";
-import { formatFecha, idCorto } from "@/lib/format";
+import { formatFecha } from "@/lib/format";
 import { useAsync } from "@/hooks/useAsync";
 import { EstadoError } from "@/components/EstadoError";
 import { useAuth } from "@/auth/AuthContext";
@@ -44,7 +42,6 @@ function DatoFila({ etiqueta, valor }: { etiqueta: string; valor: string }) {
 
 export function ReclamoDetallePage() {
   const { id = "" } = useParams();
-  const navigate = useNavigate();
   const { usuario } = useAuth();
   const { data: reclamo, loading, error, reload } = useAsync(() => obtenerReclamo(id), [id]);
   const [adhiriendo, setAdhiriendo] = useState(false);
@@ -88,11 +85,6 @@ export function ReclamoDetallePage() {
 
   return (
     <Stack gap="lg">
-      <Breadcrumbs>
-        <Anchor onClick={() => navigate("/reclamos")}>Reclamos</Anchor>
-        <Text ff="monospace">{idCorto(reclamo.id)}</Text>
-      </Breadcrumbs>
-
       <Group justify="space-between" align="flex-start">
         <div>
           <Title order={2}>{reclamo.titulo}</Title>

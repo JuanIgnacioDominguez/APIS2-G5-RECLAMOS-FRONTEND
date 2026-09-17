@@ -61,6 +61,48 @@
   color: var(--mantine-color-white);
 }
 
+/*
+ * Header in three columns (breadcrumb / search / account) with the search
+ * truly centered on the header, regardless of how wide the other two are.
+ */
+.app-header-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--mantine-spacing-md);
+}
+
+/*
+ * Sidebar collapse toggle: a small tab that belongs to the navbar and sticks
+ * out of its edge, halfway down, instead of living in the header.
+ */
+.navbar-flap {
+  position: absolute;
+  top: 50%;
+  right: -14px;
+  transform: translateY(-50%);
+  z-index: 201;
+  border: 2px solid var(--mantine-color-body);
+  box-shadow: var(--mantine-shadow-sm);
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease;
+}
+.navbar-flap:hover {
+  box-shadow: var(--mantine-shadow-md);
+}
+.navbar-flap:active {
+  transform: translateY(-50%) scale(0.94);
+}
+
+/* Header account trigger: needs a hover affordance, it opens a menu. */
+.account-trigger {
+  transition: background-color 120ms ease;
+}
+.account-trigger:hover {
+  background-color: var(--mantine-color-gray-1);
+}
+
 /* Leaflet popups picked up to match the app's card language. */
 .leaflet-popup-content-wrapper {
   border-radius: var(--mantine-radius-md);
@@ -71,10 +113,63 @@
   font-size: var(--mantine-font-size-sm);
 }
 
+/*
+ * Free OpenStreetMap tiles are correct but visually loud. A light grade -
+ * desaturated, brightened, softer contrast, a touch cooler - turns the raw
+ * basemap into a calm designed surface. Only the raster tiles are graded;
+ * markers, popups and controls live in other panes and stay crisp.
+ */
+.mapa-suave .leaflet-tile {
+  filter: saturate(0.8) brightness(1.05) contrast(0.92) hue-rotate(-4deg);
+}
+
+/*
+ * Nuevo reclamo: the map stretches to fill its flex column so its bottom edge
+ * lines up with the form fields column next to it, instead of a fixed height
+ * that leaves either side floating with mismatched whitespace.
+ */
+.mapa-columna-fill {
+  flex: 1 1 auto;
+  min-height: 360px;
+}
+
+/*
+ * Nuevo reclamo: on desktop (from `md`, where the form and the map sit side
+ * by side) bounds the page to the visible viewport so the submit button is
+ * always in view without scrolling. Values mirror AppLayout's header height
+ * (64px) and padding prop ({ base: "md", sm: 40 }, applied top and bottom).
+ * Below `md` the form stacks in one column and stays a normal, scrollable
+ * page - clamping its height there would cramp the fields and the map.
+ */
+@media (min-width: 62em) {
+  .pantalla-sin-scroll {
+    height: calc(100dvh - 64px - 80px);
+    min-height: 0;
+  }
+}
+
+/* Soft pulsing halo behind the picked-location pin (MapaSelector). */
+.mapa-marcador-halo {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mapa-pulso 2.2s ease-out infinite;
+}
+@keyframes mapa-pulso {
+  0% {
+    transform: scale(0.55);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .card-interactive,
   .row-interactive,
   .sidebar-link,
+  .account-trigger,
   .mantine-Button-root,
   .mantine-ActionIcon-root {
     transition: none;
@@ -83,5 +178,9 @@
   .mantine-Button-root:active,
   .mantine-ActionIcon-root:active {
     transform: none;
+  }
+  .mapa-marcador-halo {
+    animation: none;
+    opacity: 0.35;
   }
 }

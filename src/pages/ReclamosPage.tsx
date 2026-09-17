@@ -19,6 +19,8 @@ import { IconChecks, IconInbox, IconPlus, IconProgress, IconSearch } from "@tabl
 import { useNavigate } from "react-router-dom";
 
 import { listarReclamos } from "@/api/reclamos";
+import { useAuth } from "@/auth/AuthContext";
+import { esStaff } from "@/auth/roles";
 import type { CategoriaReclamo } from "@/domain/enums";
 import { opcionesCategoria } from "@/domain/labels";
 import { useAsync } from "@/hooks/useAsync";
@@ -60,6 +62,8 @@ function StatTile({
 
 export function ReclamosPage() {
   const navigate = useNavigate();
+  const { usuario } = useAuth();
+  const staff = usuario ? esStaff(usuario.rol) : false;
   const [tab, setTab] = useState<TabReclamos>("todos");
   const [texto, setTexto] = useState("");
   const [categoria, setCategoria] = useState<CategoriaReclamo | null>(null);
@@ -76,15 +80,19 @@ export function ReclamosPage() {
     <Stack gap="lg">
       <PageHeader
         icono={IconInbox}
-        titulo="Mis reclamos"
-        descripcion="Crea, segui y gestiona tus reclamos en la ciudad."
+        titulo={staff ? "Todos los reclamos" : "Mis reclamos"}
+        descripcion={
+          staff
+            ? "Todos los reclamos de la ciudad, mas alla de la bandeja de entrada."
+            : "Crea, segui y gestiona tus reclamos en la ciudad."
+        }
         accion={
           <Button
             leftSection={<IconPlus size={16} />}
             color="azulUrbano"
             onClick={() => navigate("/reclamos/nuevo")}
           >
-            Nuevo reclamo
+            {staff ? "Cargar reclamo" : "Nuevo reclamo"}
           </Button>
         }
       />

@@ -1,6 +1,6 @@
-import { Badge, Card, Center, Group, Loader, Stack, Table, Text } from "@mantine/core";
-import { IconInbox, IconSparkles, IconUsers } from "@tabler/icons-react";
-import { useNavigate } from "react-router-dom";
+import { ActionIcon, Badge, Card, Center, Group, Loader, Stack, Table, Text } from "@mantine/core";
+import { IconChevronRight, IconInbox, IconSparkles, IconUsers } from "@tabler/icons-react";
+import { Link, useNavigate } from "react-router-dom";
 
 import { bandeja } from "@/api/reclamos";
 import { OrigenClasificacion } from "@/domain/enums";
@@ -68,6 +68,7 @@ export function BandejaPage() {
                   <Table.Th>Estado</Table.Th>
                   <Table.Th>Adhesiones</Table.Th>
                   <Table.Th>Ingreso</Table.Th>
+                  <Table.Th />
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
@@ -117,6 +118,18 @@ export function BandejaPage() {
                       <Text size="sm" c="dimmed">
                         {haceCuanto(r.created_at)}
                       </Text>
+                    </Table.Td>
+                    <Table.Td>
+                      <ActionIcon
+                        component={Link}
+                        to={`/reclamos/${r.id}`}
+                        variant="subtle"
+                        color="azulUrbano"
+                        aria-label={`Ver reclamo ${r.titulo}`}
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <IconChevronRight size={16} />
+                      </ActionIcon>
                     </Table.Td>
                   </Table.Tr>
                 ))}

@@ -50,6 +50,7 @@ function AjustarVista({ reclamos }: { reclamos: ReclamoUbicado[] }) {
 export function MapaReclamos({ reclamos }: { reclamos: ReclamoUbicado[] }) {
   return (
     <MapContainer
+      className="mapa-suave"
       center={CENTRO_DEFAULT}
       zoom={13}
       scrollWheelZoom
@@ -57,18 +58,21 @@ export function MapaReclamos({ reclamos }: { reclamos: ReclamoUbicado[] }) {
     >
       <AjustarVista reclamos={reclamos} />
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        subdomains="abc"
+        maxZoom={19}
       />
       {reclamos.map((r) => (
         <CircleMarker
           key={r.id}
           center={[r.latitud, r.longitud]}
-          radius={9}
+          radius={8}
           pathOptions={{
-            color: COLOR_HEX[ESTADO_COLOR[r.estado]] ?? "#2563a6",
-            fillOpacity: 0.7,
+            color: "#ffffff",
             weight: 2,
+            fillColor: COLOR_HEX[ESTADO_COLOR[r.estado]] ?? "#2563a6",
+            fillOpacity: 0.95,
           }}
         >
           <Popup>
