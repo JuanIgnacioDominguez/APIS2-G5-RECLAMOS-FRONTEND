@@ -1,22 +1,15 @@
-import { useMemo, useState, type ReactNode } from "react";
-import {
-  Badge,
-  Button,
-  Card,
-  Center,
-  Grid,
-  Group,
-  Loader,
-  Select,
-  SimpleGrid,
-  Stack,
-  Tabs,
-  Text,
-  TextInput,
-  ThemeIcon,
-} from "@mantine/core";
-import { IconChecks, IconInbox, IconPlus, IconProgress, IconSearch } from "@tabler/icons-react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  CheckCircle2,
+  FolderOpen,
+  Inbox,
+  Loader2,
+  Plus,
+  Search,
+  Timer,
+  WifiOff,
+} from "lucide-react";
 
 import { listarReclamos } from "@/api/reclamos";
 import { useAuth } from "@/auth/AuthContext";
@@ -24,41 +17,22 @@ import { esStaff } from "@/auth/roles";
 import type { CategoriaReclamo } from "@/domain/enums";
 import { opcionesCategoria } from "@/domain/labels";
 import { useAsync } from "@/hooks/useAsync";
-import { EstadoError } from "@/components/EstadoError";
-import { EstadoVacio } from "@/components/EstadoVacio";
-import { PageHeader } from "@/components/PageHeader";
+import { KpiCard } from "@/components/KpiCard";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ReclamoCard } from "@/features/reclamos/ReclamoCard";
 import { TABS, contarPorTab, filtrarReclamos, type TabReclamos } from "@/features/reclamos/filters";
 
-function StatTile({
-  label,
-  value,
-  color,
-  icon,
-}: {
-  label: string;
-  value: number;
-  color: string;
-  icon: ReactNode;
-}) {
-  return (
-    <Card withBorder radius="md" padding="md">
-      <Group justify="space-between" wrap="nowrap" align="flex-start">
-        <div>
-          <Text size="xs" c="dimmed" tt="uppercase" fw={700} lts={0.3}>
-            {label}
-          </Text>
-          <Text fz={30} fw={700} lh={1.1} mt={4}>
-            {value}
-          </Text>
-        </div>
-        <ThemeIcon size={40} radius="md" variant="light" color={color}>
-          {icon}
-        </ThemeIcon>
-      </Group>
-    </Card>
-  );
-}
+const TODAS = "todas";
 
 export function ReclamosPage() {
   const navigate = useNavigate();
@@ -77,132 +51,131 @@ export function ReclamosPage() {
   );
 
   return (
-    <Stack gap="lg">
-      <PageHeader
-        icono={IconInbox}
-        titulo={staff ? "Todos los reclamos" : "Mis reclamos"}
-        descripcion={
-          staff
-            ? "Todos los reclamos de la ciudad, mas alla de la bandeja de entrada."
-            : "Crea, segui y gestiona tus reclamos en la ciudad."
-        }
-        accion={
-          <Button
-            leftSection={<IconPlus size={16} />}
-            color="azulUrbano"
-            onClick={() => navigate("/reclamos/nuevo")}
-          >
-            {staff ? "Cargar reclamo" : "Nuevo reclamo"}
-          </Button>
-        }
-      />
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <span className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <FolderOpen className="size-6" />
+          </span>
+          <div>
+            <h1 className="font-heading text-2xl font-semibold tracking-tight">
+              {staff ? "Todos los reclamos" : "Mis reclamos"}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {staff
+                ? "Todos los reclamos de la ciudad, mas alla de la bandeja de entrada."
+                : "Crea, segui y gestiona tus reclamos en la ciudad."}
+            </p>
+          </div>
+        </div>
+        <Button onClick={() => navigate("/reclamos/nuevo")}>
+          <Plus />
+          {staff ? "Cargar reclamo" : "Nuevo reclamo"}
+        </Button>
+      </div>
 
-      <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="md">
-        <StatTile
-          label="Total"
-          value={counts.todos}
-          color="azulUrbano"
-          icon={<IconInbox size={22} />}
-        />
-        <StatTile
-          label="Abiertos"
-          value={counts.abiertos}
-          color="azulUrbano"
-          icon={<IconInbox size={22} />}
-        />
-        <StatTile
-          label="En proceso"
-          value={counts.en_proceso}
-          color="ambar"
-          icon={<IconProgress size={22} />}
-        />
-        <StatTile
-          label="Resueltos"
-          value={counts.resueltos}
-          color="verdeUrbano"
-          icon={<IconChecks size={22} />}
-        />
-      </SimpleGrid>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <KpiCard label="Total" value={counts.todos} icon={Inbox} tono="azul" />
+        <KpiCard label="Abiertos" value={counts.abiertos} icon={FolderOpen} tono="azul" />
+        <KpiCard label="En proceso" value={counts.en_proceso} icon={Timer} tono="ambar" />
+        <KpiCard label="Resueltos" value={counts.resueltos} icon={CheckCircle2} tono="verde" />
+      </div>
 
-      <Card withBorder radius="md" padding="md">
-        <Stack gap="md">
-          <Group justify="space-between" wrap="wrap">
-            <Tabs
-              value={tab}
-              onChange={(v) => setTab((v ?? "todos") as TabReclamos)}
-              variant="pills"
+      <div className="rounded-xl bg-card ring-1 ring-foreground/10">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b p-4">
+          <Tabs value={tab} onValueChange={(v) => setTab(v as TabReclamos)}>
+            <TabsList>
+              {TABS.map((t) => (
+                <TabsTrigger key={t.value} value={t.value} className="gap-1.5">
+                  {t.label}
+                  <Badge variant="secondary" className="px-1.5 tabular-nums">
+                    {counts[t.value]}
+                  </Badge>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+          <div className="flex flex-wrap items-center gap-2">
+            <Select
+              value={categoria ?? TODAS}
+              onValueChange={(v) => setCategoria(v === TODAS ? null : (v as CategoriaReclamo))}
             >
-              <Tabs.List>
-                {TABS.map((t) => (
-                  <Tabs.Tab
-                    key={t.value}
-                    value={t.value}
-                    rightSection={
-                      <Badge size="xs" variant="light" circle>
-                        {counts[t.value]}
-                      </Badge>
-                    }
-                  >
-                    {t.label}
-                  </Tabs.Tab>
+              <SelectTrigger className="w-[190px]" aria-label="Filtrar por categoria">
+                <SelectValue placeholder="Todas las categorias" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={TODAS}>Todas las categorias</SelectItem>
+                {opcionesCategoria().map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
                 ))}
-              </Tabs.List>
-            </Tabs>
-            <Group gap="sm">
-              <Select
-                w={190}
-                placeholder="Todas las categorias"
-                clearable
-                data={opcionesCategoria()}
-                value={categoria}
-                onChange={(v) => setCategoria(v as CategoriaReclamo | null)}
-                aria-label="Filtrar por categoria"
-              />
-              <TextInput
-                w={220}
-                placeholder="Buscar por titulo"
-                leftSection={<IconSearch size={16} />}
+              </SelectContent>
+            </Select>
+            <div className="relative w-[220px]">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
                 value={texto}
-                onChange={(e) => setTexto(e.currentTarget.value)}
+                onChange={(e) => setTexto(e.target.value)}
+                placeholder="Buscar por titulo"
+                className="pl-9"
               />
-            </Group>
-          </Group>
+            </div>
+          </div>
+        </div>
 
+        <div className="p-4">
           {loading && (
-            <Center py="xl">
-              <Loader color="azulUrbano" />
-            </Center>
+            <div className="flex items-center justify-center gap-2 py-12 text-muted-foreground">
+              <Loader2 className="size-5 animate-spin" />
+              Cargando reclamos...
+            </div>
           )}
 
-          {error && <EstadoError mensaje={error} onReintentar={reload} />}
+          {error && (
+            <div className="flex flex-col items-center gap-3 py-12 text-center">
+              <span className="flex size-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+                <WifiOff className="size-6" />
+              </span>
+              <div>
+                <p className="font-medium">No se pudo cargar</p>
+                <p className="text-sm text-muted-foreground">{error}</p>
+              </div>
+              <Button variant="outline" onClick={reload}>
+                Reintentar
+              </Button>
+            </div>
+          )}
 
           {!loading && !error && visibles.length === 0 && (
-            <EstadoVacio
-              icono={IconInbox}
-              titulo="Todavia no hay reclamos"
-              mensaje="Cuando cargues un reclamo o ajustes los filtros, vas a verlos aca."
-            >
+            <div className="flex flex-col items-center gap-2 py-12 text-center">
+              <span className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <Inbox className="size-6" />
+              </span>
+              <p className="font-medium">Todavia no hay reclamos</p>
+              <p className="text-sm text-muted-foreground">
+                Cuando cargues un reclamo o ajustes los filtros, vas a verlos aca.
+              </p>
               <Button
-                variant="light"
-                color="azulUrbano"
-                leftSection={<IconPlus size={16} />}
+                variant="outline"
+                className="mt-1"
                 onClick={() => navigate("/reclamos/nuevo")}
-                mt="xs"
               >
+                <Plus />
                 Crear el primero
               </Button>
-            </EstadoVacio>
+            </div>
           )}
 
-          <Grid>
-            {visibles.map((reclamo) => (
-              <Grid.Col key={reclamo.id} span={{ base: 12, sm: 6, lg: 4 }}>
-                <ReclamoCard reclamo={reclamo} />
-              </Grid.Col>
-            ))}
-          </Grid>
-        </Stack>
-      </Card>
-    </Stack>
+          {!loading && !error && visibles.length > 0 && (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {visibles.map((reclamo) => (
+                <ReclamoCard key={reclamo.id} reclamo={reclamo} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

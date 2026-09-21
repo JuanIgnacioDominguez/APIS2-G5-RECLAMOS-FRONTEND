@@ -1,60 +1,45 @@
-import { Card, Group, Stack, Text, Badge } from "@mantine/core";
-import { IconMapPin, IconUsers } from "@tabler/icons-react";
 import { Link } from "react-router-dom";
+import { MapPin, Users } from "lucide-react";
 
 import type { ReclamoResumen } from "@/api/types";
 import { haceCuanto, idCorto } from "@/lib/format";
-import { CategoriaBadge, EstadoBadge, PrioridadBadge } from "./Badges";
+import { Card, CardContent } from "@/components/ui/card";
+import { CategoriaBadge, EstadoBadge, PrioridadBadge } from "./EstadoBadges";
 
 export function ReclamoCard({ reclamo }: { reclamo: ReclamoResumen }) {
   return (
-    <Card
-      component={Link}
-      to={`/reclamos/${reclamo.id}`}
-      withBorder
-      radius="md"
-      padding="md"
-      className="card-interactive"
-      h="100%"
-      style={{ display: "block", textDecoration: "none", color: "inherit" }}
-    >
-      <Stack gap="xs">
-        <Group justify="space-between" wrap="nowrap">
-          <Text fw={600} lineClamp={1}>
-            {reclamo.titulo}
-          </Text>
-          <EstadoBadge estado={reclamo.estado} />
-        </Group>
+    <Link to={`/reclamos/${reclamo.id}`} className="group block h-full">
+      <Card className="h-full gap-0 transition-all group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:ring-primary/30">
+        <CardContent className="flex h-full flex-col gap-3">
+          <div className="flex items-start justify-between gap-2">
+            <p className="line-clamp-1 font-medium">{reclamo.titulo}</p>
+            <EstadoBadge estado={reclamo.estado} />
+          </div>
 
-        <Group gap="xs">
-          <CategoriaBadge categoria={reclamo.categoria} />
-          <PrioridadBadge prioridad={reclamo.prioridad} />
-        </Group>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <CategoriaBadge categoria={reclamo.categoria} />
+            <PrioridadBadge prioridad={reclamo.prioridad} />
+          </div>
 
-        <Group justify="space-between" c="dimmed">
-          <Group gap={4}>
-            <IconMapPin size={14} />
-            <Text size="sm">{reclamo.barrio ?? "Sin barrio"}</Text>
-          </Group>
-          <Group gap="md">
-            {reclamo.adhesiones_count > 0 && (
-              <Badge
-                color="azulUrbano"
-                variant="light"
-                leftSection={<IconUsers size={12} />}
-                radius="sm"
-              >
-                {reclamo.adhesiones_count}
-              </Badge>
-            )}
-            <Text size="xs">{haceCuanto(reclamo.created_at)}</Text>
-          </Group>
-        </Group>
+          <div className="mt-auto flex items-center justify-between gap-2 text-muted-foreground">
+            <span className="inline-flex items-center gap-1 text-sm">
+              <MapPin className="size-3.5" />
+              {reclamo.barrio ?? "Sin barrio"}
+            </span>
+            <div className="flex items-center gap-3">
+              {reclamo.adhesiones_count > 0 && (
+                <span className="inline-flex items-center gap-1 text-sm">
+                  <Users className="size-3.5" />
+                  {reclamo.adhesiones_count}
+                </span>
+              )}
+              <span className="text-xs">{haceCuanto(reclamo.created_at)}</span>
+            </div>
+          </div>
 
-        <Text size="xs" c="dimmed" ff="monospace">
-          {idCorto(reclamo.id)}
-        </Text>
-      </Stack>
-    </Card>
+          <p className="font-mono text-xs text-muted-foreground">{idCorto(reclamo.id)}</p>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }

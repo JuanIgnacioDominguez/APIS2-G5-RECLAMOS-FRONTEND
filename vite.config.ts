@@ -29,6 +29,9 @@ export default defineConfig({
         "src/test/**",
         "src/**/index.ts",
         "src/theme/**",
+        // Vendored shadcn/ui primitives: added by the CLI, not our logic to test.
+        "src/components/ui/**",
+        "src/lib/utils.ts",
         // Declaration-only: interfaces/types compile to nothing at runtime,
         // so there is no executable code to cover.
         "src/api/types.ts",
