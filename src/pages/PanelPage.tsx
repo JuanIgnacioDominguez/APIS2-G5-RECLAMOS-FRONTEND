@@ -1,7 +1,19 @@
-import { Card, Center, Grid, Group, Loader, Progress, Stack, Text, Title } from "@mantine/core";
-import { IconClockHour4, IconInbox } from "@tabler/icons-react";
+import {
+  Card,
+  Center,
+  Grid,
+  Group,
+  Loader,
+  Progress,
+  Stack,
+  Text,
+  ThemeIcon,
+  Title,
+} from "@mantine/core";
+import { IconChartBar, IconClockHour4, IconInbox } from "@tabler/icons-react";
 
 import { EstadoError } from "@/components/EstadoError";
+import { PageHeader } from "@/components/PageHeader";
 
 import { estadisticas } from "@/api/reclamos";
 import type { ConteoPorClave } from "@/api/types";
@@ -55,39 +67,44 @@ export function PanelPage() {
 
   return (
     <Stack gap="lg">
-      <div>
-        <Title order={2}>Panel de metricas</Title>
-        <Text c="dimmed">Resumen del modulo de reclamos.</Text>
-      </div>
+      <PageHeader
+        icono={IconChartBar}
+        titulo="Panel de metricas"
+        descripcion="Resumen del modulo de reclamos."
+      />
 
       <Grid>
         <Grid.Col span={{ base: 12, sm: 6 }}>
           <Card withBorder radius="md" padding="lg">
-            <Group justify="space-between">
+            <Group justify="space-between" align="flex-start">
               <div>
-                <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+                <Text size="xs" c="dimmed" tt="uppercase" fw={700} lts={0.3}>
                   Total de reclamos
                 </Text>
-                <Text fz={32} fw={700}>
+                <Text fz={34} fw={700} mt={4}>
                   {data.total}
                 </Text>
               </div>
-              <IconInbox size={32} />
+              <ThemeIcon size={46} radius="md" variant="light" color="azulUrbano">
+                <IconInbox size={24} />
+              </ThemeIcon>
             </Group>
           </Card>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6 }}>
           <Card withBorder radius="md" padding="lg">
-            <Group justify="space-between">
+            <Group justify="space-between" align="flex-start">
               <div>
-                <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+                <Text size="xs" c="dimmed" tt="uppercase" fw={700} lts={0.3}>
                   Tiempo de resolucion promedio
                 </Text>
-                <Text fz={32} fw={700}>
+                <Text fz={34} fw={700} mt={4}>
                   {horas === null ? "-" : `${horas.toFixed(1)} h`}
                 </Text>
               </div>
-              <IconClockHour4 size={32} />
+              <ThemeIcon size={46} radius="md" variant="light" color="verdeUrbano">
+                <IconClockHour4 size={24} />
+              </ThemeIcon>
             </Group>
           </Card>
         </Grid.Col>

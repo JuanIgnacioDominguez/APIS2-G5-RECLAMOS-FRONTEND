@@ -14,16 +14,19 @@ import {
   Text,
   TextInput,
   ThemeIcon,
-  Title,
 } from "@mantine/core";
 import { IconChecks, IconInbox, IconPlus, IconProgress, IconSearch } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
 
 import { listarReclamos } from "@/api/reclamos";
+import { useAuth } from "@/auth/AuthContext";
+import { esStaff } from "@/auth/roles";
 import type { CategoriaReclamo } from "@/domain/enums";
 import { opcionesCategoria } from "@/domain/labels";
 import { useAsync } from "@/hooks/useAsync";
 import { EstadoError } from "@/components/EstadoError";
+import { EstadoVacio } from "@/components/EstadoVacio";
+import { PageHeader } from "@/components/PageHeader";
 import { ReclamoCard } from "@/features/reclamos/ReclamoCard";
 import { TABS, contarPorTab, filtrarReclamos, type TabReclamos } from "@/features/reclamos/filters";
 
@@ -40,16 +43,16 @@ function StatTile({
 }) {
   return (
     <Card withBorder radius="md" padding="md">
-      <Group justify="space-between" wrap="nowrap">
+      <Group justify="space-between" wrap="nowrap" align="flex-start">
         <div>
-          <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+          <Text size="xs" c="dimmed" tt="uppercase" fw={700} lts={0.3}>
             {label}
           </Text>
-          <Text fz={28} fw={700} lh={1.1}>
+          <Text fz={30} fw={700} lh={1.1} mt={4}>
             {value}
           </Text>
         </div>
-        <ThemeIcon size={42} radius="md" variant="light" color={color}>
+        <ThemeIcon size={40} radius="md" variant="light" color={color}>
           {icon}
         </ThemeIcon>
       </Group>
@@ -59,6 +62,8 @@ function StatTile({
 
 export function ReclamosPage() {
   const navigate = useNavigate();
+  const { usuario } = useAuth();
+  const staff = usuario ? esStaff(usuario.rol) : false;
   const [tab, setTab] = useState<TabReclamos>("todos");
   const [texto, setTexto] = useState("");
   const [categoria, setCategoria] = useState<CategoriaReclamo | null>(null);
@@ -73,19 +78,24 @@ export function ReclamosPage() {
 
   return (
     <Stack gap="lg">
-      <Group justify="space-between" align="flex-end">
-        <div>
-          <Title order={2}>Mis reclamos</Title>
-          <Text c="dimmed">Crea, segui y gestiona tus reclamos en la ciudad.</Text>
-        </div>
-        <Button
-          leftSection={<IconPlus size={16} />}
-          color="azulUrbano"
-          onClick={() => navigate("/reclamos/nuevo")}
-        >
-          Nuevo reclamo
-        </Button>
-      </Group>
+      <PageHeader
+        icono={IconInbox}
+        titulo={staff ? "Todos los reclamos" : "Mis reclamos"}
+        descripcion={
+          staff
+            ? "Todos los reclamos de la ciudad, mas alla de la bandeja de entrada."
+            : "Crea, segui y gestiona tus reclamos en la ciudad."
+        }
+        accion={
+          <Button
+            leftSection={<IconPlus size={16} />}
+            color="azulUrbano"
+            onClick={() => navigate("/reclamos/nuevo")}
+          >
+            {staff ? "Cargar reclamo" : "Nuevo reclamo"}
+          </Button>
+        }
+      />
 
       <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="md">
         <StatTile
@@ -167,9 +177,21 @@ export function ReclamosPage() {
           {error && <EstadoError mensaje={error} onReintentar={reload} />}
 
           {!loading && !error && visibles.length === 0 && (
-            <Text c="dimmed" ta="center" py="xl">
-              No hay reclamos para mostrar.
-            </Text>
+            <EstadoVacio
+              icono={IconInbox}
+              titulo="Todavia no hay reclamos"
+              mensaje="Cuando cargues un reclamo o ajustes los filtros, vas a verlos aca."
+            >
+              <Button
+                variant="light"
+                color="azulUrbano"
+                leftSection={<IconPlus size={16} />}
+                onClick={() => navigate("/reclamos/nuevo")}
+                mt="xs"
+              >
+                Crear el primero
+              </Button>
+            </EstadoVacio>
           )}
 
           <Grid>

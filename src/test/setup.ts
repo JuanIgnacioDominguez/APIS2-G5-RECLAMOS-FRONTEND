@@ -11,7 +11,14 @@ vi.mock("react-leaflet", () => ({
   TileLayer: () => null,
   CircleMarker: ({ children }: { children?: ReactNode }) => createElement("div", null, children),
   Popup: ({ children }: { children?: ReactNode }) => createElement("div", null, children),
-  useMap: () => ({ setView: vi.fn(), getZoom: () => 13 }),
+  useMap: () => ({
+    setView: vi.fn(),
+    flyTo: vi.fn(),
+    getZoom: () => 13,
+    invalidateSize: vi.fn(),
+    fitBounds: vi.fn(),
+    getContainer: () => document.createElement("div"),
+  }),
   useMapEvents: () => null,
 }));
 
