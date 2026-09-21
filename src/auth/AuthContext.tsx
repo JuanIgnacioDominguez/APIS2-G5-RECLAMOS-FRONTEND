@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
-import { setAuthToken } from "@/api/client";
+import { setAuthToken, setUnauthorizedHandler } from "@/api/client";
 import { loginDev } from "@/api/auth";
 import { rolPrincipal } from "./roles";
 import type { Usuario } from "./users";
@@ -49,6 +49,23 @@ export function AuthProvider({
     setAuthToken(sesion?.token ?? null);
   }, [sesion]);
 
+  const logout = useCallback(() => {
+    setSesion(null);
+    setAuthToken(null);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  // Drop the session when any authenticated call returns 401 (expired/revoked
+  // token), so the route guard sends the user back to login.
+  useEffect(() => {
+    setUnauthorizedHandler(logout);
+    return () => setUnauthorizedHandler(null);
+  }, [logout]);
+
   const login = useCallback(async (usuario: string, password: string) => {
     const { access_token, usuario: perfil } = await loginDev(usuario, password);
     const u: Usuario = {
@@ -66,16 +83,6 @@ export function AuthProvider({
       // storage may be unavailable (private mode); session stays in memory
     }
     return u;
-  }, []);
-
-  const logout = useCallback(() => {
-    setSesion(null);
-    setAuthToken(null);
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      // ignore
-    }
   }, []);
 
   const value = useMemo<AuthContextValue>(

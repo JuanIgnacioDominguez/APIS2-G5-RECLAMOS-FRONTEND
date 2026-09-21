@@ -30,6 +30,17 @@ export function getAuthToken(): string | null {
   return authToken;
 }
 
+/**
+ * Called when an authenticated request is rejected with 401 (typically an
+ * expired JWT). The auth layer registers this to drop the session so the guard
+ * sends the user back to login instead of leaving them "logged in" but broken.
+ */
+let onUnauthorized: (() => void) | null = null;
+
+export function setUnauthorizedHandler(handler: (() => void) | null): void {
+  onUnauthorized = handler;
+}
+
 interface RequestOptions {
   method?: string;
   body?: unknown;
@@ -68,6 +79,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   if (body !== undefined) headers["Content-Type"] = "application/json";
   if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
 
+  const teniaToken = authToken !== null;
   const response = await fetch(buildUrl(path, query), {
     method,
     headers,
@@ -75,7 +87,13 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     signal,
   });
 
-  if (!response.ok) throw await parseError(response);
+  if (!response.ok) {
+    // An authenticated request that comes back 401 means the session expired or
+    // was revoked: drop it so the guard redirects to login. A 401 on the login
+    // call itself (no token yet) is just wrong credentials and is left alone.
+    if (response.status === 401 && teniaToken) onUnauthorized?.();
+    throw await parseError(response);
+  }
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
 }
