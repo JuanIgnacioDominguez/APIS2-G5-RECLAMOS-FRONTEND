@@ -1,25 +1,41 @@
 import { describe, expect, it } from "vitest";
 
-import { CUENTA, SERVICIOS, navItemPorRuta } from "./navigation";
+import { Rol } from "@/auth/roles";
+import { homePorRol, migasPara, navModulo } from "./navigation";
 
-describe("navegacion", () => {
-  it("Reclamos es el unico servicio propio (ownerGroup null)", () => {
-    const propios = SERVICIOS.filter((s) => s.ownerGroup === null);
-    expect(propios).toHaveLength(1);
-    expect(propios[0].to).toBe("/reclamos");
+describe("navegacion del modulo de reclamos", () => {
+  it("el menu cambia por rol", () => {
+    const ciudadano = navModulo(Rol.CIUDADANO).map((i) => i.to);
+    expect(ciudadano).toEqual(["/feed", "/reclamos", "/reclamos/nuevo", "/mapa"]);
+
+    const operador = navModulo(Rol.OPERADOR).map((i) => i.to);
+    expect(operador).toEqual(["/backoffice", "/feed", "/reclamos", "/mapa"]);
+
+    const admin = navModulo(Rol.ADMIN).map((i) => i.to);
+    expect(admin).toEqual(["/backoffice", "/feed", "/reclamos", "/panel", "/mapa"]);
   });
 
-  it("el resto de los servicios pertenece a otro grupo", () => {
-    const ajenos = SERVICIOS.filter((s) => s.to !== "/reclamos");
-    expect(ajenos.every((s) => s.ownerGroup !== null)).toBe(true);
+  it("cada rol aterriza en su home", () => {
+    expect(homePorRol(Rol.CIUDADANO)).toBe("/reclamos");
+    expect(homePorRol(Rol.OPERADOR)).toBe("/backoffice");
+    expect(homePorRol(Rol.ADMIN)).toBe("/backoffice");
   });
 
-  it("navItemPorRuta encuentra items en ambos grupos de links", () => {
-    expect(navItemPorRuta("/reclamos")?.label).toBe("Reclamos");
-    expect(navItemPorRuta(CUENTA[0].to)?.label).toBe(CUENTA[0].label);
-  });
-
-  it("devuelve undefined para una ruta desconocida", () => {
-    expect(navItemPorRuta("/no-existe")).toBeUndefined();
+  it("arma las migas de pan segun la ruta, sin pedir datos al backend", () => {
+    expect(migasPara("/reclamos", false)).toEqual([{ label: "Mis reclamos" }]);
+    expect(migasPara("/reclamos", true)).toEqual([{ label: "Todos los reclamos" }]);
+    expect(migasPara("/reclamos/nuevo", false)).toEqual([
+      { label: "Reclamos", to: "/reclamos" },
+      { label: "Nuevo reclamo" },
+    ]);
+    expect(migasPara("/reclamos/abcd1234-ef00", false)).toEqual([
+      { label: "Reclamos", to: "/reclamos" },
+      { label: "#abcd1234" },
+    ]);
+    expect(migasPara("/feed", false)).toEqual([{ label: "Reclamos de la ciudad" }]);
+    expect(migasPara("/backoffice", true)).toEqual([{ label: "Bandeja de reclamos" }]);
+    expect(migasPara("/panel", true)).toEqual([{ label: "Panel de metricas" }]);
+    expect(migasPara("/mapa", false)).toEqual([{ label: "Mapa de reclamos" }]);
+    expect(migasPara("/desconocida", false)).toEqual([]);
   });
 });

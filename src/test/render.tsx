@@ -4,18 +4,29 @@ import { MantineProvider } from "@mantine/core";
 import { MemoryRouter } from "react-router-dom";
 
 import { theme } from "@/theme/theme";
+import { AuthProvider } from "@/auth/AuthContext";
+import type { Usuario } from "@/auth/users";
+
+interface Options extends RenderOptions {
+  /** Initial router location. */
+  route?: string;
+  /** Seed an authenticated user (skips going through the login flow). */
+  usuario?: Usuario | null;
+}
 
 /**
- * Render a component inside the providers the app relies on: Mantine theme and
- * a router. `route` seeds the router's initial location.
+ * Render a component inside the providers the app relies on: Mantine theme,
+ * router and auth. `route` seeds the location; `usuario` seeds the session.
  */
 export function renderWithProviders(
   ui: ReactNode,
-  { route = "/", ...options }: RenderOptions & { route?: string } = {},
+  { route = "/", usuario = null, ...options }: Options = {},
 ) {
   return render(
     <MantineProvider theme={theme}>
-      <MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>
+      <AuthProvider usuarioInicial={usuario}>
+        <MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>
+      </AuthProvider>
     </MantineProvider>,
     options,
   );

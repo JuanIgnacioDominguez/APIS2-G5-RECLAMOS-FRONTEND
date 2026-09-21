@@ -49,6 +49,22 @@ npm run test:cov
 
 1. **Lint + tests** — ESLint, Prettier `--check`, y `test:cov` con el gate de 60%.
 2. **Build** — `npm run build` (typecheck + bundle) para asegurar que compila.
+3. **Docker image** — construye la imagen de produccion.
+4. **SonarCloud** — quality gate (bugs, vulnerabilidades, code smells + cobertura).
+
+### Configurar SonarCloud
+
+El job de SonarCloud solo corre cuando existe el secret `SONAR_TOKEN` (hasta
+entonces se saltea y el CI queda verde). Para activarlo:
+
+1. Importar el repo en [sonarcloud.io](https://sonarcloud.io) (organizacion +
+   proyecto). Verificar que `sonar.projectKey` y `sonar.organization` en
+   `sonar-project.properties` coincidan con los que asigna SonarCloud.
+2. Generar un token en SonarCloud y cargarlo como secret del repo en
+   GitHub → Settings → Secrets and variables → Actions → `SONAR_TOKEN`.
+3. Opcional: en la proteccion de `main`/`develop`, marcar el check
+   **SonarCloud Code Analysis** como requerido para bloquear el merge si el
+   quality gate falla.
 
 ## Estructura
 

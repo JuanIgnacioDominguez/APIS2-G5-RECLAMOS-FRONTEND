@@ -1,8 +1,5 @@
 import { useState } from "react";
 import {
-  Alert,
-  Anchor,
-  Breadcrumbs,
   Button,
   Card,
   Center,
@@ -14,15 +11,21 @@ import {
   Timeline,
   Title,
 } from "@mantine/core";
-import { IconAlertTriangle, IconClockHour4, IconMapPin, IconUsers } from "@tabler/icons-react";
+import { IconClockHour4, IconMapPin, IconUsers } from "@tabler/icons-react";
 import { notifications } from "@mantine/notifications";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 import { adherir, obtenerReclamo } from "@/api/reclamos";
 import { ESTADO_LABEL } from "@/domain/labels";
-import { formatFecha, idCorto } from "@/lib/format";
+import { formatFecha } from "@/lib/format";
 import { useAsync } from "@/hooks/useAsync";
+import { EstadoError } from "@/components/EstadoError";
+import { useAuth } from "@/auth/AuthContext";
+import { esStaff } from "@/auth/roles";
 import { CategoriaBadge, EstadoBadge, PrioridadBadge } from "@/features/reclamos/Badges";
+import { GestionarEstado } from "@/features/reclamos/GestionarEstado";
+import { ClasificarReclamo } from "@/features/reclamos/ClasificarReclamo";
+import { ComentariosReclamo } from "@/features/reclamos/ComentariosReclamo";
 
 function DatoFila({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   return (
@@ -39,10 +42,11 @@ function DatoFila({ etiqueta, valor }: { etiqueta: string; valor: string }) {
 
 export function ReclamoDetallePage() {
   const { id = "" } = useParams();
-  const navigate = useNavigate();
-  const { data: reclamo, loading, error } = useAsync(() => obtenerReclamo(id), [id]);
+  const { usuario } = useAuth();
+  const { data: reclamo, loading, error, reload } = useAsync(() => obtenerReclamo(id), [id]);
   const [adhiriendo, setAdhiriendo] = useState(false);
   const [adhesiones, setAdhesiones] = useState<number | null>(null);
+  const staff = usuario ? esStaff(usuario.rol) : false;
 
   async function handleAdherir() {
     setAdhiriendo(true);
@@ -74,26 +78,13 @@ export function ReclamoDetallePage() {
   }
 
   if (error || !reclamo) {
-    return (
-      <Alert
-        color="rojoEmergencia"
-        icon={<IconAlertTriangle size={16} />}
-        title="No se pudo cargar"
-      >
-        {error ?? "Reclamo no encontrado"}
-      </Alert>
-    );
+    return <EstadoError mensaje={error ?? "Reclamo no encontrado"} onReintentar={reload} />;
   }
 
   const totalAdhesiones = adhesiones ?? reclamo.adhesiones_count;
 
   return (
-    <Stack gap="lg" maw={980}>
-      <Breadcrumbs>
-        <Anchor onClick={() => navigate("/reclamos")}>Reclamos</Anchor>
-        <Text ff="monospace">{idCorto(reclamo.id)}</Text>
-      </Breadcrumbs>
-
+    <Stack gap="lg">
       <Group justify="space-between" align="flex-start">
         <div>
           <Title order={2}>{reclamo.titulo}</Title>
@@ -151,6 +142,22 @@ export function ReclamoDetallePage() {
 
         <Grid.Col span={{ base: 12, md: 5 }}>
           <Stack gap="lg">
+            {staff && (
+              <>
+                <GestionarEstado
+                  reclamoId={reclamo.id}
+                  estadoActual={reclamo.estado}
+                  onActualizado={reload}
+                />
+                <ClasificarReclamo
+                  reclamoId={reclamo.id}
+                  categoriaActual={reclamo.categoria}
+                  prioridadActual={reclamo.prioridad}
+                  onActualizado={reload}
+                />
+              </>
+            )}
+
             <Card withBorder radius="md" padding="lg">
               <Title order={5} mb="md">
                 Detalles
@@ -188,6 +195,12 @@ export function ReclamoDetallePage() {
           </Stack>
         </Grid.Col>
       </Grid>
+
+      <ComentariosReclamo
+        reclamoId={reclamo.id}
+        comentarios={reclamo.comentarios}
+        onComentado={reload}
+      />
     </Stack>
   );
 }

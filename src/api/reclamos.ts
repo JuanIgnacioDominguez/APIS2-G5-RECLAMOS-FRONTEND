@@ -4,13 +4,16 @@ import { request } from "./client";
 import type {
   CambioEstado,
   ComentarioOut,
+  Estadisticas,
   FiltroReclamos,
   HistorialOut,
   Page,
+  ReclamoBandeja,
   ReclamoCrear,
   ReclamoDetalle,
   ReclamoOut,
   ReclamoResumen,
+  ReclasificacionPedido,
   SugerenciaClasificacion,
 } from "./types";
 
@@ -30,6 +33,16 @@ export function cambiarEstado(id: string, cambio: CambioEstado): Promise<Reclamo
   return request<ReclamoOut>(`/reclamos/${id}/estado`, { method: "PATCH", body: cambio });
 }
 
+/** Backoffice inbox: incoming claims to triage (operador/admin). */
+export function bandeja(page = 1, size = 20): Promise<Page<ReclamoBandeja>> {
+  return request<Page<ReclamoBandeja>>("/reclamos/bandeja", { query: { page, size } });
+}
+
+/** Correct a claim's category/priority without changing its state (operador/admin). */
+export function reclasificar(id: string, cambio: ReclasificacionPedido): Promise<ReclamoOut> {
+  return request<ReclamoOut>(`/reclamos/${id}/clasificacion`, { method: "PATCH", body: cambio });
+}
+
 export function sugerirClasificacion(
   titulo: string,
   descripcion: string,
@@ -47,10 +60,18 @@ export function comentar(id: string, texto: string): Promise<ComentarioOut> {
   });
 }
 
+export function listarComentarios(id: string): Promise<ComentarioOut[]> {
+  return request<ComentarioOut[]>(`/reclamos/${id}/comentarios`);
+}
+
 export function adherir(id: string): Promise<{ reclamo_id: string; adhesiones_count: number }> {
   return request(`/reclamos/${id}/adhesiones`, { method: "POST" });
 }
 
 export function historial(id: string): Promise<HistorialOut[]> {
   return request<HistorialOut[]>(`/reclamos/${id}/historial`);
+}
+
+export function estadisticas(): Promise<Estadisticas> {
+  return request<Estadisticas>("/reclamos/estadisticas");
 }

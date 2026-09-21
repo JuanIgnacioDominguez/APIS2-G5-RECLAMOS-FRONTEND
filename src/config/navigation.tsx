@@ -1,58 +1,77 @@
 import type { Icon } from "@tabler/icons-react";
 import {
-  IconBell,
-  IconBike,
-  IconBuildingEstate,
   IconChartHistogram,
-  IconHelpCircle,
-  IconHome,
-  IconMasksTheater,
-  IconMessageReport,
-  IconSettings,
-  IconShieldExclamation,
-  IconTrash,
-  IconUser,
+  IconInbox,
+  IconList,
+  IconMapPin,
+  IconNews,
+  IconPlus,
 } from "@tabler/icons-react";
+
+import { Rol } from "@/auth/roles";
+import { idCorto } from "@/lib/format";
+
 export interface NavItem {
   label: string;
   to: string;
   icon: Icon;
-  /** null = this module (Grupo 5, Reclamos). A number = the group that owns it. */
-  ownerGroup: number | null;
 }
 
-/** Primary services shown in the sidebar. Only Reclamos is implemented here. */
-export const SERVICIOS: NavItem[] = [
-  { label: "Inicio", to: "/inicio", icon: IconHome, ownerGroup: 0 },
-  { label: "Movilidad", to: "/movilidad", icon: IconBike, ownerGroup: 3 },
-  { label: "Residuos", to: "/residuos", icon: IconTrash, ownerGroup: 4 },
-  { label: "Reclamos", to: "/reclamos", icon: IconMessageReport, ownerGroup: null },
-  { label: "Emergencias", to: "/emergencias", icon: IconShieldExclamation, ownerGroup: 6 },
-  { label: "Espacios Publicos", to: "/espacios", icon: IconBuildingEstate, ownerGroup: 7 },
-  { label: "Cultura y Eventos", to: "/cultura", icon: IconMasksTheater, ownerGroup: 7 },
-  { label: "Analitica Urbana", to: "/analitica", icon: IconChartHistogram, ownerGroup: 8 },
-];
+/** One crumb in the header's breadcrumb trail. Omit `to` for the current page. */
+export interface Miga {
+  label: string;
+  to?: string;
+}
 
-/** Secondary links at the bottom of the sidebar. */
-export const CUENTA: NavItem[] = [
-  { label: "Mi cuenta", to: "/cuenta", icon: IconUser, ownerGroup: 2 },
-  { label: "Notificaciones", to: "/notificaciones", icon: IconBell, ownerGroup: 0 },
-  { label: "Configuracion", to: "/configuracion", icon: IconSettings, ownerGroup: 0 },
-  { label: "Ayuda", to: "/ayuda", icon: IconHelpCircle, ownerGroup: 0 },
-];
+/**
+ * Navigation of the Reclamos module. This frontend is only the claims system,
+ * so the menu differs by role: a citizen manages their own claims, an operator
+ * works the backoffice inbox, and an admin also gets the metrics panel.
+ */
+export function navModulo(rol: Rol): NavItem[] {
+  if (rol === Rol.CIUDADANO) {
+    return [
+      { label: "Reclamos de la ciudad", to: "/feed", icon: IconNews },
+      { label: "Mis reclamos", to: "/reclamos", icon: IconList },
+      { label: "Nuevo reclamo", to: "/reclamos/nuevo", icon: IconPlus },
+      { label: "Mapa", to: "/mapa", icon: IconMapPin },
+    ];
+  }
+  const items: NavItem[] = [
+    { label: "Bandeja", to: "/backoffice", icon: IconInbox },
+    { label: "Reclamos de la ciudad", to: "/feed", icon: IconNews },
+    { label: "Todos los reclamos", to: "/reclamos", icon: IconList },
+  ];
+  if (rol === Rol.ADMIN) {
+    items.push({ label: "Panel", to: "/panel", icon: IconChartHistogram });
+  }
+  items.push({ label: "Mapa", to: "/mapa", icon: IconMapPin });
+  return items;
+}
 
-/** Human name of the group that owns a not-yet-integrated section. */
-export const GRUPO_NOMBRE: Record<number, string> = {
-  0: "la plataforma CityPass+",
-  2: "el Grupo 2 (Login Federado)",
-  3: "el Grupo 3 (Movilidad Urbana)",
-  4: "el Grupo 4 (Gestion de Residuos)",
-  6: "el Grupo 6 (Emergencias y Seguridad)",
-  7: "el Grupo 7 (Espacios Publicos y Cultura)",
-  8: "el Grupo 8 (Analitica Urbana e IA)",
-};
+/** Landing route after login, by role. */
+export function homePorRol(rol: Rol): string {
+  return rol === Rol.CIUDADANO ? "/reclamos" : "/backoffice";
+}
 
-/** Look up a nav item by its route, across both groups of links. */
-export function navItemPorRuta(ruta: string): NavItem | undefined {
-  return [...SERVICIOS, ...CUENTA].find((item) => item.to === ruta);
+/**
+ * Breadcrumb trail for the header, built from the URL alone (no fetch: a
+ * claim's id segment is only ever shortened for display, never resolved).
+ */
+export function migasPara(pathname: string, staff: boolean): Miga[] {
+  if (pathname === "/reclamos") {
+    return [{ label: staff ? "Todos los reclamos" : "Mis reclamos" }];
+  }
+  if (pathname === "/reclamos/nuevo") {
+    return [{ label: "Reclamos", to: "/reclamos" }, { label: "Nuevo reclamo" }];
+  }
+  const detalle = /^\/reclamos\/([^/]+)$/.exec(pathname);
+  if (detalle) {
+    return [{ label: "Reclamos", to: "/reclamos" }, { label: idCorto(detalle[1]) }];
+  }
+  if (pathname === "/feed") return [{ label: "Reclamos de la ciudad" }];
+  if (pathname === "/backoffice") return [{ label: "Bandeja de reclamos" }];
+  if (pathname === "/panel") return [{ label: "Panel de metricas" }];
+  if (pathname === "/mapa") return [{ label: "Mapa de reclamos" }];
+  return [];
 }

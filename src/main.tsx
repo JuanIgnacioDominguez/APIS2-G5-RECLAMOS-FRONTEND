@@ -6,8 +6,10 @@ import { Notifications } from "@mantine/notifications";
 
 import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
+import "@/theme/global.css";
 
 import { theme } from "@/theme/theme";
+import { AuthProvider } from "@/auth/AuthContext";
 import { App } from "@/App";
 
 createRoot(document.getElementById("root")!).render(
@@ -15,7 +17,9 @@ createRoot(document.getElementById("root")!).render(
     <MantineProvider theme={theme}>
       <Notifications position="top-right" />
       <BrowserRouter>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </BrowserRouter>
     </MantineProvider>
   </StrictMode>,

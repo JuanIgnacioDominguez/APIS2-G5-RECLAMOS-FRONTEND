@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Anchor, Breadcrumbs, Card, Stack, Text, Title } from "@mantine/core";
+import { Stack, Text, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useNavigate } from "react-router-dom";
 
@@ -33,12 +33,7 @@ export function NuevoReclamoPage() {
   }
 
   return (
-    <Stack gap="lg" maw={720}>
-      <Breadcrumbs>
-        <Anchor onClick={() => navigate("/reclamos")}>Reclamos</Anchor>
-        <Text>Nuevo</Text>
-      </Breadcrumbs>
-
+    <Stack gap="md" className="pantalla-sin-scroll">
       <div>
         <Title order={2}>Nuevo reclamo</Title>
         <Text c="dimmed">
@@ -46,9 +41,7 @@ export function NuevoReclamoPage() {
         </Text>
       </div>
 
-      <Card withBorder radius="md" padding="lg">
-        <ReclamoForm onSubmit={handleSubmit} loading={loading} />
-      </Card>
+      <ReclamoForm onSubmit={handleSubmit} loading={loading} />
     </Stack>
   );
 }

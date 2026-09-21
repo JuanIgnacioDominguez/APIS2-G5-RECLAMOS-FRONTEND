@@ -5,7 +5,7 @@
  */
 
 import type { ReclamoResumen } from "@/api/types";
-import { EstadoReclamo } from "@/domain/enums";
+import { CategoriaReclamo, EstadoReclamo } from "@/domain/enums";
 
 export type TabReclamos = "todos" | "abiertos" | "en_proceso" | "resueltos";
 
@@ -41,15 +41,19 @@ export function perteneceATab(estado: EstadoReclamo, tab: TabReclamos): boolean 
   }
 }
 
-/** Filter a list by the active tab and a free-text query on the title. */
+/** Filter a list by the active tab, a category, and a free-text query on the title. */
 export function filtrarReclamos(
   items: ReclamoResumen[],
   tab: TabReclamos,
   texto: string,
+  categoria: CategoriaReclamo | null = null,
 ): ReclamoResumen[] {
   const q = texto.trim().toLowerCase();
   return items.filter(
-    (r) => perteneceATab(r.estado, tab) && (q === "" || r.titulo.toLowerCase().includes(q)),
+    (r) =>
+      perteneceATab(r.estado, tab) &&
+      (categoria === null || r.categoria === categoria) &&
+      (q === "" || r.titulo.toLowerCase().includes(q)),
   );
 }
 
