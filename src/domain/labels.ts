@@ -25,7 +25,8 @@ export const ESTADO_LABEL: Record<EstadoReclamo, string> = {
  */
 export const COLOR_HEX = {
   azulUrbano: "#2563a6",
-  azulSuave: "#4f89d1",
+  cian: "#0f9bc7",
+  violeta: "#7a5cc2",
   azulNoche: "#142430",
   ambar: "#d99838",
   verdeUrbano: "#4f8a72",
@@ -35,8 +36,8 @@ export type ColorKey = keyof typeof COLOR_HEX;
 
 /** Brand color key per state, for badges, map markers and legends. */
 export const ESTADO_COLOR: Record<EstadoReclamo, ColorKey> = {
-  [EstadoReclamo.RECIBIDO]: "azulSuave",
-  [EstadoReclamo.EN_REVISION]: "azulUrbano",
+  [EstadoReclamo.RECIBIDO]: "cian",
+  [EstadoReclamo.EN_REVISION]: "violeta",
   [EstadoReclamo.ASIGNADO]: "azulUrbano",
   [EstadoReclamo.EN_PROCESO]: "ambar",
   [EstadoReclamo.RESUELTO]: "verdeUrbano",

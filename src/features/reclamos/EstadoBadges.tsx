@@ -1,5 +1,4 @@
-import type { ReactNode } from "react";
-import { Sparkles } from "lucide-react";
+import { ChevronDown, ChevronUp, ChevronsUp, Equal, Sparkles, type LucideIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import type { CategoriaReclamo, EstadoReclamo, PrioridadReclamo } from "@/domain/enums";
@@ -10,34 +9,43 @@ import {
   ESTADO_LABEL,
   PRIORIDAD_COLOR,
   PRIORIDAD_LABEL,
-  type ColorKey,
 } from "@/domain/labels";
 
-function BadgeColoreado({ colorKey, children }: { colorKey: ColorKey; children: ReactNode }) {
-  const color = COLOR_HEX[colorKey];
+/** State: tinted pill with a leading dot, so it reads as "where the claim is". */
+export function EstadoBadge({ estado }: { estado: EstadoReclamo }) {
+  const color = COLOR_HEX[ESTADO_COLOR[estado]];
   return (
     <Badge
       variant="outline"
-      className="border-transparent font-medium"
-      style={{
-        backgroundColor: `color-mix(in oklab, ${color} 12%, transparent)`,
-        color,
-      }}
+      className="gap-1.5 border-transparent font-medium"
+      style={{ backgroundColor: `color-mix(in oklab, ${color} 14%, transparent)`, color }}
     >
-      {children}
+      <span className="size-1.5 rounded-full" style={{ backgroundColor: color }} />
+      {ESTADO_LABEL[estado]}
     </Badge>
   );
 }
 
-export function EstadoBadge({ estado }: { estado: EstadoReclamo }) {
-  return <BadgeColoreado colorKey={ESTADO_COLOR[estado]}>{ESTADO_LABEL[estado]}</BadgeColoreado>;
-}
+const ICONO_PRIORIDAD: Record<PrioridadReclamo, LucideIcon> = {
+  BAJA: ChevronDown,
+  MEDIA: Equal,
+  ALTA: ChevronUp,
+  CRITICA: ChevronsUp,
+};
 
+/** Priority: outlined pill with a directional icon, visually apart from state. */
 export function PrioridadBadge({ prioridad }: { prioridad: PrioridadReclamo }) {
+  const color = COLOR_HEX[PRIORIDAD_COLOR[prioridad]];
+  const Icono = ICONO_PRIORIDAD[prioridad];
   return (
-    <BadgeColoreado colorKey={PRIORIDAD_COLOR[prioridad]}>
+    <Badge
+      variant="outline"
+      className="gap-1 bg-transparent font-semibold"
+      style={{ borderColor: color, color }}
+    >
+      <Icono strokeWidth={2.5} />
       {PRIORIDAD_LABEL[prioridad]}
-    </BadgeColoreado>
+    </Badge>
   );
 }
 

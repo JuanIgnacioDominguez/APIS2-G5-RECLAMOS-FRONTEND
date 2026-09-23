@@ -1,4 +1,15 @@
-import { BarChart3, Inbox, List, MapPin, Newspaper, type LucideIcon } from "lucide-react";
+import {
+  BarChart3,
+  Bell,
+  CircleHelp,
+  Inbox,
+  List,
+  MapPin,
+  Newspaper,
+  Settings,
+  User,
+  type LucideIcon,
+} from "lucide-react";
 
 import { Rol } from "@/auth/roles";
 import { idCorto } from "@/lib/format";
@@ -26,6 +37,14 @@ export interface Miga {
 const COMUNIDAD: NavItem[] = [
   { label: "Reclamos de la ciudad", to: "/feed", icon: Newspaper },
   { label: "Mapa", to: "/mapa", icon: MapPin },
+];
+
+/** Personal section pinned to the bottom of the sidebar, same for every role. */
+export const NAV_CUENTA: NavItem[] = [
+  { label: "Mi cuenta", to: "/cuenta", icon: User },
+  { label: "Notificaciones", to: "/notificaciones", icon: Bell },
+  { label: "Configuracion", to: "/configuracion", icon: Settings },
+  { label: "Ayuda", to: "/ayuda", icon: CircleHelp },
 ];
 
 /**
@@ -96,5 +115,7 @@ export function migasPara(pathname: string, staff: boolean, origen?: Miga): Miga
   if (pathname === "/backoffice") return [{ label: "Bandeja de reclamos" }];
   if (pathname === "/panel") return [{ label: "Panel de metricas" }];
   if (pathname === "/mapa") return [{ label: "Mapa de reclamos" }];
+  const personal = NAV_CUENTA.find((i) => i.to === pathname);
+  if (personal) return [{ label: personal.label }];
   return [];
 }

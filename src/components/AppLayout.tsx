@@ -5,7 +5,7 @@ import { Bell, ChevronsUpDown, LogOut, Plus, Search } from "lucide-react";
 import { bandeja } from "@/api/reclamos";
 import { LogoMark } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { migasPara, navModulo, type Miga } from "@/config/navigation";
+import { migasPara, NAV_CUENTA, navModulo, type Miga, type NavItem } from "@/config/navigation";
 import { useAsync } from "@/hooks/useAsync";
 import { useAuth } from "@/auth/AuthContext";
 import { esStaff, Rol, ROL_LABEL } from "@/auth/roles";
@@ -145,6 +145,44 @@ function BusquedaGlobal() {
   );
 }
 
+/** One sidebar link: soft hover, blue-tinted selected state with an "ACTIVO" tag. */
+function ItemNav({
+  item,
+  activo,
+  conteo,
+}: {
+  item: NavItem;
+  activo: boolean;
+  conteo: number | null;
+}) {
+  const tieneConteo = !!conteo;
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        asChild
+        isActive={activo}
+        tooltip={item.label}
+        className="h-9 gap-3 rounded-lg px-3 text-sm font-medium text-sidebar-foreground/80 hover:bg-white/[0.07] hover:text-white data-[active=true]:bg-sidebar-primary/30 data-[active=true]:text-white data-[active=true]:hover:bg-sidebar-primary/30 [&>svg]:size-[18px] [&>svg]:text-sidebar-foreground/60 hover:[&>svg]:text-white data-[active=true]:[&>svg]:text-white"
+      >
+        <RouterNavLink to={item.to}>
+          <item.icon />
+          <span>{item.label}</span>
+          {activo && !tieneConteo && (
+            <span className="ml-auto rounded bg-[#e6b566]/20 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-[#e6b566] group-data-[collapsible=icon]:hidden">
+              ACTIVO
+            </span>
+          )}
+        </RouterNavLink>
+      </SidebarMenuButton>
+      {tieneConteo && (
+        <SidebarMenuBadge className="rounded-full bg-[#e6b566] text-[11px] font-semibold text-[#142430]">
+          {conteo}
+        </SidebarMenuBadge>
+      )}
+    </SidebarMenuItem>
+  );
+}
+
 /** Account menu in the sidebar footer (shadcn's stock `NavUser` pattern). */
 function NavUser() {
   const navigate = useNavigate();
@@ -214,57 +252,56 @@ export function AppLayout() {
   return (
     <SidebarProvider>
       <Sidebar collapsible="icon">
-        <SidebarHeader>
+        <SidebarHeader className="border-b border-sidebar-border p-3">
           <Marca />
-          {usuario?.rol === Rol.CIUDADANO && (
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  tooltip="Nuevo reclamo"
-                  onClick={() => navigate("/reclamos/nuevo")}
-                  className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground"
-                >
-                  <Plus />
-                  <span>Nuevo reclamo</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          )}
         </SidebarHeader>
-        <SidebarContent>
+        <SidebarContent className="gap-0 px-2 py-3">
+          {usuario?.rol === Rol.CIUDADANO && (
+            <SidebarGroup className="pt-0">
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    tooltip="Nuevo reclamo"
+                    onClick={() => navigate("/reclamos/nuevo")}
+                    className="h-9 bg-sidebar-primary font-medium text-sidebar-primary-foreground hover:bg-sidebar-primary/90 hover:text-sidebar-primary-foreground active:bg-sidebar-primary/90 active:text-sidebar-primary-foreground"
+                  >
+                    <Plus />
+                    <span>Nuevo reclamo</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroup>
+          )}
           {secciones.map((seccion) => (
             <SidebarGroup key={seccion.label}>
-              <SidebarGroupLabel className="text-[11px] tracking-wider text-sidebar-foreground/50 uppercase">
+              <SidebarGroupLabel className="text-[11px] font-semibold tracking-wider text-sidebar-foreground/45 uppercase">
                 {seccion.label}
               </SidebarGroupLabel>
               <SidebarGroupContent>
-                <SidebarMenu>
+                <SidebarMenu className="gap-0.5">
                   {seccion.items.map((item) => (
-                    <SidebarMenuItem key={item.to}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={isActive(item.to)}
-                        tooltip={item.label}
-                        className="data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground data-[active=true]:hover:bg-sidebar-primary"
-                      >
-                        <RouterNavLink to={item.to}>
-                          <item.icon />
-                          <span>{item.label}</span>
-                        </RouterNavLink>
-                      </SidebarMenuButton>
-                      {item.contador && !!pendientes && (
-                        <SidebarMenuBadge className="bg-primary text-primary-foreground">
-                          {pendientes}
-                        </SidebarMenuBadge>
-                      )}
-                    </SidebarMenuItem>
+                    <ItemNav
+                      key={item.to}
+                      item={item}
+                      activo={isActive(item.to)}
+                      conteo={item.contador ? pendientes : null}
+                    />
                   ))}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
           ))}
+          <SidebarGroup className="mt-auto border-t border-sidebar-border pt-3">
+            <SidebarGroupContent>
+              <SidebarMenu className="gap-0.5">
+                {NAV_CUENTA.map((item) => (
+                  <ItemNav key={item.to} item={item} activo={isActive(item.to)} conteo={null} />
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
         </SidebarContent>
-        <SidebarFooter>
+        <SidebarFooter className="border-t border-sidebar-border p-2">
           <SidebarMenu>
             <SidebarMenuItem>
               <NavUser />

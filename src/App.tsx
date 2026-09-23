@@ -12,6 +12,10 @@ import { ReclamoDetallePage } from "@/pages/ReclamoDetallePage";
 import { BandejaPage } from "@/pages/BandejaPage";
 import { PanelPage } from "@/pages/PanelPage";
 import { MapaPublicoPage } from "@/pages/MapaPublicoPage";
+import { CuentaPage } from "@/pages/CuentaPage";
+import { NotificacionesPage } from "@/pages/NotificacionesPage";
+import { ConfiguracionPage } from "@/pages/ConfiguracionPage";
+import { AyudaPage } from "@/pages/AyudaPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 
 // Land each role on its own home (citizen: their claims; staff: the backoffice).
@@ -32,6 +36,10 @@ export function App() {
           <Route path="/reclamos/nuevo" element={<NuevoReclamoPage />} />
           <Route path="/reclamos/:id" element={<ReclamoDetallePage />} />
           <Route path="/mapa" element={<MapaPublicoPage />} />
+          <Route path="/cuenta" element={<CuentaPage />} />
+          <Route path="/notificaciones" element={<NotificacionesPage />} />
+          <Route path="/configuracion" element={<ConfiguracionPage />} />
+          <Route path="/ayuda" element={<AyudaPage />} />
           <Route element={<RequireAuth soloStaff />}>
             <Route path="/backoffice" element={<BandejaPage />} />
           </Route>
