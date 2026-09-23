@@ -12,7 +12,7 @@ export function CitySkyline() {
       aria-hidden="true"
       style={{ display: "block", opacity: 0.35 }}
     >
-      <g stroke="var(--mantine-color-azulUrbano-3)" strokeWidth="1.4" strokeLinejoin="round">
+      <g stroke="#87afdf" strokeWidth="1.4" strokeLinejoin="round">
         {/* sun */}
         <circle cx="44" cy="30" r="10" />
         {/* clouds */}

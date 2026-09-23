@@ -1,5 +1,4 @@
-import type { Icon } from "@tabler/icons-react";
-import { IconChartHistogram, IconInbox, IconList, IconMapPin, IconNews } from "@tabler/icons-react";
+import { BarChart3, Inbox, List, MapPin, Newspaper, type LucideIcon } from "lucide-react";
 
 import { Rol } from "@/auth/roles";
 import { idCorto } from "@/lib/format";
@@ -7,7 +6,7 @@ import { idCorto } from "@/lib/format";
 export interface NavItem {
   label: string;
   to: string;
-  icon: Icon;
+  icon: LucideIcon;
 }
 
 /** One crumb in the header's breadcrumb trail. Omit `to` for the current page. */
@@ -24,20 +23,20 @@ export interface Miga {
 export function navModulo(rol: Rol): NavItem[] {
   if (rol === Rol.CIUDADANO) {
     return [
-      { label: "Mis reclamos", to: "/reclamos", icon: IconList },
-      { label: "Reclamos de la ciudad", to: "/feed", icon: IconNews },
-      { label: "Mapa", to: "/mapa", icon: IconMapPin },
+      { label: "Mis reclamos", to: "/reclamos", icon: List },
+      { label: "Reclamos de la ciudad", to: "/feed", icon: Newspaper },
+      { label: "Mapa", to: "/mapa", icon: MapPin },
     ];
   }
   const items: NavItem[] = [
-    { label: "Bandeja", to: "/backoffice", icon: IconInbox },
-    { label: "Todos los reclamos", to: "/reclamos", icon: IconList },
-    { label: "Reclamos de la ciudad", to: "/feed", icon: IconNews },
+    { label: "Bandeja", to: "/backoffice", icon: Inbox },
+    { label: "Todos los reclamos", to: "/reclamos", icon: List },
+    { label: "Reclamos de la ciudad", to: "/feed", icon: Newspaper },
   ];
   if (rol === Rol.ADMIN) {
-    items.push({ label: "Panel", to: "/panel", icon: IconChartHistogram });
+    items.push({ label: "Panel", to: "/panel", icon: BarChart3 });
   }
-  items.push({ label: "Mapa", to: "/mapa", icon: IconMapPin });
+  items.push({ label: "Mapa", to: "/mapa", icon: MapPin });
   return items;
 }
 
