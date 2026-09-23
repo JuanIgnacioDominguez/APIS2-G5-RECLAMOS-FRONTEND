@@ -216,8 +216,8 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 min-w-0 flex-col">
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-6 md:grid-cols-12 md:items-stretch">
-        <div className="min-h-0 min-w-0 md:col-span-5">
+      <div className="flex min-h-0 flex-1 flex-col gap-6 md:flex-row md:items-stretch">
+        <div className="min-h-0 min-w-0 md:flex-[5_5_0%]">
           <div className="flex h-full flex-col gap-4 overflow-x-hidden overflow-y-auto">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="titulo">
@@ -390,7 +390,7 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
           </div>
         </div>
 
-        <div className="min-w-0 md:col-span-7">
+        <div className="min-h-0 min-w-0 md:flex-[7_7_0%]">
           <div className="flex h-full flex-col gap-2">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Ubicacion en el mapa</span>
