@@ -145,7 +145,7 @@ function BusquedaGlobal() {
   );
 }
 
-/** One sidebar link: soft hover, blue-tinted selected state with an "ACTIVO" tag. */
+/** One sidebar link: 44px row, soft hover, solid blue selected state. */
 function ItemNav({
   item,
   activo,
@@ -162,16 +162,11 @@ function ItemNav({
         asChild
         isActive={activo}
         tooltip={item.label}
-        className="h-9 gap-3 rounded-lg px-3 text-sm font-medium text-sidebar-foreground/80 hover:bg-white/[0.07] hover:text-white data-[active=true]:bg-sidebar-primary/30 data-[active=true]:text-white data-[active=true]:hover:bg-sidebar-primary/30 [&>svg]:size-[18px] [&>svg]:text-sidebar-foreground/60 hover:[&>svg]:text-white data-[active=true]:[&>svg]:text-white"
+        className="h-11 gap-3 rounded-lg px-3.5 text-sm font-medium text-sidebar-foreground/75 hover:bg-white/[0.07] hover:text-white data-[active=true]:bg-[#1f5a99] data-[active=true]:text-white data-[active=true]:shadow-sm data-[active=true]:hover:bg-[#1f5a99] [&>svg]:size-5 [&>svg]:text-sidebar-foreground/55 hover:[&>svg]:text-white data-[active=true]:[&>svg]:text-[#8fd3f0]"
       >
         <RouterNavLink to={item.to}>
           <item.icon />
           <span>{item.label}</span>
-          {activo && !tieneConteo && (
-            <span className="ml-auto rounded bg-[#e6b566]/20 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-[#e6b566] group-data-[collapsible=icon]:hidden">
-              ACTIVO
-            </span>
-          )}
         </RouterNavLink>
       </SidebarMenuButton>
       {tieneConteo && (
@@ -263,7 +258,7 @@ export function AppLayout() {
                   <SidebarMenuButton
                     tooltip="Nuevo reclamo"
                     onClick={() => navigate("/reclamos/nuevo")}
-                    className="h-9 bg-sidebar-primary font-medium text-sidebar-primary-foreground hover:bg-sidebar-primary/90 hover:text-sidebar-primary-foreground active:bg-sidebar-primary/90 active:text-sidebar-primary-foreground"
+                    className="h-11 bg-sidebar-primary px-3.5 font-medium text-sidebar-primary-foreground hover:bg-sidebar-primary/90 hover:text-sidebar-primary-foreground active:bg-sidebar-primary/90 active:text-sidebar-primary-foreground"
                   >
                     <Plus />
                     <span>Nuevo reclamo</span>
