@@ -13,6 +13,7 @@ import {
   PrioridadReclamo,
 } from "@/domain/enums";
 import { renderWithProviders } from "@/test/render";
+import { CIUDADANO } from "@/test/usuarios";
 import { ReclamoDetallePage } from "./ReclamoDetallePage";
 
 const detalle: ReclamoDetalle = {
@@ -61,12 +62,12 @@ const detalle: ReclamoDetalle = {
   comentarios: [],
 };
 
-function renderDetalle() {
+function renderDetalle(usuario: (typeof CIUDADANO) | null = null) {
   return renderWithProviders(
     <Routes>
       <Route path="/reclamos/:id" element={<ReclamoDetallePage />} />
     </Routes>,
-    { route: `/reclamos/${detalle.id}` },
+    { route: `/reclamos/${detalle.id}`, usuario },
   );
 }
 
@@ -96,6 +97,17 @@ describe("ReclamoDetallePage", () => {
 
     await waitFor(() => expect(screen.getByText("5 vecinos adheridos")).toBeInTheDocument());
     expect(reclamosApi.adherir).toHaveBeenCalledWith(detalle.id);
+  });
+
+  it("no ofrece adherir cuando el reclamo es del propio usuario", async () => {
+    // The claim's ciudadano_id matches CIUDADANO.id, so it is the user's own.
+    renderDetalle(CIUDADANO);
+    await screen.findByText(detalle.titulo);
+
+    expect(
+      screen.queryByRole("button", { name: /a mi tambien me pasa/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(/es tu reclamo/i)).toBeInTheDocument();
   });
 
   it("muestra un error si el reclamo no se puede cargar", async () => {

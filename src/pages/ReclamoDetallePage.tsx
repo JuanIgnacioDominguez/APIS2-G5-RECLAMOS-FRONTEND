@@ -1,18 +1,6 @@
 import { useState } from "react";
-import {
-  Button,
-  Card,
-  Center,
-  Grid,
-  Group,
-  Loader,
-  Stack,
-  Text,
-  Timeline,
-  Title,
-} from "@mantine/core";
-import { IconClockHour4, IconMapPin, IconUsers } from "@tabler/icons-react";
-import { notifications } from "@mantine/notifications";
+import { Clock, Loader2, MapPin, Users } from "lucide-react";
+import { toast } from "sonner";
 import { useParams } from "react-router-dom";
 
 import { adherir, obtenerReclamo } from "@/api/reclamos";
@@ -22,21 +10,20 @@ import { useAsync } from "@/hooks/useAsync";
 import { EstadoError } from "@/components/EstadoError";
 import { useAuth } from "@/auth/AuthContext";
 import { esStaff } from "@/auth/roles";
-import { CategoriaBadge, EstadoBadge, PrioridadBadge } from "@/features/reclamos/Badges";
+import { CategoriaBadge, EstadoBadge, PrioridadBadge } from "@/features/reclamos/EstadoBadges";
 import { GestionarEstado } from "@/features/reclamos/GestionarEstado";
 import { ClasificarReclamo } from "@/features/reclamos/ClasificarReclamo";
 import { ComentariosReclamo } from "@/features/reclamos/ComentariosReclamo";
+import { MapaUbicacion } from "@/features/mapa/MapaUbicacion";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 function DatoFila({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   return (
-    <Group justify="space-between" wrap="nowrap" gap="xl">
-      <Text size="sm" c="dimmed">
-        {etiqueta}
-      </Text>
-      <Text size="sm" fw={500} ta="right">
-        {valor}
-      </Text>
-    </Group>
+    <div className="flex items-center justify-between gap-6">
+      <span className="text-sm text-muted-foreground">{etiqueta}</span>
+      <span className="text-right text-sm font-medium">{valor}</span>
+    </div>
   );
 }
 
@@ -53,16 +40,12 @@ export function ReclamoDetallePage() {
     try {
       const res = await adherir(id);
       setAdhesiones(res.adhesiones_count);
-      notifications.show({
-        color: "verdeUrbano",
-        title: "Adhesion registrada",
-        message: "Gracias por sumarte a este reclamo.",
+      toast.success("Adhesion registrada", {
+        description: "Gracias por sumarte a este reclamo.",
       });
     } catch (err) {
-      notifications.show({
-        color: "rojoEmergencia",
-        title: "No se pudo adherir",
-        message: err instanceof Error ? err.message : "Error inesperado",
+      toast.error("No se pudo adherir", {
+        description: err instanceof Error ? err.message : "Error inesperado",
       });
     } finally {
       setAdhiriendo(false);
@@ -71,9 +54,9 @@ export function ReclamoDetallePage() {
 
   if (loading) {
     return (
-      <Center py="xl">
-        <Loader color="azulUrbano" />
-      </Center>
+      <div className="flex justify-center py-16">
+        <Loader2 className="size-6 animate-spin text-primary" />
+      </div>
     );
   }
 
@@ -82,125 +65,139 @@ export function ReclamoDetallePage() {
   }
 
   const totalAdhesiones = adhesiones ?? reclamo.adhesiones_count;
+  // A citizen cannot adhere to their own claim.
+  const esPropio = usuario?.id === reclamo.ciudadano_id;
+  const tieneUbicacion = reclamo.latitud !== null && reclamo.longitud !== null;
 
   return (
-    <Stack gap="lg">
-      <Group justify="space-between" align="flex-start">
-        <div>
-          <Title order={2}>{reclamo.titulo}</Title>
-          <Text c="dimmed">{formatFecha(reclamo.created_at)}</Text>
+    <div className="mx-auto flex max-w-6xl flex-col gap-6">
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight">{reclamo.titulo}</h1>
+          <p className="text-sm text-muted-foreground">{formatFecha(reclamo.created_at)}</p>
         </div>
         <EstadoBadge estado={reclamo.estado} />
-      </Group>
+      </div>
 
-      <Group gap="xs">
+      <div className="flex flex-wrap items-center gap-2">
         <CategoriaBadge categoria={reclamo.categoria} />
         <PrioridadBadge prioridad={reclamo.prioridad} />
-      </Group>
+      </div>
 
-      <Grid>
-        <Grid.Col span={{ base: 12, md: 7 }}>
-          <Stack gap="lg">
-            <Card withBorder radius="md" padding="lg">
-              <Title order={5} mb="sm">
-                Descripcion
-              </Title>
-              <Text>{reclamo.descripcion}</Text>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="flex flex-col gap-6 lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Descripcion</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm leading-relaxed">{reclamo.descripcion}</p>
               {reclamo.direccion && (
-                <Group gap={6} mt="md" c="dimmed">
-                  <IconMapPin size={16} />
-                  <Text size="sm">
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <MapPin className="size-4" />
+                  <span>
                     {reclamo.direccion}
                     {reclamo.barrio ? `, ${reclamo.barrio}` : ""}
-                  </Text>
-                </Group>
+                  </span>
+                </div>
               )}
-            </Card>
+            </CardContent>
+          </Card>
 
-            <Card withBorder radius="md" padding="lg">
-              <Group justify="space-between">
-                <Group gap={8}>
-                  <IconUsers size={18} />
-                  <Text fw={500}>
-                    {totalAdhesiones}{" "}
-                    {totalAdhesiones === 1 ? "vecino adherido" : "vecinos adheridos"}
-                  </Text>
-                </Group>
-                <Button
-                  variant="light"
-                  color="azulUrbano"
-                  loading={adhiriendo}
-                  onClick={handleAdherir}
-                  leftSection={<IconUsers size={16} />}
-                >
+          {tieneUbicacion && (
+            <Card className="overflow-hidden">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <MapPin className="size-4 text-primary" />
+                  Ubicacion
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <MapaUbicacion latitud={reclamo.latitud!} longitud={reclamo.longitud!} />
+              </CardContent>
+            </Card>
+          )}
+
+          <Card>
+            <CardContent className="flex flex-wrap items-center justify-between gap-3 pt-6">
+              <div className="flex items-center gap-2">
+                <Users className="size-5 text-primary" />
+                <span className="font-medium">
+                  {totalAdhesiones}{" "}
+                  {totalAdhesiones === 1 ? "vecino adherido" : "vecinos adheridos"}
+                </span>
+              </div>
+              {esPropio ? (
+                <span className="text-sm text-muted-foreground">Es tu reclamo</span>
+              ) : (
+                <Button onClick={handleAdherir} disabled={adhiriendo} className="gap-2">
+                  {adhiriendo ? <Loader2 className="size-4 animate-spin" /> : <Users className="size-4" />}
                   A mi tambien me pasa
                 </Button>
-              </Group>
-            </Card>
-          </Stack>
-        </Grid.Col>
+              )}
+            </CardContent>
+          </Card>
 
-        <Grid.Col span={{ base: 12, md: 5 }}>
-          <Stack gap="lg">
-            {staff && (
-              <>
-                <GestionarEstado
-                  reclamoId={reclamo.id}
-                  estadoActual={reclamo.estado}
-                  onActualizado={reload}
-                />
-                <ClasificarReclamo
-                  reclamoId={reclamo.id}
-                  categoriaActual={reclamo.categoria}
-                  prioridadActual={reclamo.prioridad}
-                  onActualizado={reload}
-                />
-              </>
-            )}
+          <ComentariosReclamo
+            reclamoId={reclamo.id}
+            comentarios={reclamo.comentarios}
+            onComentado={reload}
+          />
+        </div>
 
-            <Card withBorder radius="md" padding="lg">
-              <Title order={5} mb="md">
-                Detalles
-              </Title>
-              <Stack gap="xs">
-                <DatoFila etiqueta="Categoria" valor={reclamo.categoria} />
-                <DatoFila etiqueta="Prioridad" valor={reclamo.prioridad} />
-                <DatoFila etiqueta="Estado" valor={ESTADO_LABEL[reclamo.estado]} />
-                <DatoFila etiqueta="Barrio" valor={reclamo.barrio ?? "-"} />
-                {reclamo.asignado_a && (
-                  <DatoFila etiqueta="Asignado a" valor={reclamo.asignado_a} />
-                )}
-              </Stack>
-            </Card>
+        <div className="flex flex-col gap-6">
+          {staff && (
+            <>
+              <GestionarEstado
+                reclamoId={reclamo.id}
+                estadoActual={reclamo.estado}
+                onActualizado={reload}
+              />
+              <ClasificarReclamo
+                reclamoId={reclamo.id}
+                categoriaActual={reclamo.categoria}
+                prioridadActual={reclamo.prioridad}
+                onActualizado={reload}
+              />
+            </>
+          )}
 
-            <Card withBorder radius="md" padding="lg">
-              <Title order={5} mb="md">
-                Trazabilidad
-              </Title>
-              <Timeline active={reclamo.historial.length} bulletSize={18} lineWidth={2}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Detalles</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <DatoFila etiqueta="Categoria" valor={reclamo.categoria} />
+              <DatoFila etiqueta="Prioridad" valor={reclamo.prioridad} />
+              <DatoFila etiqueta="Estado" valor={ESTADO_LABEL[reclamo.estado]} />
+              <DatoFila etiqueta="Barrio" valor={reclamo.barrio ?? "-"} />
+              {reclamo.asignado_a && <DatoFila etiqueta="Asignado a" valor={reclamo.asignado_a} />}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Trazabilidad</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ol className="relative space-y-4 border-l border-border pl-6">
                 {reclamo.historial.map((h) => (
-                  <Timeline.Item
-                    key={h.id}
-                    bullet={<IconClockHour4 size={12} />}
-                    title={ESTADO_LABEL[h.estado_nuevo]}
-                  >
-                    <Text size="xs" c="dimmed">
-                      {formatFecha(h.created_at)}
-                    </Text>
-                    {h.motivo && <Text size="sm">{h.motivo}</Text>}
-                  </Timeline.Item>
+                  <li key={h.id} className="relative">
+                    <span className="absolute -left-[27px] flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                      <Clock className="size-2.5" />
+                    </span>
+                    <p className="text-sm font-medium leading-none">
+                      {ESTADO_LABEL[h.estado_nuevo]}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">{formatFecha(h.created_at)}</p>
+                    {h.motivo && <p className="mt-1 text-sm">{h.motivo}</p>}
+                  </li>
                 ))}
-              </Timeline>
-            </Card>
-          </Stack>
-        </Grid.Col>
-      </Grid>
-
-      <ComentariosReclamo
-        reclamoId={reclamo.id}
-        comentarios={reclamo.comentarios}
-        onComentado={reload}
-      />
-    </Stack>
+              </ol>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
   );
 }
