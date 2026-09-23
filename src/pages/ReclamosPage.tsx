@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   FolderOpen,
   Inbox,
+  List,
   Loader2,
   Plus,
   Search,
@@ -66,7 +67,7 @@ export function ReclamosPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex items-center gap-3">
-          <FolderOpen className="size-7 shrink-0 text-primary" />
+          <List className="size-7 shrink-0 text-primary" />
           <div>
             <h1 className="font-heading text-2xl font-semibold tracking-tight">
               {staff ? "Todos los reclamos" : "Mis reclamos"}

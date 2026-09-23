@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Loader2, Map } from "lucide-react";
+import { Loader2, MapPin } from "lucide-react";
 
 import { listarReclamos } from "@/api/reclamos";
 import { useAuth } from "@/auth/AuthContext";
@@ -70,7 +70,7 @@ export function MapaPublicoPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        icono={Map}
+        icono={MapPin}
         titulo="Mapa de reclamos"
         descripcion="Reclamos publicos reportados en la ciudad, sin datos personales."
       />
