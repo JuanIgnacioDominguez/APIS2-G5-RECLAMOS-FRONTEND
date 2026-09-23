@@ -1,21 +1,13 @@
-import { useState } from "react";
-import {
-  Alert,
-  Box,
-  Button,
-  Divider,
-  Flex,
-  Group,
-  PasswordInput,
-  Stack,
-  Text,
-  TextInput,
-} from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { notifications } from "@mantine/notifications";
-import { IconAlertTriangle } from "@tabler/icons-react";
+import { useState, type FormEvent } from "react";
+import { AlertTriangle, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { Logo } from "@/components/Logo";
 import { LoginAside } from "@/components/LoginAside";
 import { useAuth } from "@/auth/AuthContext";
@@ -55,23 +47,16 @@ function GoogleIcon() {
 export function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const [usuario, setUsuario] = useState("");
+  const [password, setPassword] = useState("");
   const [cargando, setCargando] = useState(false);
   const [errorLogin, setErrorLogin] = useState<string | null>(null);
 
-  const form = useForm({
-    initialValues: { usuario: "", password: "" },
-    validateInputOnBlur: true,
-    validate: {
-      usuario: (v) => (v.trim() ? null : "Ingresa tu usuario"),
-      password: (v) => (v.length > 0 ? null : "Ingresa tu contrasena"),
-    },
-  });
-
-  async function ingresar(usuario: string, password: string) {
+  async function ingresar(usuarioVal: string, passwordVal: string) {
     setCargando(true);
     setErrorLogin(null);
     try {
-      const u = await login(usuario, password);
+      const u = await login(usuarioVal, passwordVal);
       navigate(homePorRol(u.rol));
     } catch (err) {
       setErrorLogin(err instanceof Error ? err.message : "No se pudo iniciar sesion");
@@ -80,104 +65,119 @@ export function LoginPage() {
     }
   }
 
-  const onSubmit = form.onSubmit((values) => ingresar(values.usuario.trim(), values.password));
+  function onSubmit(e: FormEvent) {
+    e.preventDefault();
+    ingresar(usuario.trim(), password);
+  }
 
   function entrarDemo(c: CredencialDemo) {
     ingresar(c.usuario, c.password);
   }
 
   return (
-    <Flex mih="100vh">
-      <Box flex="1" bg="white">
-        <Flex align="center" justify="center" h="100%" p="xl">
-          <Stack gap="lg" w="100%" maw={380}>
-            <Stack gap={6}>
+    <div className="flex min-h-screen">
+      <div className="flex-1 bg-white">
+        <div className="flex h-full items-center justify-center p-8">
+          <div className="flex w-full max-w-[380px] flex-col gap-6">
+            <div className="flex flex-col gap-1.5">
               <Logo size={40} />
-              <Text c="dimmed" size="sm">
+              <p className="text-sm text-muted-foreground">
                 Reclamos y Participacion Ciudadana
-              </Text>
-            </Stack>
+              </p>
+            </div>
 
             <div>
-              <Text fw={700} fz={24}>
-                Ingresa a tu cuenta
-              </Text>
-              <Text c="dimmed" size="sm">
+              <p className="text-2xl font-bold">Ingresa a tu cuenta</p>
+              <p className="text-sm text-muted-foreground">
                 Usa tu cuenta ciudadana para continuar.
-              </Text>
+              </p>
             </div>
 
             {errorLogin && (
-              <Alert color="rojoEmergencia" icon={<IconAlertTriangle size={16} />} py="xs">
-                {errorLogin}
+              <Alert variant="destructive">
+                <AlertTriangle className="size-4" />
+                <AlertDescription>{errorLogin}</AlertDescription>
               </Alert>
             )}
 
             <form onSubmit={onSubmit} noValidate>
-              <Stack gap="sm">
-                <TextInput
-                  label="Usuario"
-                  placeholder="vecino1"
-                  autoComplete="username"
-                  withAsterisk
-                  {...form.getInputProps("usuario")}
-                />
-                <PasswordInput
-                  label="Contrasena"
-                  placeholder="Tu contrasena"
-                  autoComplete="current-password"
-                  withAsterisk
-                  {...form.getInputProps("password")}
-                />
-                <Button type="submit" color="azulUrbano" fullWidth loading={cargando} mt={4}>
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="usuario">
+                    Usuario <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="usuario"
+                    placeholder="vecino1"
+                    autoComplete="username"
+                    value={usuario}
+                    onChange={(e) => setUsuario(e.target.value)}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="password">
+                    Contrasena <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Tu contrasena"
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+                <Button type="submit" disabled={cargando} className="mt-1 w-full">
+                  {cargando && <Loader2 className="size-4 animate-spin" />}
                   Ingresar
                 </Button>
-              </Stack>
+              </div>
             </form>
 
-            <Divider label="o" labelPosition="center" />
+            <div className="flex items-center gap-3">
+              <Separator className="flex-1" />
+              <span className="text-xs text-muted-foreground">o</span>
+              <Separator className="flex-1" />
+            </div>
 
             <Button
-              variant="default"
-              fullWidth
-              leftSection={<GoogleIcon />}
+              variant="outline"
+              className="w-full"
               onClick={() =>
-                notifications.show({
-                  color: "azulUrbano",
-                  title: "Proximamente",
-                  message: "Se habilita al integrar el Login Federado (Grupo 2).",
+                toast("Proximamente", {
+                  description: "Se habilita al integrar el Login Federado (Grupo 2).",
                 })
               }
             >
+              <GoogleIcon />
               Continuar con Google
             </Button>
 
-            <Stack gap={6}>
-              <Text c="dimmed" size="xs" ta="center">
+            <div className="flex flex-col gap-1.5">
+              <p className="text-center text-xs text-muted-foreground">
                 Acceso rapido (demo, hasta integrar el Login Federado del Grupo 2)
-              </Text>
-              <Group grow gap="xs">
+              </p>
+              <div className="grid grid-cols-3 gap-2">
                 {CREDENCIALES_DEMO.map((c) => (
                   <Button
                     key={c.usuario}
-                    variant="light"
-                    color="azulUrbano"
-                    size="xs"
+                    variant="secondary"
+                    size="sm"
                     disabled={cargando}
                     onClick={() => entrarDemo(c)}
                   >
                     {ROL_LABEL[c.rol]}
                   </Button>
                 ))}
-              </Group>
-            </Stack>
-          </Stack>
-        </Flex>
-      </Box>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <Box flex="1" visibleFrom="md">
+      <div className="hidden flex-1 md:block">
         <LoginAside />
-      </Box>
-    </Flex>
+      </div>
+    </div>
   );
 }

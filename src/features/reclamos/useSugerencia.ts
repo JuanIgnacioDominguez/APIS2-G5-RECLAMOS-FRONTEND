@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useDebouncedValue } from "@mantine/hooks";
 
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { sugerirClasificacion } from "@/api/reclamos";
 import type { SugerenciaClasificacion } from "@/api/types";
 import { validarDescripcion, validarTitulo } from "./validation";
@@ -12,8 +12,8 @@ import { validarDescripcion, validarTitulo } from "./validation";
  * missing suggestion must never block the manual flow.
  */
 export function useSugerenciaClasificacion(titulo: string, descripcion: string) {
-  const [tituloD] = useDebouncedValue(titulo, 500);
-  const [descD] = useDebouncedValue(descripcion, 500);
+  const tituloD = useDebouncedValue(titulo, 500);
+  const descD = useDebouncedValue(descripcion, 500);
   const [sugerencia, setSugerencia] = useState<SugerenciaClasificacion | null>(null);
   const [cargando, setCargando] = useState(false);
 

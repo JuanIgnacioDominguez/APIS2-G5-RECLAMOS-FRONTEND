@@ -35,8 +35,8 @@ describe("ClasificarReclamo", () => {
       />,
     );
 
-    await userEvent.click(screen.getByRole("textbox", { name: /categoria/i }));
-    await userEvent.click(await screen.findByText("Alumbrado"));
+    await userEvent.click(screen.getByRole("combobox", { name: /categoria/i }));
+    await userEvent.click(await screen.findByRole("option", { name: "Alumbrado" }));
     await userEvent.click(screen.getByRole("button", { name: /guardar clasificacion/i }));
 
     await waitFor(() => expect(onActualizado).toHaveBeenCalled());

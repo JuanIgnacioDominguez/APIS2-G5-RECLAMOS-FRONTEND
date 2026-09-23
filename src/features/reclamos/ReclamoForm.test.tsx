@@ -65,6 +65,6 @@ describe("ReclamoForm", () => {
     await userEvent.click(screen.getByRole("button", { name: /^aplicar$/i }));
 
     // La categoria del select queda seteada al valor sugerido.
-    expect(screen.getByDisplayValue("Alumbrado")).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: /categoria/i })).toHaveTextContent("Alumbrado");
   });
 });

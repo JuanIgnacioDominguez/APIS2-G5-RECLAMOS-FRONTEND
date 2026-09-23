@@ -64,9 +64,9 @@ export function MapaSelector({
       style={{
         height: altura,
         width: "100%",
-        borderRadius: "var(--mantine-radius-md)",
-        border: "1px solid var(--mantine-color-gray-3)",
-        boxShadow: "var(--mantine-shadow-xs)",
+        borderRadius: "0.75rem",
+        border: "1px solid var(--border)",
+        boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
       }}
     >
       <TileLayer

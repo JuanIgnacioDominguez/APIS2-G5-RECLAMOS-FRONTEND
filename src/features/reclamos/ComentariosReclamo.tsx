@@ -1,70 +1,49 @@
 import { useState } from "react";
-import {
-  Badge,
-  Box,
-  Button,
-  Card,
-  Group,
-  Stack,
-  Text,
-  Textarea,
-  ThemeIcon,
-  Title,
-} from "@mantine/core";
-import { IconShieldCheck } from "@tabler/icons-react";
-import { notifications } from "@mantine/notifications";
+import { Loader2, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
 
 import { comentar } from "@/api/reclamos";
 import type { ComentarioOut } from "@/api/types";
 import { haceCuanto } from "@/lib/format";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 
 /** Renders one comment; official replies (US-12) get a highlighted card. */
 function Comentario({ comentario }: { comentario: ComentarioOut }) {
-  const cabecera = (
-    <Group gap="xs" mb={2}>
-      <Text size="sm" fw={600}>
-        {comentario.autor_nombre ?? comentario.autor_id}
-      </Text>
-      <Text size="xs" c="dimmed">
-        {haceCuanto(comentario.created_at)}
-      </Text>
-    </Group>
-  );
-
   if (comentario.es_oficial) {
     return (
-      <Box
+      <div
         data-testid="comentario-oficial"
-        p="sm"
-        style={{
-          borderRadius: "var(--mantine-radius-md)",
-          border: "1px solid var(--mantine-color-verdeUrbano-3)",
-          backgroundColor: "var(--mantine-color-verdeUrbano-0)",
-        }}
+        className="rounded-lg border border-[color-mix(in_oklab,var(--chart-2)_35%,transparent)] bg-[color-mix(in_oklab,var(--chart-2)_8%,transparent)] p-3"
       >
-        <Group gap="xs" mb={4}>
-          <ThemeIcon size="sm" radius="xl" variant="light" color="verdeUrbano">
-            <IconShieldCheck size={13} />
-          </ThemeIcon>
-          <Text size="sm" fw={600}>
+        <div className="mb-1 flex flex-wrap items-center gap-1.5">
+          <span className="flex size-5 items-center justify-center rounded-full bg-[color-mix(in_oklab,var(--chart-2)_18%,transparent)] text-[var(--chart-2)]">
+            <ShieldCheck className="size-3" />
+          </span>
+          <span className="text-sm font-semibold">
             {comentario.autor_nombre ?? comentario.autor_id}
-          </Text>
-          <Badge size="xs" color="verdeUrbano" variant="filled" radius="sm">
+          </span>
+          <Badge className="border-transparent bg-[var(--chart-2)] text-white">
             Respuesta oficial
           </Badge>
-          <Text size="xs" c="dimmed">
-            {haceCuanto(comentario.created_at)}
-          </Text>
-        </Group>
-        <Text size="sm">{comentario.texto}</Text>
-      </Box>
+          <span className="text-xs text-muted-foreground">{haceCuanto(comentario.created_at)}</span>
+        </div>
+        <p className="text-sm">{comentario.texto}</p>
+      </div>
     );
   }
 
   return (
     <div>
-      {cabecera}
-      <Text size="sm">{comentario.texto}</Text>
+      <div className="mb-0.5 flex items-center gap-1.5">
+        <span className="text-sm font-semibold">
+          {comentario.autor_nombre ?? comentario.autor_id}
+        </span>
+        <span className="text-xs text-muted-foreground">{haceCuanto(comentario.created_at)}</span>
+      </div>
+      <p className="text-sm">{comentario.texto}</p>
     </div>
   );
 }
@@ -95,10 +74,8 @@ export function ComentariosReclamo({
       setTexto("");
       onComentado();
     } catch (err) {
-      notifications.show({
-        color: "rojoEmergencia",
-        title: "No se pudo comentar",
-        message: err instanceof Error ? err.message : "Error inesperado",
+      toast.error("No se pudo comentar", {
+        description: err instanceof Error ? err.message : "Error inesperado",
       });
     } finally {
       setEnviando(false);
@@ -106,44 +83,35 @@ export function ComentariosReclamo({
   }
 
   return (
-    <Card withBorder radius="md" padding="lg">
-      <Title order={5} mb="md">
-        Comentarios
-      </Title>
-
-      <Stack gap="md">
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Comentarios</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
         {comentarios.length === 0 && (
-          <Text c="dimmed" size="sm">
-            Todavia no hay comentarios.
-          </Text>
+          <p className="text-sm text-muted-foreground">Todavia no hay comentarios.</p>
         )}
 
         {comentarios.map((c) => (
           <Comentario key={c.id} comentario={c} />
         ))}
 
-        <Stack gap="xs">
+        <div className="flex flex-col gap-2">
           <Textarea
             placeholder="Escribi un comentario"
-            autosize
-            minRows={2}
+            rows={2}
             value={texto}
-            onChange={(e) => setTexto(e.currentTarget.value)}
+            onChange={(e) => setTexto(e.target.value)}
             aria-label="Nuevo comentario"
           />
-          <Group justify="flex-end">
-            <Button
-              size="sm"
-              color="azulUrbano"
-              loading={enviando}
-              disabled={!texto.trim()}
-              onClick={enviar}
-            >
+          <div className="flex justify-end">
+            <Button size="sm" disabled={!texto.trim() || enviando} onClick={enviar}>
+              {enviando && <Loader2 className="animate-spin" />}
               Comentar
             </Button>
-          </Group>
-        </Stack>
-      </Stack>
+          </div>
+        </div>
+      </CardContent>
     </Card>
   );
 }

@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Stack, Text, Title } from "@mantine/core";
-import { notifications } from "@mantine/notifications";
+import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
 import { crearReclamo } from "@/api/reclamos";
@@ -15,17 +14,11 @@ export function NuevoReclamoPage() {
     setLoading(true);
     try {
       const reclamo = await crearReclamo(datos);
-      notifications.show({
-        color: "verdeUrbano",
-        title: "Reclamo creado",
-        message: "Ya podes seguir su estado.",
-      });
+      toast.success("Reclamo creado", { description: "Ya podes seguir su estado." });
       navigate(`/reclamos/${reclamo.id}`);
     } catch (err) {
-      notifications.show({
-        color: "rojoEmergencia",
-        title: "No se pudo crear el reclamo",
-        message: err instanceof Error ? err.message : "Error inesperado",
+      toast.error("No se pudo crear el reclamo", {
+        description: err instanceof Error ? err.message : "Error inesperado",
       });
     } finally {
       setLoading(false);
@@ -33,15 +26,15 @@ export function NuevoReclamoPage() {
   }
 
   return (
-    <Stack gap="md" className="pantalla-sin-scroll">
+    <div className="flex flex-1 flex-col gap-4 pantalla-sin-scroll">
       <div>
-        <Title order={2}>Nuevo reclamo</Title>
-        <Text c="dimmed">
+        <h2 className="text-xl font-semibold">Nuevo reclamo</h2>
+        <p className="text-muted-foreground">
           Si no elegis categoria y prioridad, las sugiere el clasificador automatico.
-        </Text>
+        </p>
       </div>
 
       <ReclamoForm onSubmit={handleSubmit} loading={loading} />
-    </Stack>
+    </div>
   );
 }

@@ -63,7 +63,7 @@ export const ORIGEN_LABEL: Record<OrigenClasificacion, string> = {
   [OrigenClasificacion.OPERADOR]: "Operador",
 };
 
-/** Options ready for a Mantine `Select` (value + label). */
+/** Options ready for a `Select` (value + label). */
 export function opcionesEstado() {
   return Object.entries(ESTADO_LABEL).map(([value, label]) => ({ value, label }));
 }

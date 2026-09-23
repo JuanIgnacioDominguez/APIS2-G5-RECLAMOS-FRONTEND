@@ -1,27 +1,6 @@
-import { useEffect, useRef, useState } from "react";
-import {
-  ActionIcon,
-  Alert,
-  Autocomplete,
-  Button,
-  Grid,
-  Group,
-  Select,
-  Stack,
-  Text,
-  Textarea,
-  TextInput,
-  ThemeIcon,
-} from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { useDebouncedValue } from "@mantine/hooks";
-import { notifications } from "@mantine/notifications";
-import {
-  IconCurrentLocation,
-  IconMapPin,
-  IconMapPinSearch,
-  IconSparkles,
-} from "@tabler/icons-react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Loader2, LocateFixed, MapPin, Search, Sparkles } from "lucide-react";
+import { toast } from "sonner";
 
 import type { ReclamoCrear } from "@/api/types";
 import type { CategoriaReclamo, PrioridadReclamo } from "@/domain/enums";
@@ -32,6 +11,20 @@ import {
   opcionesPrioridad,
 } from "@/domain/labels";
 import { formatConfianza } from "@/lib/format";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { MapaSelector } from "@/features/mapa/MapaSelector";
 import {
   buscarDireccion,
@@ -40,38 +33,54 @@ import {
   sugerirDirecciones,
   type SugerenciaDireccion,
 } from "@/features/mapa/geocoding";
-import { reclamoValidators, type ReclamoFormValues } from "./validation";
+import { esFormularioValido, reclamoValidators, type ReclamoFormValues } from "./validation";
 import { useSugerenciaClasificacion } from "./useSugerencia";
+
+/** Sentinel select value meaning "no elegido, lo sugiere el clasificador". */
+const AUTO = "auto";
 
 interface Props {
   onSubmit: (datos: ReclamoCrear) => void;
   loading?: boolean;
 }
 
-export function ReclamoForm({ onSubmit, loading }: Props) {
-  const form = useForm<ReclamoFormValues>({
-    initialValues: {
-      titulo: "",
-      descripcion: "",
-      categoria: null,
-      prioridad: null,
-      direccion: "",
-      barrio: "",
-      latitud: null,
-      longitud: null,
-    },
-    validate: reclamoValidators,
-    validateInputOnBlur: true,
-  });
+const VALORES_INICIALES: ReclamoFormValues = {
+  titulo: "",
+  descripcion: "",
+  categoria: null,
+  prioridad: null,
+  direccion: "",
+  barrio: "",
+  latitud: null,
+  longitud: null,
+};
 
-  const { sugerencia } = useSugerenciaClasificacion(form.values.titulo, form.values.descripcion);
+export function ReclamoForm({ onSubmit, loading }: Props) {
+  const [values, setValues] = useState<ReclamoFormValues>(VALORES_INICIALES);
+  const [touched, setTouched] = useState<Partial<Record<"titulo" | "descripcion", boolean>>>({});
+  const [submitted, setSubmitted] = useState(false);
+
+  function setValue<K extends keyof ReclamoFormValues>(key: K, value: ReclamoFormValues[K]) {
+    setValues((v) => ({ ...v, [key]: value }));
+  }
+
+  const erroresCampo = {
+    titulo: reclamoValidators.titulo(values.titulo),
+    descripcion: reclamoValidators.descripcion(values.descripcion),
+  };
+  const errores = {
+    titulo: (touched.titulo || submitted) ? erroresCampo.titulo : null,
+    descripcion: (touched.descripcion || submitted) ? erroresCampo.descripcion : null,
+  };
+
+  const { sugerencia } = useSugerenciaClasificacion(values.titulo, values.descripcion);
   const [ubicando, setUbicando] = useState(false);
   const [buscandoDir, setBuscandoDir] = useState(false);
   const [opcionesDir, setOpcionesDir] = useState<SugerenciaDireccion[]>([]);
   // Skips the next autocomplete fetch when the address was set programmatically
   // (map click, geolocation, a picked suggestion) instead of typed by the user.
   const omitirSugerencia = useRef(false);
-  const [dirDebounced] = useDebouncedValue(form.values.direccion, 300);
+  const dirDebounced = useDebouncedValue(values.direccion, 300);
 
   // Proximity centre for ranking suggestions: the dropped pin if any, else the
   // citizen's device location, else Greater Buenos Aires. Kept in a ref so the
@@ -79,8 +88,8 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
   const [centroDispositivo, setCentroDispositivo] = useState(CENTRO_AMBA);
   const centroRef = useRef(CENTRO_AMBA);
   centroRef.current =
-    form.values.latitud !== null && form.values.longitud !== null
-      ? { lat: form.values.latitud, lng: form.values.longitud }
+    values.latitud !== null && values.longitud !== null
+      ? { lat: values.latitud, lng: values.longitud }
       : centroDispositivo;
 
   // Best-effort: bias toward the citizen's real location. Denied → stays AMBA.
@@ -114,34 +123,33 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
 
   function aplicarSugerencia() {
     if (!sugerencia) return;
-    form.setFieldValue("categoria", sugerencia.categoria);
-    form.setFieldValue("prioridad", sugerencia.prioridad);
+    setValues((v) => ({ ...v, categoria: sugerencia.categoria, prioridad: sugerencia.prioridad }));
   }
 
   // A candidate chosen from the dropdown: fill address, neighbourhood and pin.
-  function elegirSugerenciaDir(etiqueta: string) {
-    const elegida = opcionesDir.find((o) => o.etiqueta === etiqueta);
-    if (!elegida) return;
+  function elegirSugerenciaDir(elegida: SugerenciaDireccion) {
     omitirSugerencia.current = true;
-    form.setFieldValue("direccion", elegida.direccion);
-    form.setFieldValue("latitud", elegida.latitud);
-    form.setFieldValue("longitud", elegida.longitud);
-    if (elegida.barrio) form.setFieldValue("barrio", elegida.barrio);
+    setValues((v) => ({
+      ...v,
+      direccion: elegida.direccion,
+      latitud: elegida.latitud,
+      longitud: elegida.longitud,
+      barrio: elegida.barrio || v.barrio,
+    }));
     setOpcionesDir([]);
   }
 
   // Point picked on the map (or from geolocation): drop the pin and reverse
   // geocode so the address and neighbourhood fields fill themselves in.
   async function fijarUbicacion(lat: number, lng: number) {
-    form.setFieldValue("latitud", lat);
-    form.setFieldValue("longitud", lng);
+    setValues((v) => ({ ...v, latitud: lat, longitud: lng }));
     try {
       const lugar = await direccionDesdePunto(lat, lng);
       if (lugar?.direccion) {
         omitirSugerencia.current = true;
-        form.setFieldValue("direccion", lugar.direccion);
+        setValue("direccion", lugar.direccion);
       }
-      if (lugar?.barrio) form.setFieldValue("barrio", lugar.barrio);
+      if (lugar?.barrio) setValue("barrio", lugar.barrio);
     } catch {
       // Keep the coordinates even if the address lookup fails.
     }
@@ -149,32 +157,29 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
 
   // Address typed by the citizen: geocode it and move the pin to the real point.
   async function buscarPorDireccion() {
-    const texto = form.values.direccion.trim();
+    const texto = values.direccion.trim();
     if (texto.length < 4) return;
     setBuscandoDir(true);
     try {
       const lugar = await buscarDireccion(texto, centroRef.current);
       if (!lugar) {
-        notifications.show({
-          color: "ambar",
-          title: "No encontramos esa direccion",
-          message: "Revisa como esta escrita o marca el punto en el mapa.",
+        toast("No encontramos esa direccion", {
+          description: "Revisa como esta escrita o marca el punto en el mapa.",
         });
         return;
       }
-      form.setFieldValue("latitud", lugar.latitud);
-      form.setFieldValue("longitud", lugar.longitud);
       omitirSugerencia.current = true;
-      form.setFieldValue("direccion", lugar.direccion);
-      if (lugar.barrio && !form.values.barrio.trim()) {
-        form.setFieldValue("barrio", lugar.barrio);
-      }
+      setValues((v) => ({
+        ...v,
+        latitud: lugar.latitud,
+        longitud: lugar.longitud,
+        direccion: lugar.direccion,
+        barrio: lugar.barrio && !v.barrio.trim() ? lugar.barrio : v.barrio,
+      }));
       setOpcionesDir([]);
     } catch {
-      notifications.show({
-        color: "rojoEmergencia",
-        title: "No se pudo buscar la direccion",
-        message: "Intenta de nuevo en unos segundos.",
+      toast.error("No se pudo buscar la direccion", {
+        description: "Intenta de nuevo en unos segundos.",
       });
     } finally {
       setBuscandoDir(false);
@@ -193,7 +198,10 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
     );
   }
 
-  const handleSubmit = form.onSubmit((values) => {
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setSubmitted(true);
+    if (!esFormularioValido(values)) return;
     onSubmit({
       titulo: values.titulo.trim(),
       descripcion: values.descripcion.trim(),
@@ -204,188 +212,221 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
       latitud: values.latitud,
       longitud: values.longitud,
     });
-  });
+  }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        flex: 1,
-        minHeight: 0,
-        minWidth: 0,
-      }}
-    >
-      <Grid gutter="xl" align="stretch" style={{ flex: 1, minHeight: 0, minWidth: 0 }}>
-        <Grid.Col span={{ base: 12, md: 5 }} style={{ minHeight: 0, minWidth: 0 }}>
-          <Stack gap="md" h="100%" style={{ overflowY: "auto", overflowX: "hidden" }}>
-            <TextInput
-              label="Titulo"
-              placeholder="Luminaria apagada en la plaza"
-              size="md"
-              withAsterisk
-              {...form.getInputProps("titulo")}
-            />
-            <Textarea
-              label="Descripcion"
-              placeholder="Contanos que pasa, hace cuanto y donde."
-              size="md"
-              minRows={4}
-              autosize
-              withAsterisk
-              {...form.getInputProps("descripcion")}
-            />
+    <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 min-w-0 flex-col">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-6 md:grid-cols-12 md:items-stretch">
+        <div className="min-h-0 min-w-0 md:col-span-5">
+          <div className="flex h-full flex-col gap-4 overflow-x-hidden overflow-y-auto">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="titulo">
+                Titulo <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="titulo"
+                placeholder="Luminaria apagada en la plaza"
+                value={values.titulo}
+                aria-invalid={!!errores.titulo}
+                onBlur={() => setTouched((t) => ({ ...t, titulo: true }))}
+                onChange={(e) => setValue("titulo", e.target.value)}
+              />
+              {errores.titulo && <p className="text-xs text-destructive">{errores.titulo}</p>}
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="descripcion">
+                Descripcion <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                id="descripcion"
+                placeholder="Contanos que pasa, hace cuanto y donde."
+                rows={4}
+                value={values.descripcion}
+                aria-invalid={!!errores.descripcion}
+                onBlur={() => setTouched((t) => ({ ...t, descripcion: true }))}
+                onChange={(e) => setValue("descripcion", e.target.value)}
+              />
+              {errores.descripcion && (
+                <p className="text-xs text-destructive">{errores.descripcion}</p>
+              )}
+            </div>
+
             {sugerencia && (
-              <Alert
-                color="azulUrbano"
-                variant="light"
-                icon={<IconSparkles size={16} />}
-                title="Sugerencia automatica"
-              >
-                <Group justify="space-between" wrap="wrap" gap="xs">
-                  <span>
-                    Categoria <b>{CATEGORIA_LABEL[sugerencia.categoria]}</b>, prioridad{" "}
-                    <b>{PRIORIDAD_LABEL[sugerencia.prioridad]}</b> (
-                    {formatConfianza(sugerencia.confianza)} de confianza).
-                  </span>
-                  <Button size="xs" variant="light" color="azulUrbano" onClick={aplicarSugerencia}>
-                    Aplicar
-                  </Button>
-                </Group>
+              <Alert className="border-primary/20 bg-primary/5">
+                <Sparkles className="size-4 text-primary" />
+                <AlertTitle>Sugerencia automatica</AlertTitle>
+                <AlertDescription>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span>
+                      Categoria <b>{CATEGORIA_LABEL[sugerencia.categoria]}</b>, prioridad{" "}
+                      <b>{PRIORIDAD_LABEL[sugerencia.prioridad]}</b> (
+                      {formatConfianza(sugerencia.confianza)} de confianza).
+                    </span>
+                    <Button type="button" size="xs" variant="secondary" onClick={aplicarSugerencia}>
+                      Aplicar
+                    </Button>
+                  </div>
+                </AlertDescription>
               </Alert>
             )}
-            <Grid gutter="sm" align="flex-end">
-              <Grid.Col span={6}>
-                <Select
-                  label="Categoria"
-                  placeholder="La sugiere el clasificador"
-                  size="md"
-                  clearable
-                  data={opcionesCategoria()}
-                  {...form.getInputProps("categoria")}
-                />
-              </Grid.Col>
-              <Grid.Col span={6}>
-                <Select
-                  label="Prioridad"
-                  placeholder="La sugiere el clasificador"
-                  size="md"
-                  clearable
-                  data={opcionesPrioridad()}
-                  {...form.getInputProps("prioridad")}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, xs: 7 }}>
-                <Autocomplete
-                  label="Direccion"
-                  placeholder="Av. Rivadavia 800"
-                  size="md"
-                  data={opcionesDir.map((o) => o.etiqueta)}
-                  filter={({ options }) => options}
-                  limit={6}
-                  maxDropdownHeight={300}
-                  comboboxProps={{ shadow: "md" }}
-                  renderOption={({ option }) => {
-                    const s = opcionesDir.find((o) => o.etiqueta === option.value);
-                    return (
-                      <Group gap="sm" wrap="nowrap">
-                        <ThemeIcon size="sm" radius="xl" variant="light" color="azulUrbano">
-                          <IconMapPin size={13} />
-                        </ThemeIcon>
-                        <div style={{ minWidth: 0 }}>
-                          <Text size="sm" fw={500} lineClamp={1}>
-                            {s?.principal ?? option.value}
-                          </Text>
-                          {s?.secundaria && (
-                            <Text size="xs" c="dimmed" lineClamp={1}>
-                              {s.secundaria}
-                            </Text>
-                          )}
-                        </div>
-                      </Group>
-                    );
-                  }}
-                  value={form.values.direccion}
-                  error={form.errors.direccion}
-                  onChange={(v) => {
-                    // Picking a suggestion sends its full label; resolve it to the
-                    // short address + pin. Free typing just updates the field.
-                    if (opcionesDir.some((o) => o.etiqueta === v)) {
-                      elegirSugerenciaDir(v);
-                    } else {
-                      form.setFieldValue("direccion", v);
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      void buscarPorDireccion();
-                    }
-                  }}
-                  rightSection={
-                    <ActionIcon
-                      variant="subtle"
-                      color="azulUrbano"
-                      loading={buscandoDir}
-                      onClick={() => void buscarPorDireccion()}
-                      aria-label="Buscar direccion en el mapa"
-                    >
-                      <IconMapPinSearch size={18} />
-                    </ActionIcon>
-                  }
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, xs: 5 }}>
-                <TextInput label="Barrio" size="md" {...form.getInputProps("barrio")} />
-              </Grid.Col>
-              <Grid.Col span={12}>
-                <Text size="xs" c="dimmed" mt={-6}>
-                  Empeza a escribir y elegi una sugerencia, o marca el punto en el mapa.
-                </Text>
-              </Grid.Col>
-            </Grid>
-          </Stack>
-        </Grid.Col>
 
-        <Grid.Col span={{ base: 12, md: 7 }} style={{ minWidth: 0 }}>
-          <Stack gap="xs" h="100%">
-            <Group justify="space-between">
-              <Text fw={500} size="sm">
-                Ubicacion en el mapa
-              </Text>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="categoria">Categoria</Label>
+                <Select
+                  value={values.categoria ?? AUTO}
+                  onValueChange={(v) => setValue("categoria", v === AUTO ? null : v)}
+                >
+                  <SelectTrigger id="categoria" className="w-full" aria-label="Categoria">
+                    <SelectValue placeholder="La sugiere el clasificador" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={AUTO}>La sugiere el clasificador</SelectItem>
+                    {opcionesCategoria().map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="prioridad">Prioridad</Label>
+                <Select
+                  value={values.prioridad ?? AUTO}
+                  onValueChange={(v) => setValue("prioridad", v === AUTO ? null : v)}
+                >
+                  <SelectTrigger id="prioridad" className="w-full" aria-label="Prioridad">
+                    <SelectValue placeholder="La sugiere el clasificador" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={AUTO}>La sugiere el clasificador</SelectItem>
+                    {opcionesPrioridad().map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="col-span-2 flex flex-col gap-1.5 sm:col-span-1">
+                <Label htmlFor="direccion">Direccion</Label>
+                <div className="relative">
+                  <InputGroup>
+                    <InputGroupInput
+                      id="direccion"
+                      placeholder="Av. Rivadavia 800"
+                      autoComplete="off"
+                      value={values.direccion}
+                      onChange={(e) => setValue("direccion", e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          void buscarPorDireccion();
+                        }
+                      }}
+                    />
+                    <InputGroupAddon align="inline-end">
+                      <InputGroupButton
+                        type="button"
+                        size="icon-xs"
+                        aria-label="Buscar direccion en el mapa"
+                        onClick={() => void buscarPorDireccion()}
+                      >
+                        {buscandoDir ? (
+                          <Loader2 className="animate-spin" />
+                        ) : (
+                          <Search />
+                        )}
+                      </InputGroupButton>
+                    </InputGroupAddon>
+                  </InputGroup>
+                  {opcionesDir.length > 0 && (
+                    <ul
+                      role="listbox"
+                      className="absolute z-10 mt-1 max-h-64 w-full overflow-auto rounded-lg bg-popover py-1 text-popover-foreground shadow-md ring-1 ring-foreground/10"
+                    >
+                      {opcionesDir.map((o) => (
+                        <li key={o.etiqueta}>
+                          <button
+                            type="button"
+                            role="option"
+                            aria-selected={false}
+                            className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+                            onClick={() => elegirSugerenciaDir(o)}
+                          >
+                            <MapPin className="size-3.5 shrink-0 text-primary" />
+                            <span className="min-w-0">
+                              <span className="block truncate font-medium">{o.principal}</span>
+                              {o.secundaria && (
+                                <span className="block truncate text-xs text-muted-foreground">
+                                  {o.secundaria}
+                                </span>
+                              )}
+                            </span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+
+              <div className="col-span-2 flex flex-col gap-1.5 sm:col-span-1">
+                <Label htmlFor="barrio">Barrio</Label>
+                <Input
+                  id="barrio"
+                  value={values.barrio}
+                  onChange={(e) => setValue("barrio", e.target.value)}
+                />
+              </div>
+
+              <p className="col-span-2 -mt-1.5 text-xs text-muted-foreground">
+                Empeza a escribir y elegi una sugerencia, o marca el punto en el mapa.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="min-w-0 md:col-span-7">
+          <div className="flex h-full flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Ubicacion en el mapa</span>
               <Button
+                type="button"
                 size="xs"
-                variant="light"
-                color="azulUrbano"
-                leftSection={<IconCurrentLocation size={14} />}
-                loading={ubicando}
+                variant="secondary"
+                disabled={ubicando}
                 onClick={usarMiUbicacion}
               >
+                {ubicando ? <Loader2 className="animate-spin" /> : <LocateFixed />}
                 Usar mi ubicacion
               </Button>
-            </Group>
+            </div>
             <MapaSelector
-              lat={form.values.latitud}
-              lng={form.values.longitud}
+              lat={values.latitud}
+              lng={values.longitud}
               onPick={fijarUbicacion}
               altura={620}
               className="mapa-columna-fill"
             />
-            <Text size="xs" c="dimmed">
-              {form.values.latitud !== null && form.values.longitud !== null
-                ? `Lat ${form.values.latitud.toFixed(5)}, Lng ${form.values.longitud.toFixed(5)}`
+            <p className="text-xs text-muted-foreground">
+              {values.latitud !== null && values.longitud !== null
+                ? `Lat ${values.latitud.toFixed(5)}, Lng ${values.longitud.toFixed(5)}`
                 : "Toca el mapa o usa tu ubicacion para marcar el punto."}
-            </Text>
-          </Stack>
-        </Grid.Col>
-      </Grid>
+            </p>
+          </div>
+        </div>
+      </div>
 
-      <Group justify="flex-end" mt="md" mb="md" style={{ flexShrink: 0 }}>
-        <Button type="submit" loading={loading} color="azulUrbano" size="md">
+      <div className="mt-4 mb-4 flex shrink-0 justify-end">
+        <Button type="submit" disabled={loading}>
+          {loading && <Loader2 className="animate-spin" />}
           Enviar reclamo
         </Button>
-      </Group>
+      </div>
     </form>
   );
 }

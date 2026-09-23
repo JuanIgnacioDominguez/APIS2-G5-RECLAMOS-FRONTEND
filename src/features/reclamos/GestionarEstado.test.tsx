@@ -34,8 +34,8 @@ describe("GestionarEstado", () => {
       />,
     );
 
-    await userEvent.click(screen.getByRole("textbox", { name: /nuevo estado/i }));
-    await userEvent.click(await screen.findByText("En proceso"));
+    await userEvent.click(screen.getByRole("combobox", { name: /nuevo estado/i }));
+    await userEvent.click(await screen.findByRole("option", { name: "En proceso" }));
     await userEvent.click(screen.getByRole("button", { name: /aplicar cambio/i }));
 
     await waitFor(() => expect(onActualizado).toHaveBeenCalled());

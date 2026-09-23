@@ -1,10 +1,20 @@
 import { useState } from "react";
-import { Button, Card, Select, Stack, Title } from "@mantine/core";
-import { notifications } from "@mantine/notifications";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { reclasificar } from "@/api/reclamos";
 import type { CategoriaReclamo, PrioridadReclamo } from "@/domain/enums";
 import { opcionesCategoria, opcionesPrioridad } from "@/domain/labels";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 /**
  * Staff-only control to correct a claim's category and priority (US-14), via
@@ -21,8 +31,8 @@ export function ClasificarReclamo({
   prioridadActual: PrioridadReclamo;
   onActualizado: () => void;
 }) {
-  const [categoria, setCategoria] = useState<string | null>(categoriaActual);
-  const [prioridad, setPrioridad] = useState<string | null>(prioridadActual);
+  const [categoria, setCategoria] = useState<string>(categoriaActual);
+  const [prioridad, setPrioridad] = useState<string>(prioridadActual);
   const [guardando, setGuardando] = useState(false);
 
   const sinCambios = categoria === categoriaActual && prioridad === prioridadActual;
@@ -31,20 +41,16 @@ export function ClasificarReclamo({
     setGuardando(true);
     try {
       await reclasificar(reclamoId, {
-        categoria: categoria as CategoriaReclamo | null,
-        prioridad: prioridad as PrioridadReclamo | null,
+        categoria: categoria as CategoriaReclamo,
+        prioridad: prioridad as PrioridadReclamo,
       });
-      notifications.show({
-        color: "verdeUrbano",
-        title: "Reclamo clasificado",
-        message: "Se actualizo la categoria y/o prioridad.",
+      toast.success("Reclamo clasificado", {
+        description: "Se actualizo la categoria y/o prioridad.",
       });
       onActualizado();
     } catch (err) {
-      notifications.show({
-        color: "rojoEmergencia",
-        title: "No se pudo clasificar",
-        message: err instanceof Error ? err.message : "Error inesperado",
+      toast.error("No se pudo clasificar", {
+        description: err instanceof Error ? err.message : "Error inesperado",
       });
     } finally {
       setGuardando(false);
@@ -52,29 +58,46 @@ export function ClasificarReclamo({
   }
 
   return (
-    <Card withBorder radius="md" padding="lg">
-      <Title order={5} mb="md">
-        Clasificacion
-      </Title>
-      <Stack gap="sm">
-        <Select
-          label="Categoria"
-          data={opcionesCategoria()}
-          value={categoria}
-          onChange={setCategoria}
-          allowDeselect={false}
-        />
-        <Select
-          label="Prioridad"
-          data={opcionesPrioridad()}
-          value={prioridad}
-          onChange={setPrioridad}
-          allowDeselect={false}
-        />
-        <Button color="azulUrbano" loading={guardando} disabled={sinCambios} onClick={aplicar}>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Clasificacion</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="clasificar-categoria">Categoria</Label>
+          <Select value={categoria} onValueChange={setCategoria}>
+            <SelectTrigger id="clasificar-categoria" className="w-full" aria-label="Categoria">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {opcionesCategoria().map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="clasificar-prioridad">Prioridad</Label>
+          <Select value={prioridad} onValueChange={setPrioridad}>
+            <SelectTrigger id="clasificar-prioridad" className="w-full" aria-label="Prioridad">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {opcionesPrioridad().map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <Button disabled={sinCambios || guardando} onClick={aplicar}>
+          {guardando && <Loader2 className="animate-spin" />}
           Guardar clasificacion
         </Button>
-      </Stack>
+      </CardContent>
     </Card>
   );
 }
