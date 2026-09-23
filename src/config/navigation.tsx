@@ -1,12 +1,5 @@
 import type { Icon } from "@tabler/icons-react";
-import {
-  IconChartHistogram,
-  IconInbox,
-  IconList,
-  IconMapPin,
-  IconNews,
-  IconPlus,
-} from "@tabler/icons-react";
+import { IconChartHistogram, IconInbox, IconList, IconMapPin, IconNews } from "@tabler/icons-react";
 
 import { Rol } from "@/auth/roles";
 import { idCorto } from "@/lib/format";
@@ -31,16 +24,15 @@ export interface Miga {
 export function navModulo(rol: Rol): NavItem[] {
   if (rol === Rol.CIUDADANO) {
     return [
-      { label: "Reclamos de la ciudad", to: "/feed", icon: IconNews },
       { label: "Mis reclamos", to: "/reclamos", icon: IconList },
-      { label: "Nuevo reclamo", to: "/reclamos/nuevo", icon: IconPlus },
+      { label: "Reclamos de la ciudad", to: "/feed", icon: IconNews },
       { label: "Mapa", to: "/mapa", icon: IconMapPin },
     ];
   }
   const items: NavItem[] = [
     { label: "Bandeja", to: "/backoffice", icon: IconInbox },
-    { label: "Reclamos de la ciudad", to: "/feed", icon: IconNews },
     { label: "Todos los reclamos", to: "/reclamos", icon: IconList },
+    { label: "Reclamos de la ciudad", to: "/feed", icon: IconNews },
   ];
   if (rol === Rol.ADMIN) {
     items.push({ label: "Panel", to: "/panel", icon: IconChartHistogram });

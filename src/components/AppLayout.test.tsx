@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes } from "react-router-dom";
 
@@ -41,21 +41,30 @@ function renderLayout(ruta = "/reclamos") {
   );
 }
 
+async function abrirBusqueda(): Promise<HTMLElement> {
+  await userEvent.click(screen.getByRole("button", { name: /buscar reclamos/i }));
+  return screen.findByPlaceholderText(/buscar reclamos por titulo/i);
+}
+
 describe("AppLayout", () => {
   beforeEach(() => vi.restoreAllMocks());
 
   it("muestra el menu del ciudadano (solo reclamos)", () => {
-    renderLayout();
-    expect(screen.getByRole("link", { name: /mis reclamos/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /nuevo reclamo/i })).toBeInTheDocument();
-    // Otros modulos no pertenecen a este sistema.
-    expect(screen.queryByRole("link", { name: /movilidad/i })).not.toBeInTheDocument();
+    const { container } = renderLayout();
+    // Scope to the sidebar: the header breadcrumb also exposes the current
+    // page as a link, so query only inside the navigation menu.
+    const nav = within(container.querySelector<HTMLElement>('[data-slot="sidebar-content"]')!);
+    expect(nav.getByRole("link", { name: /mis reclamos/i })).toBeInTheDocument();
+    expect(nav.getByRole("link", { name: /reclamos de la ciudad/i })).toBeInTheDocument();
+    // "Nuevo reclamo" ya no vive en el sidebar (es un boton en Mis reclamos).
+    expect(nav.queryByRole("link", { name: /nuevo reclamo/i })).not.toBeInTheDocument();
+    expect(nav.queryByRole("link", { name: /movilidad/i })).not.toBeInTheDocument();
   });
 
-  it("renderiza el contenido de la ruta hija y la barra de busqueda", () => {
+  it("renderiza el contenido de la ruta hija y el acceso a la busqueda", () => {
     renderLayout();
     expect(screen.getByText("contenido de reclamos")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/buscar reclamos/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /buscar reclamos/i })).toBeInTheDocument();
   });
 
   it("muestra el usuario autenticado y su rol", () => {
@@ -64,13 +73,14 @@ describe("AppLayout", () => {
     expect(screen.getByText("Ciudadano")).toBeInTheDocument();
   });
 
-  it("busca reclamos en el header y navega al elegir un resultado", async () => {
+  it("busca reclamos y navega al elegir un resultado", async () => {
     vi.spyOn(reclamosApi, "listarReclamos").mockResolvedValue(
       page([reclamo("1", "Bache en la esquina")]),
     );
 
     renderLayout();
-    await userEvent.type(screen.getByPlaceholderText(/buscar reclamos/i), "bache");
+    const input = await abrirBusqueda();
+    await userEvent.type(input, "bache");
 
     const opcion = await screen.findByRole(
       "option",
@@ -86,7 +96,8 @@ describe("AppLayout", () => {
     const spy = vi.spyOn(reclamosApi, "listarReclamos").mockResolvedValue(page([]));
     renderLayout();
 
-    await userEvent.type(screen.getByPlaceholderText(/buscar reclamos/i), "b");
+    const input = await abrirBusqueda();
+    await userEvent.type(input, "b");
     expect(await screen.findByText(/al menos 2 letras/i)).toBeInTheDocument();
     expect(spy).not.toHaveBeenCalled();
   });

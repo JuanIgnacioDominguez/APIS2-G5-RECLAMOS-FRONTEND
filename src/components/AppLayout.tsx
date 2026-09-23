@@ -1,44 +1,58 @@
 import { useState } from "react";
-import {
-  ActionIcon,
-  Anchor,
-  AppShell,
-  Avatar,
-  Badge,
-  Box,
-  Breadcrumbs,
-  Burger,
-  Combobox,
-  Divider,
-  Group,
-  Loader,
-  Menu,
-  NavLink,
-  ScrollArea,
-  Stack,
-  Text,
-  TextInput,
-  Tooltip,
-  UnstyledButton,
-  useCombobox,
-} from "@mantine/core";
-import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import {
-  IconBellOff,
-  IconChevronsLeft,
-  IconChevronsRight,
-  IconLogout,
-  IconSearch,
-} from "@tabler/icons-react";
 import { NavLink as RouterNavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Bell, LogOut, Search } from "lucide-react";
 
-import { Logo } from "@/components/Logo";
-import { migasPara, navModulo, type Miga, type NavItem } from "@/config/navigation";
-import { CitySkyline } from "@/components/CitySkyline";
+import { LogoMark } from "@/components/Logo";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { migasPara, navModulo } from "@/config/navigation";
 import { useAuth } from "@/auth/AuthContext";
 import { esStaff, ROL_LABEL } from "@/auth/roles";
-import { ESTADO_COLOR, ESTADO_LABEL } from "@/domain/labels";
 import { useBusquedaReclamos } from "@/features/reclamos/useBusquedaReclamos";
+import { EstadoBadge } from "@/features/reclamos/EstadoBadges";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import {
+  Command,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarRail,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 
 function iniciales(nombre: string): string {
   return nombre
@@ -48,153 +62,77 @@ function iniciales(nombre: string): string {
     .join("");
 }
 
-function SidebarLink({
-  item,
-  active,
-  collapsed,
-  onNavigate,
-}: {
-  item: NavItem;
-  active: boolean;
-  collapsed: boolean;
-  onNavigate: () => void;
-}) {
-  const link = (
-    <NavLink
-      className="sidebar-link"
-      component={RouterNavLink}
-      to={item.to}
-      label={collapsed ? undefined : item.label}
-      aria-label={item.label}
-      onClick={onNavigate}
-      leftSection={<item.icon size={19} stroke={1.6} />}
-      active={active}
-      variant="filled"
-      color="azulUrbano"
-      c={active ? "white" : "gray.4"}
-      styles={{
-        root: {
-          borderRadius: "var(--mantine-radius-md)",
-          justifyContent: collapsed ? "center" : undefined,
-          paddingInline: collapsed ? 0 : undefined,
-        },
-        label: { fontSize: "var(--mantine-font-size-sm)", fontWeight: 500 },
-      }}
-    />
-  );
-
-  if (!collapsed) return link;
+function Marca() {
   return (
-    <Tooltip label={item.label} position="right" withArrow openDelay={200}>
-      {link}
-    </Tooltip>
+    <div className="flex items-center gap-2 px-1">
+      <LogoMark size={28} />
+      <span className="text-lg font-semibold tracking-tight text-sidebar-foreground group-data-[collapsible=icon]:hidden">
+        CityPass<span className="text-[#e6b566]">+</span>
+      </span>
+    </div>
   );
 }
 
+/** Command palette (Cmd/Ctrl-K style) to jump to a claim by title. */
 function BusquedaGlobal() {
   const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
   const [texto, setTexto] = useState("");
   const { resultados, buscando, activa } = useBusquedaReclamos(texto);
-  const combobox = useCombobox({
-    onDropdownClose: () => combobox.resetSelectedOption(),
-  });
 
-  function irAReclamo(id: string) {
+  function ir(id: string) {
+    setOpen(false);
     setTexto("");
-    combobox.closeDropdown();
     navigate(`/reclamos/${id}`);
   }
 
   return (
-    <Combobox store={combobox} withinPortal onOptionSubmit={irAReclamo}>
-      <Combobox.Target>
-        <TextInput
-          w={{ base: 0, xs: 240, md: 380 }}
-          radius="md"
-          variant="filled"
-          placeholder="Buscar reclamos..."
-          leftSection={<IconSearch size={16} />}
-          rightSection={buscando ? <Loader size={14} /> : null}
-          visibleFrom="xs"
-          value={texto}
-          onChange={(event) => {
-            setTexto(event.currentTarget.value);
-            combobox.openDropdown();
-            combobox.updateSelectedOptionIndex();
-          }}
-          onFocus={() => activa && combobox.openDropdown()}
-          onBlur={() => combobox.closeDropdown()}
-          onKeyDown={(event) => {
-            if (event.key === "ArrowDown") {
-              event.preventDefault();
-              combobox.selectNextOption();
-            } else if (event.key === "ArrowUp") {
-              event.preventDefault();
-              combobox.selectPreviousOption();
-            } else if (event.key === "Enter") {
-              combobox.clickSelectedOption();
-            }
-          }}
-        />
-      </Combobox.Target>
-
-      <Combobox.Dropdown>
-        <Combobox.Options>
-          {!activa && <Combobox.Empty>Escribi al menos 2 letras para buscar</Combobox.Empty>}
-          {activa && !buscando && resultados.length === 0 && (
-            <Combobox.Empty>Sin resultados para &quot;{texto.trim()}&quot;</Combobox.Empty>
-          )}
-          {activa &&
-            resultados.map((r) => (
-              <Combobox.Option value={r.id} key={r.id}>
-                <Group justify="space-between" wrap="nowrap" gap="sm">
-                  <Text size="sm" lineClamp={1}>
-                    {r.titulo}
-                  </Text>
-                  <Badge size="sm" variant="light" color={ESTADO_COLOR[r.estado]} radius="sm">
-                    {ESTADO_LABEL[r.estado]}
-                  </Badge>
-                </Group>
-              </Combobox.Option>
-            ))}
-        </Combobox.Options>
-      </Combobox.Dropdown>
-    </Combobox>
+    <>
+      <Button
+        variant="outline"
+        className="w-full max-w-sm justify-start gap-2 text-muted-foreground"
+        onClick={() => setOpen(true)}
+      >
+        <Search className="size-4" />
+        Buscar reclamos...
+      </Button>
+      <CommandDialog open={open} onOpenChange={setOpen}>
+        <Command shouldFilter={false}>
+          <CommandInput
+            value={texto}
+            onValueChange={setTexto}
+            placeholder="Buscar reclamos por titulo..."
+          />
+          <CommandList>
+            {!activa && <CommandEmpty>Escribi al menos 2 letras para buscar.</CommandEmpty>}
+            {activa && buscando && <p className="p-4 text-sm text-muted-foreground">Buscando...</p>}
+            {activa && !buscando && resultados.length === 0 && (
+              <CommandEmpty>Sin resultados.</CommandEmpty>
+            )}
+            {resultados.length > 0 && (
+              <CommandGroup heading="Reclamos">
+                {resultados.map((r) => (
+                  <CommandItem key={r.id} value={r.id} onSelect={() => ir(r.id)}>
+                    <span className="flex-1 truncate">{r.titulo}</span>
+                    <EstadoBadge estado={r.estado} />
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+          </CommandList>
+        </Command>
+      </CommandDialog>
+    </>
   );
 }
-
-function MigasHeader({ migas }: { migas: Miga[] }) {
-  const navigate = useNavigate();
-  if (migas.length === 0) return null;
-  return (
-    <Breadcrumbs separator="/" style={{ flexWrap: "nowrap" }}>
-      {migas.map((miga, i) =>
-        miga.to ? (
-          <Anchor key={i} size="sm" c="dimmed" fw={500} onClick={() => navigate(miga.to!)}>
-            {miga.label}
-          </Anchor>
-        ) : (
-          <Text key={i} size="sm" fw={600} truncate>
-            {miga.label}
-          </Text>
-        ),
-      )}
-    </Breadcrumbs>
-  );
-}
-
-const NAVBAR_ANCHO = 264;
-const NAVBAR_ANCHO_RAIL = 80;
 
 export function AppLayout() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { usuario, logout } = useAuth();
-  const [mobileOpened, { toggle: toggleMobile, close: closeMobile }] = useDisclosure(false);
-  const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true);
-  const esEscritorio = useMediaQuery("(min-width: 48em)") ?? true;
-  const railColapsado = esEscritorio && !desktopOpened;
-  const migas = migasPara(pathname, usuario ? esStaff(usuario.rol) : false);
+  const staff = usuario ? esStaff(usuario.rol) : false;
+  const migas = migasPara(pathname, staff);
+  const items = usuario ? navModulo(usuario.rol) : [];
 
   const isActive = (to: string) => pathname === to || pathname.startsWith(`${to}/`);
 
@@ -204,133 +142,118 @@ export function AppLayout() {
   }
 
   return (
-    <AppShell
-      layout="alt"
-      header={{ height: 64 }}
-      navbar={{
-        width: { base: NAVBAR_ANCHO, sm: desktopOpened ? NAVBAR_ANCHO : NAVBAR_ANCHO_RAIL },
-        breakpoint: "sm",
-        collapsed: { mobile: !mobileOpened },
-      }}
-      padding={{ base: "md", sm: 40 }}
-    >
-      <AppShell.Header withBorder>
-        <div
-          className="app-header-grid"
-          style={{ height: "100%", paddingInline: "var(--mantine-spacing-lg)" }}
-        >
-          <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
-            <Burger opened={mobileOpened} onClick={toggleMobile} hiddenFrom="sm" size="sm" />
-            <MigasHeader migas={migas} />
-          </Group>
+    <SidebarProvider>
+      <Sidebar collapsible="icon">
+        <SidebarHeader className="h-16 justify-center border-b border-sidebar-border">
+          <Marca />
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupLabel>Reclamos</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {items.map((item) => (
+                  <SidebarMenuItem key={item.to}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive(item.to)}
+                      tooltip={item.label}
+                      className="data-[active=true]:bg-primary data-[active=true]:font-medium data-[active=true]:text-primary-foreground data-[active=true]:hover:bg-primary data-[active=true]:hover:text-primary-foreground"
+                    >
+                      <RouterNavLink to={item.to}>
+                        <item.icon />
+                        <span>{item.label}</span>
+                      </RouterNavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+        <SidebarFooter className="text-xs text-sidebar-foreground/60 group-data-[collapsible=icon]:hidden">
+          CityPass+ · Reclamos
+        </SidebarFooter>
+        <SidebarRail />
+      </Sidebar>
 
-          <Group justify="center" wrap="nowrap">
+      <SidebarInset>
+        <header className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+          <SidebarTrigger />
+          <Separator orientation="vertical" className="h-6" />
+          <Breadcrumb className="hidden md:block">
+            <BreadcrumbList>
+              {migas.map((miga, i) => (
+                <div key={i} className="flex items-center gap-1.5">
+                  {i > 0 && <BreadcrumbSeparator />}
+                  <BreadcrumbItem>
+                    {miga.to ? (
+                      <BreadcrumbLink onClick={() => navigate(miga.to!)} className="cursor-pointer">
+                        {miga.label}
+                      </BreadcrumbLink>
+                    ) : (
+                      <BreadcrumbPage>{miga.label}</BreadcrumbPage>
+                    )}
+                  </BreadcrumbItem>
+                </div>
+              ))}
+            </BreadcrumbList>
+          </Breadcrumb>
+
+          <div className="flex flex-1 justify-center px-2">
             <BusquedaGlobal />
-          </Group>
+          </div>
 
-          <Group gap="lg" wrap="nowrap" justify="flex-end">
-            <Menu position="bottom-end" withArrow shadow="md" width={240}>
-              <Menu.Target>
-                <ActionIcon variant="subtle" color="gray" size="lg" aria-label="Notificaciones">
-                  <IconBellOff size={20} />
-                </ActionIcon>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Label>Notificaciones</Menu.Label>
-                <Text size="sm" c="dimmed" px="sm" pb="xs">
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="Notificaciones">
+                  <Bell />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-60">
+                <DropdownMenuLabel>Notificaciones</DropdownMenuLabel>
+                <p className="px-2 pb-2 text-sm text-muted-foreground">
                   Sin novedades por el momento.
-                </Text>
-              </Menu.Dropdown>
-            </Menu>
-            <Menu position="bottom-end" withArrow shadow="md" width={220}>
-              <Menu.Target>
-                <UnstyledButton
-                  className="account-trigger"
-                  aria-label="Cuenta"
-                  px="xs"
-                  py={4}
-                  style={{ borderRadius: "var(--mantine-radius-md)" }}
-                >
-                  <Group gap="sm" wrap="nowrap">
-                    <Avatar color="azulUrbano" radius="xl">
+                </p>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-auto gap-2 px-2 py-1.5" aria-label="Cuenta">
+                  <Avatar className="size-8">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                       {usuario ? iniciales(usuario.nombre) : "?"}
-                    </Avatar>
-                    <Box style={{ lineHeight: 1.15 }} visibleFrom="sm">
-                      <Text size="sm" fw={600}>
-                        {usuario?.nombre ?? "Invitado"}
-                      </Text>
-                      <Text size="xs" c="dimmed">
-                        {usuario ? ROL_LABEL[usuario.rol] : "Sin sesion"}
-                      </Text>
-                    </Box>
-                  </Group>
-                </UnstyledButton>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Label>{usuario?.email}</Menu.Label>
-                <Divider my={4} />
-                <Menu.Item
-                  leftSection={<IconLogout size={16} />}
-                  color="rojoEmergencia"
-                  onClick={salir}
-                >
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="hidden text-left leading-tight sm:block">
+                    <p className="text-sm font-medium">{usuario?.nombre ?? "Invitado"}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {usuario ? ROL_LABEL[usuario.rol] : "Sin sesion"}
+                    </p>
+                  </div>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="truncate font-normal text-muted-foreground">
+                  {usuario?.email}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem variant="destructive" onClick={salir}>
+                  <LogOut />
                   Cerrar sesion
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
-          </Group>
-        </div>
-      </AppShell.Header>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </header>
 
-      <AppShell.Navbar bg="azulNoche.9" style={{ border: "none" }}>
-        <AppShell.Section p="md" style={{ display: "flex", justifyContent: "center" }}>
-          <Logo size={30} wordmarkColor="white" withWordmark={!railColapsado} />
-        </AppShell.Section>
-
-        <AppShell.Section grow component={ScrollArea} px="sm">
-          {!railColapsado && (
-            <Text size="xs" c="gray.6" fw={600} tt="uppercase" mb={6} px="xs">
-              Reclamos
-            </Text>
-          )}
-          <Stack gap={4}>
-            {(usuario ? navModulo(usuario.rol) : []).map((item) => (
-              <SidebarLink
-                key={item.to}
-                item={item}
-                active={isActive(item.to)}
-                collapsed={railColapsado}
-                onNavigate={closeMobile}
-              />
-            ))}
-          </Stack>
-        </AppShell.Section>
-
-        {!railColapsado && (
-          <AppShell.Section>
-            <CitySkyline />
-          </AppShell.Section>
-        )}
-
-        <Tooltip label={desktopOpened ? "Contraer menu" : "Expandir menu"} position="right">
-          <ActionIcon
-            className="navbar-flap"
-            variant="filled"
-            color="azulNoche.7"
-            radius="xl"
-            size={28}
-            visibleFrom="sm"
-            onClick={toggleDesktop}
-            aria-label={desktopOpened ? "Contraer menu lateral" : "Expandir menu lateral"}
-          >
-            {desktopOpened ? <IconChevronsLeft size={15} /> : <IconChevronsRight size={15} />}
-          </ActionIcon>
-        </Tooltip>
-      </AppShell.Navbar>
-
-      <AppShell.Main bg="gray.0">
-        <Outlet />
-      </AppShell.Main>
-    </AppShell>
+        <main className="flex-1 bg-muted/30 p-4 sm:p-6">
+          <Outlet />
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

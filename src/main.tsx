@@ -10,18 +10,26 @@ import "@mantine/notifications/styles.css";
 import "@/theme/global.css";
 
 import { theme } from "@/theme/theme";
+import { aplicarTemaInicial } from "@/lib/tema";
 import { AuthProvider } from "@/auth/AuthContext";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 import { App } from "@/App";
+
+aplicarTemaInicial();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <MantineProvider theme={theme}>
       <Notifications position="top-right" />
-      <BrowserRouter>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </BrowserRouter>
+      <TooltipProvider delayDuration={200}>
+        <BrowserRouter>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+        </BrowserRouter>
+        <Toaster richColors position="top-right" />
+      </TooltipProvider>
     </MantineProvider>
   </StrictMode>,
 );

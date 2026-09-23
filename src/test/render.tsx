@@ -5,6 +5,7 @@ import { MemoryRouter } from "react-router-dom";
 
 import { theme } from "@/theme/theme";
 import { AuthProvider } from "@/auth/AuthContext";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import type { Usuario } from "@/auth/users";
 
 interface Options extends RenderOptions {
@@ -24,9 +25,11 @@ export function renderWithProviders(
 ) {
   return render(
     <MantineProvider theme={theme}>
-      <AuthProvider usuarioInicial={usuario}>
-        <MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>
-      </AuthProvider>
+      <TooltipProvider delayDuration={0}>
+        <AuthProvider usuarioInicial={usuario}>
+          <MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>
+        </AuthProvider>
+      </TooltipProvider>
     </MantineProvider>,
     options,
   );

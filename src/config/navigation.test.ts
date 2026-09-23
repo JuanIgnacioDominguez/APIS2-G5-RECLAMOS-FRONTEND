@@ -6,13 +6,13 @@ import { homePorRol, migasPara, navModulo } from "./navigation";
 describe("navegacion del modulo de reclamos", () => {
   it("el menu cambia por rol", () => {
     const ciudadano = navModulo(Rol.CIUDADANO).map((i) => i.to);
-    expect(ciudadano).toEqual(["/feed", "/reclamos", "/reclamos/nuevo", "/mapa"]);
+    expect(ciudadano).toEqual(["/reclamos", "/feed", "/mapa"]);
 
     const operador = navModulo(Rol.OPERADOR).map((i) => i.to);
-    expect(operador).toEqual(["/backoffice", "/feed", "/reclamos", "/mapa"]);
+    expect(operador).toEqual(["/backoffice", "/reclamos", "/feed", "/mapa"]);
 
     const admin = navModulo(Rol.ADMIN).map((i) => i.to);
-    expect(admin).toEqual(["/backoffice", "/feed", "/reclamos", "/panel", "/mapa"]);
+    expect(admin).toEqual(["/backoffice", "/reclamos", "/feed", "/panel", "/mapa"]);
   });
 
   it("cada rol aterriza en su home", () => {
