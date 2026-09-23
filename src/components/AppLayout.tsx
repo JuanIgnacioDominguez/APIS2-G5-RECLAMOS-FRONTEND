@@ -145,7 +145,7 @@ function BusquedaGlobal() {
   );
 }
 
-/** One sidebar link: 44px row, soft hover, solid blue selected state. */
+/** One sidebar link: 44px row, soft hover, translucent blue selected state. */
 function ItemNav({
   item,
   activo,
@@ -162,7 +162,7 @@ function ItemNav({
         asChild
         isActive={activo}
         tooltip={item.label}
-        className="h-11 gap-3 rounded-lg px-3.5 text-sm font-medium text-sidebar-foreground/75 hover:bg-white/[0.07] hover:text-white data-[active=true]:bg-[#1f5a99] data-[active=true]:text-white data-[active=true]:shadow-sm data-[active=true]:hover:bg-[#1f5a99] [&>svg]:size-5 [&>svg]:text-sidebar-foreground/55 hover:[&>svg]:text-white data-[active=true]:[&>svg]:text-[#8fd3f0]"
+        className="h-11 gap-3 rounded-lg px-3.5 text-sm font-medium text-sidebar-foreground/75 hover:bg-white/[0.07] hover:text-white data-[active=true]:bg-[#3b82c4]/20 data-[active=true]:text-white data-[active=true]:ring-1 data-[active=true]:ring-inset data-[active=true]:ring-[#6aa8e0]/30 data-[active=true]:hover:bg-[#3b82c4]/20 [&>svg]:size-5 [&>svg]:text-sidebar-foreground/55 hover:[&>svg]:text-white data-[active=true]:[&>svg]:text-[#7fb8ee]"
       >
         <RouterNavLink to={item.to}>
           <item.icon />
