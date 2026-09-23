@@ -17,12 +17,13 @@ function leerPreferencia(): Tema | null {
   }
 }
 
-/** Apply the stored theme (or the OS preference) before the app renders. */
+/**
+ * Apply the theme before the app renders. Light is the agreed default and the
+ * one the team uses, so we never follow the OS preference: dark mode is strictly
+ * opt-in and only applies when the user chose it explicitly (stored value).
+ */
 export function aplicarTemaInicial(): void {
-  const guardado = leerPreferencia();
-  const prefiereOscuro =
-    typeof matchMedia === "function" && matchMedia("(prefers-color-scheme: dark)").matches;
-  const tema: Tema = guardado ?? (prefiereOscuro ? "dark" : "light");
+  const tema: Tema = leerPreferencia() ?? "light";
   document.documentElement.classList.toggle("dark", tema === "dark");
 }
 
