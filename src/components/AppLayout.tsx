@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { NavLink as RouterNavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Bell, LogOut, Plus, Search } from "lucide-react";
+import { Bell, ChevronsUpDown, LogOut, Plus, Search } from "lucide-react";
 
 import { bandeja } from "@/api/reclamos";
-import { CitySkyline } from "@/components/CitySkyline";
 import { LogoMark } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { migasPara, navModulo } from "@/config/navigation";
@@ -13,7 +12,6 @@ import { esStaff, Rol, ROL_LABEL } from "@/auth/roles";
 import { useBusquedaReclamos } from "@/features/reclamos/useBusquedaReclamos";
 import { EstadoBadge } from "@/features/reclamos/EstadoBadges";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Breadcrumb,
@@ -147,10 +145,63 @@ function BusquedaGlobal() {
   );
 }
 
+/** Account menu in the sidebar footer (shadcn's stock `NavUser` pattern). */
+function NavUser() {
+  const navigate = useNavigate();
+  const { usuario, logout } = useAuth();
+
+  function salir() {
+    logout();
+    navigate("/login");
+  }
+
+  if (!usuario) return null;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <SidebarMenuButton
+          size="lg"
+          aria-label="Cuenta"
+          className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+        >
+          <Avatar className="size-8 rounded-lg">
+            <AvatarFallback className="rounded-lg bg-primary text-primary-foreground">
+              {iniciales(usuario.nombre)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="grid flex-1 text-left text-sm leading-tight">
+            <span className="truncate font-medium">{usuario.nombre}</span>
+            <span className="truncate text-xs text-sidebar-foreground/60">
+              {ROL_LABEL[usuario.rol]}
+            </span>
+          </div>
+          <ChevronsUpDown className="ml-auto size-4" />
+        </SidebarMenuButton>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        className="w-(--radix-dropdown-menu-trigger-width) min-w-56"
+        side="top"
+        align="end"
+        sideOffset={4}
+      >
+        <DropdownMenuLabel className="truncate font-normal text-muted-foreground">
+          {usuario.email}
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem variant="destructive" onClick={salir}>
+          <LogOut />
+          Cerrar sesion
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 export function AppLayout() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { usuario, logout } = useAuth();
+  const { usuario } = useAuth();
   const staff = usuario ? esStaff(usuario.rol) : false;
   const migas = migasPara(pathname, staff);
   const secciones = usuario ? navModulo(usuario.rol) : [];
@@ -158,50 +209,42 @@ export function AppLayout() {
 
   const isActive = (to: string) => pathname === to || pathname.startsWith(`${to}/`);
 
-  function salir() {
-    logout();
-    navigate("/login");
-  }
-
   return (
     <SidebarProvider>
       <Sidebar collapsible="icon">
-        <SidebarHeader className="gap-3 border-b border-sidebar-border py-3">
+        <SidebarHeader>
           <Marca />
           {usuario?.rol === Rol.CIUDADANO && (
-            <Button
-              className="w-full justify-start gap-2 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0"
-              onClick={() => navigate("/reclamos/nuevo")}
-            >
-              <Plus className="size-4 shrink-0" />
-              <span className="group-data-[collapsible=icon]:hidden">Nuevo reclamo</span>
-            </Button>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Nuevo reclamo"
+                  onClick={() => navigate("/reclamos/nuevo")}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground"
+                >
+                  <Plus />
+                  <span>Nuevo reclamo</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
           )}
         </SidebarHeader>
-        <SidebarContent className="px-2 py-2">
+        <SidebarContent>
           {secciones.map((seccion) => (
             <SidebarGroup key={seccion.label}>
-              <SidebarGroupLabel className="px-2 text-[11px] uppercase tracking-wider text-sidebar-foreground/50">
-                {seccion.label}
-              </SidebarGroupLabel>
+              <SidebarGroupLabel>{seccion.label}</SidebarGroupLabel>
               <SidebarGroupContent>
-                <SidebarMenu className="gap-1.5">
+                <SidebarMenu>
                   {seccion.items.map((item) => (
                     <SidebarMenuItem key={item.to}>
-                      <SidebarMenuButton
-                        asChild
-                        size="lg"
-                        isActive={isActive(item.to)}
-                        tooltip={item.label}
-                        className="gap-3 rounded-lg text-[15px] font-medium text-sidebar-foreground/80 transition-colors hover:bg-white/5 hover:text-sidebar-foreground data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:shadow-sm data-[active=true]:hover:bg-primary data-[active=true]:hover:text-primary-foreground [&>svg]:size-5"
-                      >
+                      <SidebarMenuButton asChild isActive={isActive(item.to)} tooltip={item.label}>
                         <RouterNavLink to={item.to}>
                           <item.icon />
                           <span>{item.label}</span>
                         </RouterNavLink>
                       </SidebarMenuButton>
                       {item.contador && !!pendientes && (
-                        <SidebarMenuBadge className="rounded-full bg-[#e6b566] text-[11px] font-semibold text-[#142430]">
+                        <SidebarMenuBadge className="bg-primary text-primary-foreground">
                           {pendientes}
                         </SidebarMenuBadge>
                       )}
@@ -212,19 +255,12 @@ export function AppLayout() {
             </SidebarGroup>
           ))}
         </SidebarContent>
-        <SidebarFooter className="gap-2.5 border-t border-sidebar-border pt-3 group-data-[collapsible=icon]:hidden">
-          <div className="flex items-center justify-between px-1">
-            <span className="text-xs text-sidebar-foreground/50">CityPass+ · Reclamos</span>
-            {usuario && (
-              <Badge
-                variant="outline"
-                className="border-sidebar-border/60 bg-white/5 text-[10px] font-medium text-sidebar-foreground/70"
-              >
-                {ROL_LABEL[usuario.rol]}
-              </Badge>
-            )}
-          </div>
-          <CitySkyline />
+        <SidebarFooter>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <NavUser />
+            </SidebarMenuItem>
+          </SidebarMenu>
         </SidebarFooter>
         <SidebarRail />
       </Sidebar>
@@ -269,34 +305,6 @@ export function AppLayout() {
                 <p className="px-2 pb-2 text-sm text-muted-foreground">
                   Sin novedades por el momento.
                 </p>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-auto gap-2 px-2 py-1.5" aria-label="Cuenta">
-                  <Avatar className="size-8">
-                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                      {usuario ? iniciales(usuario.nombre) : "?"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="hidden text-left leading-tight sm:block">
-                    <p className="text-sm font-medium">{usuario?.nombre ?? "Invitado"}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {usuario ? ROL_LABEL[usuario.rol] : "Sin sesion"}
-                    </p>
-                  </div>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel className="truncate font-normal text-muted-foreground">
-                  {usuario?.email}
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive" onClick={salir}>
-                  <LogOut />
-                  Cerrar sesion
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
