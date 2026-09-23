@@ -43,6 +43,24 @@ export const PRIORIDAD_COLOR: Record<PrioridadReclamo, string> = {
   [PrioridadReclamo.CRITICA]: "rojoEmergencia",
 };
 
+/**
+ * Area suggested per category, used only to prefill the free-text
+ * "area responsable" field when staff assigns a claim (there is no area
+ * catalog in the backend, so this is a frontend-only heuristic).
+ */
+export const AREA_SUGERIDA: Record<CategoriaReclamo, string> = {
+  [CategoriaReclamo.ALUMBRADO]: "Alumbrado Publico",
+  [CategoriaReclamo.BACHES]: "Vialidad y Mantenimiento Vial",
+  [CategoriaReclamo.RESIDUOS]: "Higiene Urbana",
+  [CategoriaReclamo.ARBOLADO]: "Arbolado y Espacios Verdes",
+  [CategoriaReclamo.AGUA_CLOACAS]: "Aguas y Saneamiento",
+  [CategoriaReclamo.TRANSITO]: "Transito y Transporte",
+  [CategoriaReclamo.RUIDOS]: "Control Urbano",
+  [CategoriaReclamo.ESPACIOS_PUBLICOS]: "Espacios Publicos",
+  [CategoriaReclamo.SEGURIDAD]: "Seguridad Ciudadana",
+  [CategoriaReclamo.OTROS]: "Mesa de Entradas",
+};
+
 export const CATEGORIA_LABEL: Record<CategoriaReclamo, string> = {
   [CategoriaReclamo.ALUMBRADO]: "Alumbrado",
   [CategoriaReclamo.BACHES]: "Baches",

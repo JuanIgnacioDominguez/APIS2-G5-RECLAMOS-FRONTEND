@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Loader2, Newspaper, WifiOff } from "lucide-react";
+import { ArrowUpDown, Loader2, Newspaper, WifiOff } from "lucide-react";
 
 import { listarReclamos } from "@/api/reclamos";
 import type { CategoriaReclamo, EstadoReclamo } from "@/domain/enums";
@@ -15,26 +15,37 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ReclamoCard } from "@/features/reclamos/ReclamoCard";
-import { barriosDisponibles, filtrarFeed } from "@/features/reclamos/feed";
+import { barriosDisponibles, filtrarFeed, type OrdenFeed } from "@/features/reclamos/feed";
 
 const TODAS = "todas";
 
+const OPCIONES_ORDEN: { value: OrdenFeed; label: string }[] = [
+  { value: "recientes", label: "Mas recientes" },
+  { value: "antiguos", label: "Mas antiguos" },
+  { value: "adhesiones", label: "Mas apoyados" },
+];
+
 /**
- * Public feed of the city's latest claims (US-06), filterable by category,
- * neighbourhood and status (US-07). Reads the shared `GET /reclamos` list and
- * ranks it newest first; every card links to the claim's detail.
+ * Public feed of the city's claims (US-06), filterable by category,
+ * neighbourhood and status (US-07), and sortable by recency or support
+ * (`orden`, backed by the same param the backend list accepts). Every card
+ * links to the claim's detail.
  */
 export function FeedPublicoPage() {
   const [categoria, setCategoria] = useState<CategoriaReclamo | null>(null);
   const [barrio, setBarrio] = useState<string | null>(null);
   const [estado, setEstado] = useState<EstadoReclamo | null>(null);
+  const [orden, setOrden] = useState<OrdenFeed>("recientes");
 
-  const { data, loading, error, reload } = useAsync(() => listarReclamos({ size: 100 }), []);
+  const { data, loading, error, reload } = useAsync(
+    () => listarReclamos({ size: 100, orden }),
+    [orden],
+  );
   const items = useMemo(() => data?.items ?? [], [data]);
   const barrios = useMemo(() => barriosDisponibles(items), [items]);
   const visibles = useMemo(
-    () => filtrarFeed(items, { categoria, barrio, estado }),
-    [items, categoria, barrio, estado],
+    () => filtrarFeed(items, { categoria, barrio, estado, orden }),
+    [items, categoria, barrio, estado, orden],
   );
 
   return (
@@ -46,7 +57,7 @@ export function FeedPublicoPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Reclamos de la ciudad</h1>
           <p className="text-sm text-muted-foreground">
-            Los reclamos mas recientes reportados por los vecinos, mas nuevos primero.
+            Los reclamos reportados por los vecinos en toda la ciudad.
           </p>
         </div>
       </div>
@@ -101,9 +112,24 @@ export function FeedPublicoPage() {
             </SelectContent>
           </Select>
         </div>
-        <Badge variant="secondary" className="text-sm tabular-nums">
-          {visibles.length} {visibles.length === 1 ? "reclamo" : "reclamos"}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="text-sm tabular-nums">
+            {visibles.length} {visibles.length === 1 ? "reclamo" : "reclamos"}
+          </Badge>
+          <Select value={orden} onValueChange={(v) => setOrden(v as OrdenFeed)}>
+            <SelectTrigger className="w-[170px]" aria-label="Ordenar por">
+              <ArrowUpDown className="size-3.5 text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {OPCIONES_ORDEN.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {loading && (

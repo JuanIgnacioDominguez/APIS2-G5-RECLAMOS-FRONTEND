@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  ArrowUpDown,
   CheckCircle2,
   FolderOpen,
   Inbox,
@@ -31,8 +32,15 @@ import {
 } from "@/components/ui/select";
 import { ReclamoCard } from "@/features/reclamos/ReclamoCard";
 import { TABS, contarPorTab, filtrarReclamos, type TabReclamos } from "@/features/reclamos/filters";
+import type { OrdenFeed } from "@/features/reclamos/feed";
 
 const TODAS = "todas";
+
+const OPCIONES_ORDEN: { value: OrdenFeed; label: string }[] = [
+  { value: "recientes", label: "Mas recientes" },
+  { value: "antiguos", label: "Mas antiguos" },
+  { value: "adhesiones", label: "Mas apoyados" },
+];
 
 export function ReclamosPage() {
   const navigate = useNavigate();
@@ -41,8 +49,12 @@ export function ReclamosPage() {
   const [tab, setTab] = useState<TabReclamos>("todos");
   const [texto, setTexto] = useState("");
   const [categoria, setCategoria] = useState<CategoriaReclamo | null>(null);
+  const [orden, setOrden] = useState<OrdenFeed>("recientes");
 
-  const { data, loading, error, reload } = useAsync(() => listarReclamos(), []);
+  const { data, loading, error, reload } = useAsync(
+    () => listarReclamos(staff ? { orden } : { ciudadano_id: usuario?.id, orden }),
+    [staff, usuario?.id, orden],
+  );
   const items = useMemo(() => data?.items ?? [], [data]);
   const counts = useMemo(() => contarPorTab(items), [items]);
   const visibles = useMemo(
@@ -121,6 +133,19 @@ export function ReclamosPage() {
                 className="pl-9"
               />
             </div>
+            <Select value={orden} onValueChange={(v) => setOrden(v as OrdenFeed)}>
+              <SelectTrigger className="w-[170px]" aria-label="Ordenar por">
+                <ArrowUpDown className="size-3.5 text-muted-foreground" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {OPCIONES_ORDEN.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

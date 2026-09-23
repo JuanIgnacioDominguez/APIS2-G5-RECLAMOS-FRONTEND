@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Clock, Loader2, MapPin, Users } from "lucide-react";
+import { Clock, Loader2, MapPin, Sparkles, Users, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { useParams } from "react-router-dom";
 
 import { adherir, obtenerReclamo } from "@/api/reclamos";
+import { CanalOrigen, OrigenClasificacion } from "@/domain/enums";
 import { ESTADO_LABEL } from "@/domain/labels";
-import { formatFecha } from "@/lib/format";
+import { formatConfianza, formatFecha } from "@/lib/format";
 import { useAsync } from "@/hooks/useAsync";
 import { EstadoError } from "@/components/EstadoError";
 import { useAuth } from "@/auth/AuthContext";
@@ -15,8 +16,14 @@ import { GestionarEstado } from "@/features/reclamos/GestionarEstado";
 import { ClasificarReclamo } from "@/features/reclamos/ClasificarReclamo";
 import { ComentariosReclamo } from "@/features/reclamos/ComentariosReclamo";
 import { MapaUbicacion } from "@/features/mapa/MapaUbicacion";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 function DatoFila({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   return (
@@ -82,6 +89,43 @@ export function ReclamoDetallePage() {
       <div className="flex flex-wrap items-center gap-2">
         <CategoriaBadge categoria={reclamo.categoria} />
         <PrioridadBadge prioridad={reclamo.prioridad} />
+        {reclamo.origen_clasificacion !== OrigenClasificacion.CIUDADANO &&
+          reclamo.confianza_clasificacion !== null && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge
+                  variant="outline"
+                  className="gap-1 border-transparent font-medium"
+                  style={{
+                    backgroundColor: "color-mix(in oklab, var(--chart-1) 12%, transparent)",
+                    color: "var(--chart-1)",
+                  }}
+                >
+                  <Sparkles className="size-3" />
+                  {formatConfianza(reclamo.confianza_clasificacion)} de confianza
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                {reclamo.origen_clasificacion === OrigenClasificacion.MODELO
+                  ? "Categoria y prioridad sugeridas por el clasificador automatico."
+                  : "Categoria y/o prioridad corregidas por un operador."}
+              </TooltipContent>
+            </Tooltip>
+          )}
+        {reclamo.canal === CanalOrigen.EVENTO && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge variant="outline" className="gap-1 border-dashed text-muted-foreground">
+                <Zap className="size-3" />
+                Generado automaticamente
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>
+              Este reclamo lo abrio el sistema a partir de un evento de otro modulo
+              (Residuos o Emergencias), no un vecino.
+            </TooltipContent>
+          </Tooltip>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -151,6 +195,9 @@ export function ReclamoDetallePage() {
               <GestionarEstado
                 reclamoId={reclamo.id}
                 estadoActual={reclamo.estado}
+                categoria={reclamo.categoria}
+                asignadoActual={reclamo.asignado_a}
+                areaActual={reclamo.area_responsable}
                 onActualizado={reload}
               />
               <ClasificarReclamo
@@ -172,6 +219,9 @@ export function ReclamoDetallePage() {
               <DatoFila etiqueta="Estado" valor={ESTADO_LABEL[reclamo.estado]} />
               <DatoFila etiqueta="Barrio" valor={reclamo.barrio ?? "-"} />
               {reclamo.asignado_a && <DatoFila etiqueta="Asignado a" valor={reclamo.asignado_a} />}
+              {reclamo.area_responsable && (
+                <DatoFila etiqueta="Area responsable" valor={reclamo.area_responsable} />
+              )}
             </CardContent>
           </Card>
 
