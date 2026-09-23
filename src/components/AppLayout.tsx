@@ -147,18 +147,21 @@ export function AppLayout() {
         <SidebarHeader className="h-16 justify-center border-b border-sidebar-border">
           <Marca />
         </SidebarHeader>
-        <SidebarContent>
+        <SidebarContent className="px-2 py-2">
           <SidebarGroup>
-            <SidebarGroupLabel>Reclamos</SidebarGroupLabel>
+            <SidebarGroupLabel className="px-2 text-[11px] uppercase tracking-wider text-sidebar-foreground/50">
+              Navegacion
+            </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>
+              <SidebarMenu className="gap-1.5">
                 {items.map((item) => (
                   <SidebarMenuItem key={item.to}>
                     <SidebarMenuButton
                       asChild
+                      size="lg"
                       isActive={isActive(item.to)}
                       tooltip={item.label}
-                      className="data-[active=true]:bg-primary data-[active=true]:font-medium data-[active=true]:text-primary-foreground data-[active=true]:hover:bg-primary data-[active=true]:hover:text-primary-foreground"
+                      className="gap-3 rounded-lg text-[15px] font-medium text-sidebar-foreground/80 transition-colors hover:bg-white/5 hover:text-sidebar-foreground data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:shadow-sm data-[active=true]:hover:bg-primary data-[active=true]:hover:text-primary-foreground [&>svg]:size-5"
                     >
                       <RouterNavLink to={item.to}>
                         <item.icon />

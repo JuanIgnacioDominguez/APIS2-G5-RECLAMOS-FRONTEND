@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { Loader2, Map } from "lucide-react";
 
 import { listarReclamos } from "@/api/reclamos";
+import { useAuth } from "@/auth/AuthContext";
+import { Rol } from "@/auth/roles";
 import { EstadoReclamo, type CategoriaReclamo } from "@/domain/enums";
 import { ESTADO_COLOR, ESTADO_LABEL, opcionesCategoria, opcionesEstado } from "@/domain/labels";
 import { useAsync } from "@/hooks/useAsync";
@@ -30,7 +32,7 @@ const ESTADOS_LEYENDA: EstadoReclamo[] = [
 
 // Brand color keys to hex, for the legend dots (CSS vars are not available here).
 const COLOR_HEX: Record<string, string> = {
-  gray: "#868e96",
+  gray: "#64748b",
   azulUrbano: "#2563a6",
   ambar: "#d99838",
   verdeUrbano: "#4f8a72",
@@ -42,10 +44,25 @@ const COLOR_HEX: Record<string, string> = {
  * Shows no personal data of the citizen who created each claim.
  */
 export function MapaPublicoPage() {
+  const { usuario } = useAuth();
   const [categoria, setCategoria] = useState<CategoriaReclamo | null>(null);
   const [estado, setEstado] = useState<EstadoReclamo | null>(null);
 
   const { data, loading, error, reload } = useAsync(() => listarReclamos({ size: 100 }), []);
+
+  // Ids of the current citizen's own claims, so the map can highlight them.
+  const esCiudadano = usuario?.rol === Rol.CIUDADANO;
+  const { data: mios } = useAsync(
+    () =>
+      esCiudadano && usuario
+        ? listarReclamos({ ciudadano_id: usuario.id, size: 100 })
+        : Promise.resolve(null),
+    [esCiudadano, usuario?.id],
+  );
+  const misIds = useMemo(
+    () => new Set((mios?.items ?? []).map((r) => r.id)),
+    [mios],
+  );
 
   const puntos = useMemo(() => {
     const ubicados = reclamosUbicados(data?.items ?? []);
@@ -115,8 +132,17 @@ export function MapaPublicoPage() {
 
       {!loading && !error && (
         <div className="rounded-xl bg-card p-2 ring-1 ring-foreground/10">
-          <MapaReclamos reclamos={puntos} />
-          <div className="mt-1 flex flex-wrap gap-4 px-2 py-1.5">
+          <MapaReclamos reclamos={puntos} misIds={esCiudadano ? misIds : undefined} />
+          <div className="mt-1 flex flex-wrap items-center gap-4 px-2 py-1.5">
+            {esCiudadano && (
+              <div className="flex items-center gap-1.5">
+                <span
+                  className="size-3 rounded-full"
+                  style={{ backgroundColor: "#2563a6", boxShadow: "0 0 0 2px #e6b566" }}
+                />
+                <span className="text-xs font-medium text-foreground">Mis reclamos</span>
+              </div>
+            )}
             {ESTADOS_LEYENDA.map((e) => (
               <div key={e} className="flex items-center gap-1.5">
                 <span

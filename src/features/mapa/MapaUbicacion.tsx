@@ -39,7 +39,7 @@ export function MapaUbicacion({ latitud, longitud, alto = 240 }: Props) {
       center={punto}
       zoom={15}
       scrollWheelZoom={false}
-      style={{ height: alto, width: "100%", borderRadius: "var(--radius)" }}
+      style={{ height: alto, width: "100%", borderRadius: "0.75rem" }}
     >
       <AjustarVista punto={punto} />
       <TileLayer

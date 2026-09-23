@@ -137,6 +137,8 @@ export interface FiltroReclamos {
   barrio?: string;
   texto?: string;
   orden?: string;
+  /** Restrict to a single citizen's claims (used to flag "mine" on the map). */
+  ciudadano_id?: string;
   page?: number;
   size?: number;
 }
