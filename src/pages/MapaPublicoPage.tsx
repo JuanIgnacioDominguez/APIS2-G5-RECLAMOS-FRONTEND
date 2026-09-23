@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
-import { Badge, Card, Center, Group, Loader, Select, Stack, Text } from "@mantine/core";
-import { IconMap2 } from "@tabler/icons-react";
+import { Loader2, Map } from "lucide-react";
 
 import { listarReclamos } from "@/api/reclamos";
 import { EstadoReclamo, type CategoriaReclamo } from "@/domain/enums";
@@ -8,8 +7,18 @@ import { ESTADO_COLOR, ESTADO_LABEL, opcionesCategoria, opcionesEstado } from "@
 import { useAsync } from "@/hooks/useAsync";
 import { EstadoError } from "@/components/EstadoError";
 import { PageHeader } from "@/components/PageHeader";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { MapaReclamos } from "@/features/mapa/MapaReclamos";
 import { reclamosUbicados } from "@/features/mapa/coords";
+
+const TODAS = "todas";
 
 /** States worth surfacing in the map legend, in lifecycle order. */
 const ESTADOS_LEYENDA: EstadoReclamo[] = [
@@ -18,6 +27,15 @@ const ESTADOS_LEYENDA: EstadoReclamo[] = [
   EstadoReclamo.RESUELTO,
   EstadoReclamo.RECHAZADO,
 ];
+
+// Brand color keys to hex, for the legend dots (CSS vars are not available here).
+const COLOR_HEX: Record<string, string> = {
+  gray: "#868e96",
+  azulUrbano: "#2563a6",
+  ambar: "#d99838",
+  verdeUrbano: "#4f8a72",
+  rojoEmergencia: "#c83e4d",
+};
 
 /**
  * Public map of geolocated claims (US-11), filterable by category and state.
@@ -39,71 +57,78 @@ export function MapaPublicoPage() {
   }, [data, categoria, estado]);
 
   return (
-    <Stack gap="lg">
+    <div className="flex flex-col gap-6">
       <PageHeader
-        icono={IconMap2}
+        icono={Map}
         titulo="Mapa de reclamos"
         descripcion="Reclamos publicos reportados en la ciudad, sin datos personales."
       />
 
-      <Card withBorder radius="md" padding="md">
-        <Group justify="space-between" align="center" wrap="wrap" gap="md">
-          <Group gap="sm" wrap="wrap">
-            <Select
-              w={200}
-              placeholder="Todas las categorias"
-              clearable
-              data={opcionesCategoria()}
-              value={categoria}
-              onChange={(v) => setCategoria(v as CategoriaReclamo | null)}
-              aria-label="Filtrar por categoria"
-            />
-            <Select
-              w={200}
-              placeholder="Todos los estados"
-              clearable
-              data={opcionesEstado()}
-              value={estado}
-              onChange={(v) => setEstado(v as EstadoReclamo | null)}
-              aria-label="Filtrar por estado"
-            />
-          </Group>
-          <Badge size="lg" variant="light" color="azulUrbano" radius="sm">
-            {puntos.length} en el mapa
-          </Badge>
-        </Group>
-      </Card>
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
+        <div className="flex flex-wrap items-center gap-2">
+          <Select
+            value={categoria ?? TODAS}
+            onValueChange={(v) => setCategoria(v === TODAS ? null : (v as CategoriaReclamo))}
+          >
+            <SelectTrigger className="w-[190px]" aria-label="Filtrar por categoria">
+              <SelectValue placeholder="Todas las categorias" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={TODAS}>Todas las categorias</SelectItem>
+              {opcionesCategoria().map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={estado ?? TODAS}
+            onValueChange={(v) => setEstado(v === TODAS ? null : (v as EstadoReclamo))}
+          >
+            <SelectTrigger className="w-[180px]" aria-label="Filtrar por estado">
+              <SelectValue placeholder="Todos los estados" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={TODAS}>Todos los estados</SelectItem>
+              {opcionesEstado().map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <Badge variant="secondary" className="text-sm tabular-nums">
+          {puntos.length} en el mapa
+        </Badge>
+      </div>
 
       {loading && (
-        <Center py={64}>
-          <Loader color="azulUrbano" />
-        </Center>
+        <div className="flex items-center justify-center gap-2 py-16 text-muted-foreground">
+          <Loader2 className="size-5 animate-spin" />
+          Cargando mapa...
+        </div>
       )}
 
       {error && <EstadoError mensaje={error} onReintentar={reload} />}
 
       {!loading && !error && (
-        <Card withBorder radius="md" padding="xs">
+        <div className="rounded-xl bg-card p-2 ring-1 ring-foreground/10">
           <MapaReclamos reclamos={puntos} />
-          <Group gap="lg" px="sm" py="xs" mt={4} wrap="wrap">
+          <div className="mt-1 flex flex-wrap gap-4 px-2 py-1.5">
             {ESTADOS_LEYENDA.map((e) => (
-              <Group key={e} gap={6} wrap="nowrap">
+              <div key={e} className="flex items-center gap-1.5">
                 <span
-                  style={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: "50%",
-                    backgroundColor: `var(--mantine-color-${ESTADO_COLOR[e]}-6)`,
-                  }}
+                  className="size-2.5 rounded-full"
+                  style={{ backgroundColor: COLOR_HEX[ESTADO_COLOR[e]] ?? "#2563a6" }}
                 />
-                <Text size="xs" c="dimmed">
-                  {ESTADO_LABEL[e]}
-                </Text>
-              </Group>
+                <span className="text-xs text-muted-foreground">{ESTADO_LABEL[e]}</span>
+              </div>
             ))}
-          </Group>
-        </Card>
+          </div>
+        </div>
       )}
-    </Stack>
+    </div>
   );
 }

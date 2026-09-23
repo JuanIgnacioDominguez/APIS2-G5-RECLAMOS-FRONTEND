@@ -48,6 +48,11 @@ window.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver;
 // Silence scrollIntoView calls from Mantine Select in jsdom.
 window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
+// Radix UI (shadcn Select/Dropdown) uses Pointer Capture APIs that jsdom lacks.
+window.HTMLElement.prototype.hasPointerCapture = vi.fn(() => false);
+window.HTMLElement.prototype.setPointerCapture = vi.fn();
+window.HTMLElement.prototype.releasePointerCapture = vi.fn();
+
 afterEach(() => {
   cleanup();
   localStorage.clear();

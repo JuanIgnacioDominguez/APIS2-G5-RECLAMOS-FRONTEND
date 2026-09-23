@@ -61,8 +61,8 @@ describe("MapaPublicoPage", () => {
     renderWithProviders(<MapaPublicoPage />);
     await screen.findByText("Bache");
 
-    await userEvent.click(screen.getByRole("textbox", { name: /filtrar por categoria/i }));
-    await userEvent.click(await screen.findByText("Residuos"));
+    await userEvent.click(screen.getByRole("combobox", { name: /filtrar por categoria/i }));
+    await userEvent.click(await screen.findByRole("option", { name: "Residuos" }));
 
     await waitFor(() => expect(screen.queryByText("Bache")).not.toBeInTheDocument());
     expect(screen.getByText("Basural")).toBeInTheDocument();
