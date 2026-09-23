@@ -258,7 +258,7 @@ export function AppLayout() {
                   <SidebarMenuButton
                     tooltip="Nuevo reclamo"
                     onClick={() => navigate("/reclamos/nuevo")}
-                    className="h-11 justify-center gap-2 rounded-lg bg-[#2f74c0] px-3.5 font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_1px_3px_rgba(0,0,0,0.35)] transition-colors hover:bg-[#3a82d0] hover:text-white active:bg-[#2967ab] active:text-white group-data-[collapsible=icon]:justify-center"
+                    className="h-11 justify-center gap-2 rounded-lg bg-primary px-3.5 font-semibold text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_1px_3px_rgba(0,0,0,0.35)] transition-colors hover:bg-primary/85 hover:text-primary-foreground active:bg-primary/75 active:text-primary-foreground group-data-[collapsible=icon]:justify-center"
                   >
                     <Plus strokeWidth={2.5} />
                     <span>Nuevo reclamo</span>
