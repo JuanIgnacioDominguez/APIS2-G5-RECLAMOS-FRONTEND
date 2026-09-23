@@ -69,8 +69,15 @@ describe("AppLayout", () => {
 
   it("muestra el usuario autenticado y su rol", () => {
     renderLayout();
-    expect(screen.getByText(CIUDADANO.nombre)).toBeInTheDocument();
-    expect(screen.getByText("Ciudadano")).toBeInTheDocument();
+    const cuenta = within(screen.getByRole("button", { name: /cuenta/i }));
+    expect(cuenta.getByText(CIUDADANO.nombre)).toBeInTheDocument();
+    expect(cuenta.getByText("Ciudadano")).toBeInTheDocument();
+  });
+
+  it("muestra el rol tambien en el pie del sidebar", () => {
+    const { container } = renderLayout();
+    const pie = within(container.querySelector<HTMLElement>('[data-slot="sidebar-footer"]')!);
+    expect(pie.getByText("Ciudadano")).toBeInTheDocument();
   });
 
   it("busca reclamos y navega al elegir un resultado", async () => {

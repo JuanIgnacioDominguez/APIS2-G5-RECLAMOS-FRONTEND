@@ -1,15 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink as RouterNavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Bell, LogOut, Search } from "lucide-react";
+import { Bell, LogOut, Plus, Search } from "lucide-react";
 
+import { bandeja } from "@/api/reclamos";
+import { CitySkyline } from "@/components/CitySkyline";
 import { LogoMark } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { migasPara, navModulo } from "@/config/navigation";
+import { useAsync } from "@/hooks/useAsync";
 import { useAuth } from "@/auth/AuthContext";
-import { esStaff, ROL_LABEL } from "@/auth/roles";
+import { esStaff, Rol, ROL_LABEL } from "@/auth/roles";
 import { useBusquedaReclamos } from "@/features/reclamos/useBusquedaReclamos";
 import { EstadoBadge } from "@/features/reclamos/EstadoBadges";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Breadcrumb,
@@ -47,6 +51,7 @@ import {
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
@@ -71,6 +76,22 @@ function Marca() {
       </span>
     </div>
   );
+}
+
+const REFRESCO_BANDEJA_MS = 45_000;
+
+/** Live count of pending claims (RECIBIDO/EN_REVISION), for the Bandeja badge. */
+function usePendientesBandeja(activo: boolean): number | null {
+  const { data, reload } = useAsync(
+    () => (activo ? bandeja(1, 1) : Promise.resolve(null)),
+    [activo],
+  );
+  useEffect(() => {
+    if (!activo) return;
+    const id = setInterval(reload, REFRESCO_BANDEJA_MS);
+    return () => clearInterval(id);
+  }, [activo, reload]);
+  return data?.total ?? null;
 }
 
 /** Command palette (Cmd/Ctrl-K style) to jump to a claim by title. */
@@ -132,7 +153,8 @@ export function AppLayout() {
   const { usuario, logout } = useAuth();
   const staff = usuario ? esStaff(usuario.rol) : false;
   const migas = migasPara(pathname, staff);
-  const items = usuario ? navModulo(usuario.rol) : [];
+  const secciones = usuario ? navModulo(usuario.rol) : [];
+  const pendientes = usePendientesBandeja(staff);
 
   const isActive = (to: string) => pathname === to || pathname.startsWith(`${to}/`);
 
@@ -144,38 +166,65 @@ export function AppLayout() {
   return (
     <SidebarProvider>
       <Sidebar collapsible="icon">
-        <SidebarHeader className="h-16 justify-center border-b border-sidebar-border">
+        <SidebarHeader className="gap-3 border-b border-sidebar-border py-3">
           <Marca />
+          {usuario?.rol === Rol.CIUDADANO && (
+            <Button
+              className="w-full justify-start gap-2 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0"
+              onClick={() => navigate("/reclamos/nuevo")}
+            >
+              <Plus className="size-4 shrink-0" />
+              <span className="group-data-[collapsible=icon]:hidden">Nuevo reclamo</span>
+            </Button>
+          )}
         </SidebarHeader>
         <SidebarContent className="px-2 py-2">
-          <SidebarGroup>
-            <SidebarGroupLabel className="px-2 text-[11px] uppercase tracking-wider text-sidebar-foreground/50">
-              Navegacion
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu className="gap-1.5">
-                {items.map((item) => (
-                  <SidebarMenuItem key={item.to}>
-                    <SidebarMenuButton
-                      asChild
-                      size="lg"
-                      isActive={isActive(item.to)}
-                      tooltip={item.label}
-                      className="gap-3 rounded-lg text-[15px] font-medium text-sidebar-foreground/80 transition-colors hover:bg-white/5 hover:text-sidebar-foreground data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:shadow-sm data-[active=true]:hover:bg-primary data-[active=true]:hover:text-primary-foreground [&>svg]:size-5"
-                    >
-                      <RouterNavLink to={item.to}>
-                        <item.icon />
-                        <span>{item.label}</span>
-                      </RouterNavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+          {secciones.map((seccion) => (
+            <SidebarGroup key={seccion.label}>
+              <SidebarGroupLabel className="px-2 text-[11px] uppercase tracking-wider text-sidebar-foreground/50">
+                {seccion.label}
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu className="gap-1.5">
+                  {seccion.items.map((item) => (
+                    <SidebarMenuItem key={item.to}>
+                      <SidebarMenuButton
+                        asChild
+                        size="lg"
+                        isActive={isActive(item.to)}
+                        tooltip={item.label}
+                        className="gap-3 rounded-lg text-[15px] font-medium text-sidebar-foreground/80 transition-colors hover:bg-white/5 hover:text-sidebar-foreground data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:shadow-sm data-[active=true]:hover:bg-primary data-[active=true]:hover:text-primary-foreground [&>svg]:size-5"
+                      >
+                        <RouterNavLink to={item.to}>
+                          <item.icon />
+                          <span>{item.label}</span>
+                        </RouterNavLink>
+                      </SidebarMenuButton>
+                      {item.contador && !!pendientes && (
+                        <SidebarMenuBadge className="rounded-full bg-[#e6b566] text-[11px] font-semibold text-[#142430]">
+                          {pendientes}
+                        </SidebarMenuBadge>
+                      )}
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ))}
         </SidebarContent>
-        <SidebarFooter className="text-xs text-sidebar-foreground/60 group-data-[collapsible=icon]:hidden">
-          CityPass+ · Reclamos
+        <SidebarFooter className="gap-2.5 border-t border-sidebar-border pt-3 group-data-[collapsible=icon]:hidden">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-xs text-sidebar-foreground/50">CityPass+ · Reclamos</span>
+            {usuario && (
+              <Badge
+                variant="outline"
+                className="border-sidebar-border/60 bg-white/5 text-[10px] font-medium text-sidebar-foreground/70"
+              >
+                {ROL_LABEL[usuario.rol]}
+              </Badge>
+            )}
+          </div>
+          <CitySkyline />
         </SidebarFooter>
         <SidebarRail />
       </Sidebar>

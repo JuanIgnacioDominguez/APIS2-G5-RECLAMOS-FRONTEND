@@ -7,6 +7,14 @@ export interface NavItem {
   label: string;
   to: string;
   icon: LucideIcon;
+  /** Marks the item whose sidebar badge shows a live pending count (only "/backoffice" today). */
+  contador?: boolean;
+}
+
+/** A labeled group of nav items in the sidebar. */
+export interface NavSection {
+  label: string;
+  items: NavItem[];
 }
 
 /** One crumb in the header's breadcrumb trail. Omit `to` for the current page. */
@@ -15,29 +23,39 @@ export interface Miga {
   to?: string;
 }
 
+const COMUNIDAD: NavItem[] = [
+  { label: "Reclamos de la ciudad", to: "/feed", icon: Newspaper },
+  { label: "Mapa", to: "/mapa", icon: MapPin },
+];
+
 /**
- * Navigation of the Reclamos module. This frontend is only the claims system,
- * so the menu differs by role: a citizen manages their own claims, an operator
- * works the backoffice inbox, and an admin also gets the metrics panel.
+ * Navigation of the Reclamos module, grouped into labeled sidebar sections.
+ * This frontend is only the claims system, so the menu differs by role: a
+ * citizen manages their own claims, an operator works the backoffice inbox,
+ * and an admin also gets the metrics panel.
  */
-export function navModulo(rol: Rol): NavItem[] {
+export function navModulo(rol: Rol): NavSection[] {
   if (rol === Rol.CIUDADANO) {
     return [
-      { label: "Mis reclamos", to: "/reclamos", icon: List },
-      { label: "Reclamos de la ciudad", to: "/feed", icon: Newspaper },
-      { label: "Mapa", to: "/mapa", icon: MapPin },
+      { label: "Mis reclamos", items: [{ label: "Mis reclamos", to: "/reclamos", icon: List }] },
+      { label: "Comunidad", items: COMUNIDAD },
     ];
   }
-  const items: NavItem[] = [
-    { label: "Bandeja", to: "/backoffice", icon: Inbox },
-    { label: "Todos los reclamos", to: "/reclamos", icon: List },
-    { label: "Reclamos de la ciudad", to: "/feed", icon: Newspaper },
+
+  const secciones: NavSection[] = [
+    {
+      label: "Gestion",
+      items: [
+        { label: "Bandeja", to: "/backoffice", icon: Inbox, contador: true },
+        { label: "Todos los reclamos", to: "/reclamos", icon: List },
+      ],
+    },
   ];
   if (rol === Rol.ADMIN) {
-    items.push({ label: "Panel", to: "/panel", icon: BarChart3 });
+    secciones.push({ label: "Analitica", items: [{ label: "Panel", to: "/panel", icon: BarChart3 }] });
   }
-  items.push({ label: "Mapa", to: "/mapa", icon: MapPin });
-  return items;
+  secciones.push({ label: "Comunidad", items: COMUNIDAD });
+  return secciones;
 }
 
 /** Landing route after login, by role. */

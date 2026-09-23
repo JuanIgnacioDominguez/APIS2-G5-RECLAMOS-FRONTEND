@@ -4,15 +4,20 @@ import { Rol } from "@/auth/roles";
 import { homePorRol, migasPara, navModulo } from "./navigation";
 
 describe("navegacion del modulo de reclamos", () => {
+  function rutas(rol: Rol): string[] {
+    return navModulo(rol).flatMap((seccion) => seccion.items.map((i) => i.to));
+  }
+
   it("el menu cambia por rol", () => {
-    const ciudadano = navModulo(Rol.CIUDADANO).map((i) => i.to);
-    expect(ciudadano).toEqual(["/reclamos", "/feed", "/mapa"]);
+    expect(rutas(Rol.CIUDADANO)).toEqual(["/reclamos", "/feed", "/mapa"]);
+    expect(rutas(Rol.OPERADOR)).toEqual(["/backoffice", "/reclamos", "/feed", "/mapa"]);
+    expect(rutas(Rol.ADMIN)).toEqual(["/backoffice", "/reclamos", "/panel", "/feed", "/mapa"]);
+  });
 
-    const operador = navModulo(Rol.OPERADOR).map((i) => i.to);
-    expect(operador).toEqual(["/backoffice", "/reclamos", "/feed", "/mapa"]);
-
-    const admin = navModulo(Rol.ADMIN).map((i) => i.to);
-    expect(admin).toEqual(["/backoffice", "/reclamos", "/feed", "/panel", "/mapa"]);
+  it("solo la Bandeja pide contador en vivo", () => {
+    const secciones = navModulo(Rol.OPERADOR);
+    const conContador = secciones.flatMap((s) => s.items).filter((i) => i.contador);
+    expect(conContador.map((i) => i.to)).toEqual(["/backoffice"]);
   });
 
   it("cada rol aterriza en su home", () => {
