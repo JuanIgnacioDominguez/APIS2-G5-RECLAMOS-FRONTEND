@@ -5,7 +5,7 @@ import { Bell, ChevronsUpDown, LogOut, Plus, Search } from "lucide-react";
 import { bandeja } from "@/api/reclamos";
 import { LogoMark } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { migasPara, navModulo } from "@/config/navigation";
+import { migasPara, navModulo, type Miga } from "@/config/navigation";
 import { useAsync } from "@/hooks/useAsync";
 import { useAuth } from "@/auth/AuthContext";
 import { esStaff, Rol, ROL_LABEL } from "@/auth/roles";
@@ -199,11 +199,13 @@ function NavUser() {
 }
 
 export function AppLayout() {
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const { pathname } = location;
   const navigate = useNavigate();
   const { usuario } = useAuth();
   const staff = usuario ? esStaff(usuario.rol) : false;
-  const migas = migasPara(pathname, staff);
+  const origenState = (location.state as { origen?: Miga } | null)?.origen;
+  const migas = migasPara(pathname, staff, origenState);
   const secciones = usuario ? navModulo(usuario.rol) : [];
   const pendientes = usePendientesBandeja(staff);
 
@@ -232,12 +234,19 @@ export function AppLayout() {
         <SidebarContent>
           {secciones.map((seccion) => (
             <SidebarGroup key={seccion.label}>
-              <SidebarGroupLabel>{seccion.label}</SidebarGroupLabel>
+              <SidebarGroupLabel className="text-[11px] tracking-wider text-sidebar-foreground/50 uppercase">
+                {seccion.label}
+              </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {seccion.items.map((item) => (
                     <SidebarMenuItem key={item.to}>
-                      <SidebarMenuButton asChild isActive={isActive(item.to)} tooltip={item.label}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive(item.to)}
+                        tooltip={item.label}
+                        className="data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground data-[active=true]:hover:bg-sidebar-primary"
+                      >
                         <RouterNavLink to={item.to}>
                           <item.icon />
                           <span>{item.label}</span>
@@ -266,7 +275,7 @@ export function AppLayout() {
       </Sidebar>
 
       <SidebarInset>
-        <header className="sticky top-0 z-10 flex h-16 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <header className="sticky top-0 z-10 flex h-16 items-center gap-3 border-t-2 border-b border-t-primary bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
           <SidebarTrigger />
           <Separator orientation="vertical" className="h-6" />
           <Breadcrumb className="hidden md:block">
@@ -310,7 +319,7 @@ export function AppLayout() {
           </div>
         </header>
 
-        <main className="flex-1 bg-muted/30 p-4 sm:p-6">
+        <main className="flex-1 bg-muted/40 p-4 sm:p-6">
           <Outlet />
         </main>
       </SidebarInset>

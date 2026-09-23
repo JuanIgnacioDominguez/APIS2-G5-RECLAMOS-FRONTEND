@@ -20,11 +20,7 @@ export function PageHeader({
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div className="flex items-center gap-3">
-        {Icono && (
-          <span className="hidden size-11 items-center justify-center rounded-xl bg-primary/10 text-primary sm:flex">
-            <Icono className="size-6" />
-          </span>
-        )}
+        {Icono && <Icono className="hidden size-7 shrink-0 text-primary sm:block" />}
         <div className="space-y-0.5">
           <h1 className="text-2xl font-semibold tracking-tight">{titulo}</h1>
           {descripcion && <p className="text-sm text-muted-foreground">{descripcion}</p>}

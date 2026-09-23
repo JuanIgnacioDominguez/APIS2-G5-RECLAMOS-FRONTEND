@@ -5,24 +5,16 @@ import { Badge } from "@/components/ui/badge";
 import type { CategoriaReclamo, EstadoReclamo, PrioridadReclamo } from "@/domain/enums";
 import {
   CATEGORIA_LABEL,
+  COLOR_HEX,
   ESTADO_COLOR,
   ESTADO_LABEL,
   PRIORIDAD_COLOR,
   PRIORIDAD_LABEL,
+  type ColorKey,
 } from "@/domain/labels";
 
-// The domain color keys mapped to the CityPass+ hex values, so the shadcn Badge
-// can be tinted per status without leaving the palette.
-const COLOR_HEX: Record<string, string> = {
-  gray: "#64748b",
-  azulUrbano: "#2563a6",
-  ambar: "#d99838",
-  verdeUrbano: "#4f8a72",
-  rojoEmergencia: "#c83e4d",
-};
-
-function BadgeColoreado({ colorKey, children }: { colorKey: string; children: ReactNode }) {
-  const color = COLOR_HEX[colorKey] ?? COLOR_HEX.azulUrbano;
+function BadgeColoreado({ colorKey, children }: { colorKey: ColorKey; children: ReactNode }) {
+  const color = COLOR_HEX[colorKey];
   return (
     <Badge
       variant="outline"

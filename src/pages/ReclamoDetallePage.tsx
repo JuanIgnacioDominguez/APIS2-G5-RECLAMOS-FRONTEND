@@ -5,7 +5,7 @@ import { useParams } from "react-router-dom";
 
 import { adherir, obtenerReclamo } from "@/api/reclamos";
 import { CanalOrigen, OrigenClasificacion } from "@/domain/enums";
-import { ESTADO_LABEL } from "@/domain/labels";
+import { CATEGORIA_LABEL, COLOR_HEX, ESTADO_LABEL, PRIORIDAD_LABEL } from "@/domain/labels";
 import { formatConfianza, formatFecha } from "@/lib/format";
 import { useAsync } from "@/hooks/useAsync";
 import { EstadoError } from "@/components/EstadoError";
@@ -19,11 +19,7 @@ import { MapaUbicacion } from "@/features/mapa/MapaUbicacion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 function DatoFila({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   return (
@@ -89,6 +85,18 @@ export function ReclamoDetallePage() {
       <div className="flex flex-wrap items-center gap-2">
         <CategoriaBadge categoria={reclamo.categoria} />
         <PrioridadBadge prioridad={reclamo.prioridad} />
+        {!staff && (
+          <Badge
+            variant="outline"
+            className="border-transparent font-medium"
+            style={{
+              backgroundColor: `color-mix(in oklab, ${esPropio ? COLOR_HEX.verdeUrbano : COLOR_HEX.azulNoche} 12%, transparent)`,
+              color: esPropio ? COLOR_HEX.verdeUrbano : COLOR_HEX.azulNoche,
+            }}
+          >
+            {esPropio ? "Mi reclamo" : "Reclamo de la ciudad"}
+          </Badge>
+        )}
         {reclamo.origen_clasificacion !== OrigenClasificacion.CIUDADANO &&
           reclamo.confianza_clasificacion !== null && (
             <Tooltip>
@@ -121,8 +129,8 @@ export function ReclamoDetallePage() {
               </Badge>
             </TooltipTrigger>
             <TooltipContent>
-              Este reclamo lo abrio el sistema a partir de un evento de otro modulo
-              (Residuos o Emergencias), no un vecino.
+              Este reclamo lo abrio el sistema a partir de un evento de otro modulo (Residuos o
+              Emergencias), no un vecino.
             </TooltipContent>
           </Tooltip>
         )}
@@ -175,7 +183,11 @@ export function ReclamoDetallePage() {
                 <span className="text-sm text-muted-foreground">Es tu reclamo</span>
               ) : (
                 <Button onClick={handleAdherir} disabled={adhiriendo} className="gap-2">
-                  {adhiriendo ? <Loader2 className="size-4 animate-spin" /> : <Users className="size-4" />}
+                  {adhiriendo ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Users className="size-4" />
+                  )}
                   A mi tambien me pasa
                 </Button>
               )}
@@ -214,8 +226,8 @@ export function ReclamoDetallePage() {
               <CardTitle className="text-base">Detalles</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <DatoFila etiqueta="Categoria" valor={reclamo.categoria} />
-              <DatoFila etiqueta="Prioridad" valor={reclamo.prioridad} />
+              <DatoFila etiqueta="Categoria" valor={CATEGORIA_LABEL[reclamo.categoria]} />
+              <DatoFila etiqueta="Prioridad" valor={PRIORIDAD_LABEL[reclamo.prioridad]} />
               <DatoFila etiqueta="Estado" valor={ESTADO_LABEL[reclamo.estado]} />
               <DatoFila etiqueta="Barrio" valor={reclamo.barrio ?? "-"} />
               {reclamo.asignado_a && <DatoFila etiqueta="Asignado a" valor={reclamo.asignado_a} />}
@@ -239,7 +251,9 @@ export function ReclamoDetallePage() {
                     <p className="text-sm font-medium leading-none">
                       {ESTADO_LABEL[h.estado_nuevo]}
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground">{formatFecha(h.created_at)}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {formatFecha(h.created_at)}
+                    </p>
                     {h.motivo && <p className="mt-1 text-sm">{h.motivo}</p>}
                   </li>
                 ))}

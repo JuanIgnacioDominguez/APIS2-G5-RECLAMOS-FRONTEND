@@ -5,7 +5,13 @@ import { listarReclamos } from "@/api/reclamos";
 import { useAuth } from "@/auth/AuthContext";
 import { Rol } from "@/auth/roles";
 import { EstadoReclamo, type CategoriaReclamo } from "@/domain/enums";
-import { ESTADO_COLOR, ESTADO_LABEL, opcionesCategoria, opcionesEstado } from "@/domain/labels";
+import {
+  COLOR_HEX,
+  ESTADO_COLOR,
+  ESTADO_LABEL,
+  opcionesCategoria,
+  opcionesEstado,
+} from "@/domain/labels";
 import { useAsync } from "@/hooks/useAsync";
 import { EstadoError } from "@/components/EstadoError";
 import { PageHeader } from "@/components/PageHeader";
@@ -30,15 +36,6 @@ const ESTADOS_LEYENDA: EstadoReclamo[] = [
   EstadoReclamo.RECHAZADO,
 ];
 
-// Brand color keys to hex, for the legend dots (CSS vars are not available here).
-const COLOR_HEX: Record<string, string> = {
-  gray: "#64748b",
-  azulUrbano: "#2563a6",
-  ambar: "#d99838",
-  verdeUrbano: "#4f8a72",
-  rojoEmergencia: "#c83e4d",
-};
-
 /**
  * Public map of geolocated claims (US-11), filterable by category and state.
  * Shows no personal data of the citizen who created each claim.
@@ -59,10 +56,7 @@ export function MapaPublicoPage() {
         : Promise.resolve(null),
     [esCiudadano, usuario?.id],
   );
-  const misIds = useMemo(
-    () => new Set((mios?.items ?? []).map((r) => r.id)),
-    [mios],
-  );
+  const misIds = useMemo(() => new Set((mios?.items ?? []).map((r) => r.id)), [mios]);
 
   const puntos = useMemo(() => {
     const ubicados = reclamosUbicados(data?.items ?? []);

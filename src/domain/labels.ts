@@ -2,8 +2,7 @@
  * Human-facing labels and colors for the domain enums.
  *
  * Domain identifiers stay in Spanish (the municipal vocabulary of the rubric),
- * and so does everything the citizen reads on screen. Colors map to the Mantine
- * theme palette (see `src/theme/theme.ts`).
+ * and so does everything the citizen reads on screen.
  */
 
 import { CategoriaReclamo, EstadoReclamo, OrigenClasificacion, PrioridadReclamo } from "./enums";
@@ -18,15 +17,31 @@ export const ESTADO_LABEL: Record<EstadoReclamo, string> = {
   [EstadoReclamo.CERRADO]: "Cerrado",
 };
 
-/** Mantine color key per state, for badges and timelines. */
-export const ESTADO_COLOR: Record<EstadoReclamo, string> = {
-  [EstadoReclamo.RECIBIDO]: "gray",
+/**
+ * CityPass+ brand color keys, hex values. Every badge/marker/legend in the app
+ * reads from this single map (see `COLOR_HEX` below) so a color never drifts
+ * between screens. Deliberately no gray: every state and priority, including
+ * "Recibido" and "Baja", carries a real brand color, never a neutral one.
+ */
+export const COLOR_HEX = {
+  azulUrbano: "#2563a6",
+  azulSuave: "#4f89d1",
+  azulNoche: "#142430",
+  ambar: "#d99838",
+  verdeUrbano: "#4f8a72",
+  rojoEmergencia: "#c83e4d",
+} as const;
+export type ColorKey = keyof typeof COLOR_HEX;
+
+/** Brand color key per state, for badges, map markers and legends. */
+export const ESTADO_COLOR: Record<EstadoReclamo, ColorKey> = {
+  [EstadoReclamo.RECIBIDO]: "azulSuave",
   [EstadoReclamo.EN_REVISION]: "azulUrbano",
   [EstadoReclamo.ASIGNADO]: "azulUrbano",
   [EstadoReclamo.EN_PROCESO]: "ambar",
   [EstadoReclamo.RESUELTO]: "verdeUrbano",
   [EstadoReclamo.RECHAZADO]: "rojoEmergencia",
-  [EstadoReclamo.CERRADO]: "gray",
+  [EstadoReclamo.CERRADO]: "azulNoche",
 };
 
 export const PRIORIDAD_LABEL: Record<PrioridadReclamo, string> = {
@@ -36,8 +51,9 @@ export const PRIORIDAD_LABEL: Record<PrioridadReclamo, string> = {
   [PrioridadReclamo.CRITICA]: "Critica",
 };
 
-export const PRIORIDAD_COLOR: Record<PrioridadReclamo, string> = {
-  [PrioridadReclamo.BAJA]: "gray",
+/** Low to critical reads as a calm-to-urgent ramp: green, blue, amber, red. */
+export const PRIORIDAD_COLOR: Record<PrioridadReclamo, ColorKey> = {
+  [PrioridadReclamo.BAJA]: "verdeUrbano",
   [PrioridadReclamo.MEDIA]: "azulUrbano",
   [PrioridadReclamo.ALTA]: "ambar",
   [PrioridadReclamo.CRITICA]: "rojoEmergencia",

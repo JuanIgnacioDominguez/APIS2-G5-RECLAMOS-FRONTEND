@@ -18,9 +18,7 @@ export function EstadoError({
   return (
     <div className="flex justify-center py-12">
       <div className="flex max-w-sm flex-col items-center gap-3 text-center">
-        <span className="flex size-14 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-          <WifiOff className="size-7" />
-        </span>
+        <WifiOff className="size-10 text-destructive/80" strokeWidth={1.5} />
         <p className="text-lg font-semibold">{titulo}</p>
         <p className="text-sm text-muted-foreground">
           {mensaje ?? "Revisa tu conexion o que el servicio este disponible e intenta de nuevo."}

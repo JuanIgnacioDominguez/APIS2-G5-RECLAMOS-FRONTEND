@@ -2,13 +2,27 @@ import { Link } from "react-router-dom";
 import { MapPin, Users } from "lucide-react";
 
 import type { ReclamoResumen } from "@/api/types";
+import type { Miga } from "@/config/navigation";
 import { haceCuanto, idCorto } from "@/lib/format";
 import { Card, CardContent } from "@/components/ui/card";
 import { CategoriaBadge, EstadoBadge, PrioridadBadge } from "./EstadoBadges";
 
-export function ReclamoCard({ reclamo }: { reclamo: ReclamoResumen }) {
+export function ReclamoCard({
+  reclamo,
+  origen,
+}: {
+  reclamo: ReclamoResumen;
+  /** Breadcrumb parent the detail page should show when opened from this card
+   * (e.g. "Reclamos de la ciudad" from the public feed), instead of defaulting
+   * to "Mis reclamos" / "Todos los reclamos". */
+  origen?: Miga;
+}) {
   return (
-    <Link to={`/reclamos/${reclamo.id}`} className="group block h-full">
+    <Link
+      to={`/reclamos/${reclamo.id}`}
+      state={origen ? { origen } : undefined}
+      className="group block h-full"
+    >
       <Card className="h-full gap-0 transition-all group-hover:-translate-y-0.5 group-hover:shadow-md group-hover:ring-primary/30">
         <CardContent className="flex h-full flex-col gap-3">
           <div className="flex items-start justify-between gap-2">

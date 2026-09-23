@@ -52,7 +52,10 @@ export function navModulo(rol: Rol): NavSection[] {
     },
   ];
   if (rol === Rol.ADMIN) {
-    secciones.push({ label: "Analitica", items: [{ label: "Panel", to: "/panel", icon: BarChart3 }] });
+    secciones.push({
+      label: "Analitica",
+      items: [{ label: "Panel", to: "/panel", icon: BarChart3 }],
+    });
   }
   secciones.push({ label: "Comunidad", items: COMUNIDAD });
   return secciones;
@@ -64,10 +67,17 @@ export function homePorRol(rol: Rol): string {
 }
 
 /**
- * Breadcrumb trail for the header, built from the URL alone (no fetch: a
- * claim's id segment is only ever shortened for display, never resolved).
+ * Breadcrumb trail for the header, built from the URL (no fetch: a claim's id
+ * segment is only ever shortened for display, never resolved).
+ *
+ * `origen` is the parent crumb for a claim's detail page. It comes from
+ * `location.state.origen`, set by whoever linked into the detail (see
+ * `ReclamoCard`), so a claim opened from "Reclamos de la ciudad" breadcrumbs
+ * back to the feed instead of always landing on "Mis reclamos" / "Todos los
+ * reclamos" - the list the viewer may not have come from, and where a claim
+ * that is not theirs will not even appear.
  */
-export function migasPara(pathname: string, staff: boolean): Miga[] {
+export function migasPara(pathname: string, staff: boolean, origen?: Miga): Miga[] {
   if (pathname === "/reclamos") {
     return [{ label: staff ? "Todos los reclamos" : "Mis reclamos" }];
   }
@@ -76,7 +86,11 @@ export function migasPara(pathname: string, staff: boolean): Miga[] {
   }
   const detalle = /^\/reclamos\/([^/]+)$/.exec(pathname);
   if (detalle) {
-    return [{ label: "Reclamos", to: "/reclamos" }, { label: idCorto(detalle[1]) }];
+    const padre = origen ?? {
+      label: staff ? "Todos los reclamos" : "Mis reclamos",
+      to: "/reclamos",
+    };
+    return [padre, { label: idCorto(detalle[1]) }];
   }
   if (pathname === "/feed") return [{ label: "Reclamos de la ciudad" }];
   if (pathname === "/backoffice") return [{ label: "Bandeja de reclamos" }];

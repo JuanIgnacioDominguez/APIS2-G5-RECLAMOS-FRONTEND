@@ -34,7 +34,11 @@ describe("navegacion del modulo de reclamos", () => {
       { label: "Nuevo reclamo" },
     ]);
     expect(migasPara("/reclamos/abcd1234-ef00", false)).toEqual([
-      { label: "Reclamos", to: "/reclamos" },
+      { label: "Mis reclamos", to: "/reclamos" },
+      { label: "#abcd1234" },
+    ]);
+    expect(migasPara("/reclamos/abcd1234-ef00", true)).toEqual([
+      { label: "Todos los reclamos", to: "/reclamos" },
       { label: "#abcd1234" },
     ]);
     expect(migasPara("/feed", false)).toEqual([{ label: "Reclamos de la ciudad" }]);
@@ -42,5 +46,17 @@ describe("navegacion del modulo de reclamos", () => {
     expect(migasPara("/panel", true)).toEqual([{ label: "Panel de metricas" }]);
     expect(migasPara("/mapa", false)).toEqual([{ label: "Mapa de reclamos" }]);
     expect(migasPara("/desconocida", false)).toEqual([]);
+  });
+
+  it("el detalle de un reclamo respeta el origen de navegacion, no siempre Mis reclamos", () => {
+    expect(
+      migasPara("/reclamos/abcd1234-ef00", false, { label: "Reclamos de la ciudad", to: "/feed" }),
+    ).toEqual([{ label: "Reclamos de la ciudad", to: "/feed" }, { label: "#abcd1234" }]);
+    expect(
+      migasPara("/reclamos/abcd1234-ef00", true, {
+        label: "Bandeja de reclamos",
+        to: "/backoffice",
+      }),
+    ).toEqual([{ label: "Bandeja de reclamos", to: "/backoffice" }, { label: "#abcd1234" }]);
   });
 });

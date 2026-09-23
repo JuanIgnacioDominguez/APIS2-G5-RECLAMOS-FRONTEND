@@ -2,17 +2,8 @@ import { useEffect } from "react";
 import { CircleMarker, MapContainer, Popup, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
-import { ESTADO_COLOR, ESTADO_LABEL, CATEGORIA_LABEL } from "@/domain/labels";
+import { CATEGORIA_LABEL, COLOR_HEX, ESTADO_COLOR, ESTADO_LABEL } from "@/domain/labels";
 import { CENTRO_DEFAULT, type ReclamoUbicado } from "./coords";
-
-// Map the theme color keys to hex, since Leaflet paths take raw colors.
-const COLOR_HEX: Record<string, string> = {
-  gray: "#64748b",
-  azulUrbano: "#2563a6",
-  ambar: "#d99838",
-  verdeUrbano: "#4f8a72",
-  rojoEmergencia: "#c83e4d",
-};
 
 /** Highlight color for the current user's own claims (gold ring). */
 const MIO_ANILLO = "#e6b566";

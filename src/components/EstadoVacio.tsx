@@ -20,9 +20,7 @@ export function EstadoVacio({
   return (
     <div className="flex justify-center py-12">
       <div className="flex max-w-md flex-col items-center gap-3 text-center">
-        <span className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-          <Icono className="size-7" />
-        </span>
+        <Icono className="size-10 text-primary/70" strokeWidth={1.5} />
         <p className="text-lg font-semibold">{titulo}</p>
         {mensaje && <p className="text-sm text-muted-foreground">{mensaje}</p>}
         {children}

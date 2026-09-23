@@ -51,9 +51,7 @@ export function FeedPublicoPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
-        <span className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <Newspaper className="size-6" />
-        </span>
+        <Newspaper className="size-7 shrink-0 text-primary" />
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Reclamos de la ciudad</h1>
           <p className="text-sm text-muted-foreground">
@@ -141,9 +139,7 @@ export function FeedPublicoPage() {
 
       {error && (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
-          <span className="flex size-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-            <WifiOff className="size-6" />
-          </span>
+          <WifiOff className="size-9 text-destructive/80" strokeWidth={1.5} />
           <div>
             <p className="font-medium">No se pudo cargar</p>
             <p className="text-sm text-muted-foreground">{error}</p>
@@ -156,9 +152,7 @@ export function FeedPublicoPage() {
 
       {!loading && !error && visibles.length === 0 && (
         <div className="flex flex-col items-center gap-2 py-16 text-center">
-          <span className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <Newspaper className="size-6" />
-          </span>
+          <Newspaper className="size-9 text-primary/70" strokeWidth={1.5} />
           <p className="font-medium">No hay reclamos para mostrar</p>
           <p className="text-sm text-muted-foreground">
             Todavia no hay reclamos publicos o ninguno coincide con los filtros elegidos.
@@ -169,7 +163,11 @@ export function FeedPublicoPage() {
       {!loading && !error && visibles.length > 0 && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {visibles.map((reclamo) => (
-            <ReclamoCard key={reclamo.id} reclamo={reclamo} />
+            <ReclamoCard
+              key={reclamo.id}
+              reclamo={reclamo}
+              origen={{ label: "Reclamos de la ciudad", to: "/feed" }}
+            />
           ))}
         </div>
       )}

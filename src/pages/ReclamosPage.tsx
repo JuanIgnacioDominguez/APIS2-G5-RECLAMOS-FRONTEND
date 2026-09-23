@@ -66,9 +66,7 @@ export function ReclamosPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex items-center gap-3">
-          <span className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <FolderOpen className="size-6" />
-          </span>
+          <FolderOpen className="size-7 shrink-0 text-primary" />
           <div>
             <h1 className="font-heading text-2xl font-semibold tracking-tight">
               {staff ? "Todos los reclamos" : "Mis reclamos"}
@@ -159,9 +157,7 @@ export function ReclamosPage() {
 
           {error && (
             <div className="flex flex-col items-center gap-3 py-12 text-center">
-              <span className="flex size-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
-                <WifiOff className="size-6" />
-              </span>
+              <WifiOff className="size-9 text-destructive/80" strokeWidth={1.5} />
               <div>
                 <p className="font-medium">No se pudo cargar</p>
                 <p className="text-sm text-muted-foreground">{error}</p>
@@ -174,9 +170,7 @@ export function ReclamosPage() {
 
           {!loading && !error && visibles.length === 0 && (
             <div className="flex flex-col items-center gap-2 py-12 text-center">
-              <span className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <Inbox className="size-6" />
-              </span>
+              <Inbox className="size-9 text-primary/70" strokeWidth={1.5} />
               <p className="font-medium">Todavia no hay reclamos</p>
               <p className="text-sm text-muted-foreground">
                 Cuando cargues un reclamo o ajustes los filtros, vas a verlos aca.

@@ -32,7 +32,10 @@ export function KpiCard({
 }) {
   const color = TONO[tono] ?? TONO.azul;
   return (
-    <Card className="transition-shadow hover:shadow-md">
+    <Card
+      className="overflow-hidden transition-shadow hover:shadow-md"
+      style={{ boxShadow: `inset 0 2px 0 0 ${color}` }}
+    >
       <CardContent className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -41,16 +44,7 @@ export function KpiCard({
           <p className="mt-1 text-2xl font-semibold leading-none tabular-nums">{value}</p>
           {hint && <p className="mt-1.5 truncate text-xs text-muted-foreground">{hint}</p>}
         </div>
-        <span
-          aria-hidden
-          className="flex size-11 shrink-0 items-center justify-center rounded-xl"
-          style={{
-            backgroundColor: `color-mix(in oklab, ${color} 12%, transparent)`,
-            color,
-          }}
-        >
-          <Icon className="size-5" />
-        </span>
+        <Icon aria-hidden className="size-6 shrink-0" style={{ color }} />
       </CardContent>
     </Card>
   );
