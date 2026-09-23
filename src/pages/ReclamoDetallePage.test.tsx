@@ -62,7 +62,7 @@ const detalle: ReclamoDetalle = {
   comentarios: [],
 };
 
-function renderDetalle(usuario: (typeof CIUDADANO) | null = null) {
+function renderDetalle(usuario: typeof CIUDADANO | null = null) {
   return renderWithProviders(
     <Routes>
       <Route path="/reclamos/:id" element={<ReclamoDetallePage />} />
@@ -104,9 +104,7 @@ describe("ReclamoDetallePage", () => {
     renderDetalle(CIUDADANO);
     await screen.findByText(detalle.titulo);
 
-    expect(
-      screen.queryByRole("button", { name: /a mi tambien me pasa/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /a mi tambien me pasa/i })).not.toBeInTheDocument();
     expect(screen.getByText(/es tu reclamo/i)).toBeInTheDocument();
   });
 

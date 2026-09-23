@@ -81,9 +81,7 @@ export function LoginPage() {
           <div className="flex w-full max-w-[380px] flex-col gap-6">
             <div className="flex flex-col gap-1.5">
               <Logo size={40} />
-              <p className="text-sm text-muted-foreground">
-                Reclamos y Participacion Ciudadana
-              </p>
+              <p className="text-sm text-muted-foreground">Reclamos y Participacion Ciudadana</p>
             </div>
 
             <div>

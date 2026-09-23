@@ -9,10 +9,7 @@ import "./LoginAside.css";
  */
 export function LoginAside() {
   return (
-    <div
-      className="loginAside flex h-full flex-col justify-between p-8"
-      aria-hidden="true"
-    >
+    <div className="loginAside flex h-full flex-col justify-between p-8" aria-hidden="true">
       <div className="loginAside__glow loginAside__glow--a" />
       <div className="loginAside__glow loginAside__glow--b" />
 

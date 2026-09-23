@@ -14,7 +14,12 @@ import { formatConfianza } from "@/lib/format";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -69,8 +74,8 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
     descripcion: reclamoValidators.descripcion(values.descripcion),
   };
   const errores = {
-    titulo: (touched.titulo || submitted) ? erroresCampo.titulo : null,
-    descripcion: (touched.descripcion || submitted) ? erroresCampo.descripcion : null,
+    titulo: touched.titulo || submitted ? erroresCampo.titulo : null,
+    descripcion: touched.descripcion || submitted ? erroresCampo.descripcion : null,
   };
 
   const { sugerencia } = useSugerenciaClasificacion(values.titulo, values.descripcion);
@@ -335,11 +340,7 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
                         aria-label="Buscar direccion en el mapa"
                         onClick={() => void buscarPorDireccion()}
                       >
-                        {buscandoDir ? (
-                          <Loader2 className="animate-spin" />
-                        ) : (
-                          <Search />
-                        )}
+                        {buscandoDir ? <Loader2 className="animate-spin" /> : <Search />}
                       </InputGroupButton>
                     </InputGroupAddon>
                   </InputGroup>
