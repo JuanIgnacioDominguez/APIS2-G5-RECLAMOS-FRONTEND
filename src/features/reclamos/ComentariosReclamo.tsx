@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { Loader2, MessageSquare, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { comentar } from "@/api/reclamos";
@@ -19,9 +19,7 @@ function Comentario({ comentario }: { comentario: ComentarioOut }) {
         className="rounded-lg border border-[color-mix(in_oklab,var(--chart-2)_35%,transparent)] bg-[color-mix(in_oklab,var(--chart-2)_8%,transparent)] p-3"
       >
         <div className="mb-1 flex flex-wrap items-center gap-1.5">
-          <span className="flex size-5 items-center justify-center rounded-full bg-[color-mix(in_oklab,var(--chart-2)_18%,transparent)] text-[var(--chart-2)]">
-            <ShieldCheck className="size-3" />
-          </span>
+          <ShieldCheck className="size-4 text-[var(--chart-2)]" />
           <span className="text-sm font-semibold">
             {comentario.autor_nombre ?? comentario.autor_id}
           </span>
@@ -85,7 +83,10 @@ export function ComentariosReclamo({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Comentarios</CardTitle>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <MessageSquare className="size-5 text-primary" />
+          Comentarios
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {comentarios.length === 0 && (

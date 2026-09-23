@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2, UserCheck } from "lucide-react";
+import { Workflow, Loader2, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { cambiarEstado } from "@/api/reclamos";
@@ -55,7 +55,10 @@ export function GestionarEstado({
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Gestion</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Workflow className="size-5 text-primary" />
+            Gestion
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
@@ -99,7 +102,10 @@ export function GestionarEstado({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Gestion</CardTitle>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Workflow className="size-5 text-primary" />
+          Gestion
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         <div className="flex flex-col gap-1.5">

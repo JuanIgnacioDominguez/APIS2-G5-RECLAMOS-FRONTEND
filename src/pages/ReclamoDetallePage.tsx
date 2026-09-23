@@ -1,5 +1,15 @@
 import { useState } from "react";
-import { Clock, Loader2, MapPin, Sparkles, Users, Zap } from "lucide-react";
+import {
+  Clock,
+  FileText,
+  History,
+  ListChecks,
+  Loader2,
+  MapPin,
+  Sparkles,
+  Users,
+  Zap,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useParams } from "react-router-dom";
 
@@ -140,7 +150,10 @@ export function ReclamoDetallePage() {
         <div className="flex flex-col gap-6 lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Descripcion</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <FileText className="size-5 text-primary" />
+                Descripcion
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm leading-relaxed">{reclamo.descripcion}</p>
@@ -223,7 +236,10 @@ export function ReclamoDetallePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Detalles</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <ListChecks className="size-5 text-primary" />
+                Detalles
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <DatoFila etiqueta="Categoria" valor={CATEGORIA_LABEL[reclamo.categoria]} />
@@ -239,15 +255,16 @@ export function ReclamoDetallePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Trazabilidad</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <History className="size-5 text-primary" />
+                Trazabilidad
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <ol className="relative space-y-4 border-l border-border pl-6">
                 {reclamo.historial.map((h) => (
                   <li key={h.id} className="relative">
-                    <span className="absolute -left-[27px] flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                      <Clock className="size-2.5" />
-                    </span>
+                    <Clock className="absolute -left-[31px] size-[18px] rounded-full bg-card text-primary" />
                     <p className="text-sm font-medium leading-none">
                       {ESTADO_LABEL[h.estado_nuevo]}
                     </p>

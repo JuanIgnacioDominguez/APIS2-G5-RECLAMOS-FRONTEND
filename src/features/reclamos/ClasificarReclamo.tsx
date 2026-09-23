@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Tags, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { reclasificar } from "@/api/reclamos";
@@ -60,7 +60,10 @@ export function ClasificarReclamo({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Clasificacion</CardTitle>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Tags className="size-5 text-primary" />
+          Clasificacion
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         <div className="flex flex-col gap-1.5">
