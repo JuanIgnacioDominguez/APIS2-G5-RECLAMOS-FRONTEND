@@ -1,11 +1,3 @@
-/**
- * The logged-in user and the demo credentials for the quick-access buttons.
- *
- * These credentials match the backend's dev login (`app/api/v1/auth_dev.py`):
- * one user per role, password equal to the username. TEMPORARY until Group 2's
- * federated login is integrated.
- */
-
 import { Rol } from "./roles";
 
 export interface Usuario {

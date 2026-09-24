@@ -1,10 +1,3 @@
-/**
- * Human-facing labels and colors for the domain enums.
- *
- * Domain identifiers stay in Spanish (the municipal vocabulary of the rubric),
- * and so does everything the citizen reads on screen.
- */
-
 import { CategoriaReclamo, EstadoReclamo, OrigenClasificacion, PrioridadReclamo } from "./enums";
 
 export const ESTADO_LABEL: Record<EstadoReclamo, string> = {
@@ -17,18 +10,14 @@ export const ESTADO_LABEL: Record<EstadoReclamo, string> = {
   [EstadoReclamo.CERRADO]: "Cerrado",
 };
 
-/**
- * Concrete status fills shared by DOM badges and canvas map markers. Text and
- * badge foregrounds use the adjacent theme-aware token maps instead.
- */
 export const ESTADO_HEX: Record<EstadoReclamo, string> = {
-  [EstadoReclamo.RECIBIDO]: "#2563eb", // bright blue: just arrived
-  [EstadoReclamo.EN_REVISION]: "#d9a406", // deep sunflower yellow: being triaged
-  [EstadoReclamo.ASIGNADO]: "#0891b2", // cyan: has an owner (kept apart from blue)
-  [EstadoReclamo.EN_PROCESO]: "#ea580c", // orange: work in progress
-  [EstadoReclamo.RESUELTO]: "#16a34a", // green: solved
-  [EstadoReclamo.RECHAZADO]: "#dc2626", // red: rejected
-  [EstadoReclamo.CERRADO]: "#64748b", // slate: closed / archived
+  [EstadoReclamo.RECIBIDO]: "#2563eb",
+  [EstadoReclamo.EN_REVISION]: "#d9a406",
+  [EstadoReclamo.ASIGNADO]: "#0891b2",
+  [EstadoReclamo.EN_PROCESO]: "#ea580c",
+  [EstadoReclamo.RESUELTO]: "#16a34a",
+  [EstadoReclamo.RECHAZADO]: "#dc2626",
+  [EstadoReclamo.CERRADO]: "#64748b",
 };
 
 export const ESTADO_ON_COLOR: Record<EstadoReclamo, string> = {
@@ -58,7 +47,6 @@ export const PRIORIDAD_LABEL: Record<PrioridadReclamo, string> = {
   [PrioridadReclamo.CRITICA]: "Critica",
 };
 
-/** Theme-aware priority colors shared by labels, icons and charts. */
 export const PRIORIDAD_HEX: Record<PrioridadReclamo, string> = {
   [PrioridadReclamo.BAJA]: "var(--priority-low)",
   [PrioridadReclamo.MEDIA]: "var(--priority-medium)",
@@ -66,11 +54,6 @@ export const PRIORIDAD_HEX: Record<PrioridadReclamo, string> = {
   [PrioridadReclamo.CRITICA]: "var(--priority-critical)",
 };
 
-/**
- * Area suggested per category, used only to prefill the free-text
- * "area responsable" field when staff assigns a claim (there is no area
- * catalog in the backend, so this is a frontend-only heuristic).
- */
 export const AREA_SUGERIDA: Record<CategoriaReclamo, string> = {
   [CategoriaReclamo.ALUMBRADO]: "Alumbrado Publico",
   [CategoriaReclamo.BACHES]: "Vialidad y Mantenimiento Vial",
@@ -84,7 +67,6 @@ export const AREA_SUGERIDA: Record<CategoriaReclamo, string> = {
   [CategoriaReclamo.OTROS]: "Mesa de Entradas",
 };
 
-/** Theme-aware category colors shared by labels, icons and charts. */
 export const CATEGORIA_HEX: Record<CategoriaReclamo, string> = {
   [CategoriaReclamo.ALUMBRADO]: "var(--category-alumbrado)",
   [CategoriaReclamo.BACHES]: "var(--category-baches)",
@@ -111,14 +93,12 @@ export const CATEGORIA_LABEL: Record<CategoriaReclamo, string> = {
   [CategoriaReclamo.OTROS]: "Otros",
 };
 
-/** Who decided the claim's category/priority. */
 export const ORIGEN_LABEL: Record<OrigenClasificacion, string> = {
   [OrigenClasificacion.CIUDADANO]: "Ciudadano",
   [OrigenClasificacion.MODELO]: "IA",
   [OrigenClasificacion.OPERADOR]: "Operador",
 };
 
-/** Options ready for a `Select` (value + label). */
 export function opcionesEstado() {
   return Object.entries(ESTADO_LABEL).map(([value, label]) => ({ value, label }));
 }

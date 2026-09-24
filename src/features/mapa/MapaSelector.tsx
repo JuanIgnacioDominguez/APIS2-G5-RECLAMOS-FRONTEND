@@ -5,7 +5,6 @@ import "leaflet/dist/leaflet.css";
 import { CENTRO_DEFAULT } from "./coords";
 import { TILES } from "./tiles";
 
-/** Zoom level the map flies to once a location is set: close enough to place a pin precisely. */
 const ZOOM_UBICACION = 17;
 
 function ClickHandler({ onPick }: { onPick: (lat: number, lng: number) => void }) {
@@ -15,9 +14,6 @@ function ClickHandler({ onPick }: { onPick: (lat: number, lng: number) => void }
 
 function Recenter({ lat, lng }: { lat: number | null; lng: number | null }) {
   const map = useMap();
-  // Recompute the size once mounted, and again whenever the container resizes
-  // (it now stretches to match the form column's height), so no tiles stay
-  // unloaded (see MapaReclamos.AjustarVista, same fix).
   useEffect(() => {
     const t = setTimeout(() => map.invalidateSize(), 150);
     const obs = new ResizeObserver(() => map.invalidateSize());
@@ -27,8 +23,6 @@ function Recenter({ lat, lng }: { lat: number | null; lng: number | null }) {
       obs.disconnect();
     };
   }, [map]);
-  // Every time a location is set (click, search, geolocation) fly in close on
-  // it instead of just panning, so the pin lands clearly visible.
   useEffect(() => {
     if (lat === null || lng === null) return;
     map.flyTo([lat, lng], Math.max(map.getZoom(), ZOOM_UBICACION), { duration: 1 });
@@ -36,10 +30,6 @@ function Recenter({ lat, lng }: { lat: number | null; lng: number | null }) {
   return null;
 }
 
-/**
- * Location picker for the claim form (US-10): click on the map to set the
- * marker, or recenter it from the browser geolocation.
- */
 export function MapaSelector({
   lat,
   lng,
@@ -50,10 +40,7 @@ export function MapaSelector({
   lat: number | null;
   lng: number | null;
   onPick: (lat: number, lng: number) => void;
-  /** Map height in px. Defaults to the compact form-inline size; also doubles
-   * as the flex-basis when the caller stretches the map with a flex class. */
   altura?: number;
-  /** Extra class appended to the map, e.g. to make it flex-grow to fill a column. */
   className?: string;
 }) {
   const center: [number, number] = lat !== null && lng !== null ? [lat, lng] : CENTRO_DEFAULT;

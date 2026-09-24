@@ -7,11 +7,6 @@ import type { ReclamoResumen } from "@/api/types";
 const LARGO_MINIMO = 2;
 const LIMITE_RESULTADOS = 6;
 
-/**
- * Global header search: debounced lookup against the `texto` filter of
- * `GET /reclamos`, capped to a handful of results for a dropdown preview.
- * Queries under the minimum length never hit the network.
- */
 export function useBusquedaReclamos(texto: string) {
   const textoD = useDebouncedValue(texto.trim(), 300);
   const [resultados, setResultados] = useState<ReclamoResumen[]>([]);

@@ -4,6 +4,9 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import * as authApi from "@/api/auth";
+import * as notificacionesApi from "@/api/notificaciones";
+import { citypassApi } from "@/store/citypassApi";
+import { crearStore } from "@/store/store";
 import { getAuthToken, request, setAuthToken } from "@/api/client";
 import { renderWithProviders } from "@/test/render";
 import { useAuth } from "./AuthContext";
@@ -32,6 +35,22 @@ const tokenOut: authApi.TokenOut = {
 };
 
 describe("AuthContext", () => {
+  it.each(["login", "logout"])(
+    "%s limpia los datos privados de la sesion anterior",
+    async (accion) => {
+      vi.spyOn(authApi, "loginDev").mockResolvedValue(tokenOut);
+      vi.spyOn(notificacionesApi, "contarNotificaciones").mockResolvedValue({ unread_count: 7 });
+      const store = crearStore();
+      await store.dispatch(citypassApi.endpoints.contarNotificaciones.initiate());
+      renderWithProviders(<Harness />, { store });
+      await userEvent.click(screen.getByRole("button", { name: accion }));
+      await waitFor(() =>
+        expect(
+          citypassApi.endpoints.contarNotificaciones.select()(store.getState()).isUninitialized,
+        ).toBe(true),
+      );
+    },
+  );
   beforeEach(() => {
     localStorage.clear();
     setAuthToken(null);

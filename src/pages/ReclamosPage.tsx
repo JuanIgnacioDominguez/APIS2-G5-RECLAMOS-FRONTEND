@@ -17,12 +17,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { listarReclamos } from "@/api/reclamos";
+import { useListarReclamosQuery } from "@/store/citypassApi";
 import { useAuth } from "@/auth/AuthContext";
 import { esStaff } from "@/auth/roles";
 import type { CategoriaReclamo } from "@/domain/enums";
 import { CATEGORIA_HEX, opcionesCategoria } from "@/domain/labels";
-import { useAsync } from "@/hooks/useAsync";
 import { cn } from "cn";
 import { KpiCard } from "@/components/KpiCard";
 import { Button } from "@/components/ui/button";
@@ -114,11 +113,40 @@ export function ReclamosPage() {
   const [categoria, setCategoria] = useState<CategoriaReclamo | null>(null);
   const [orden, setOrden] = useState<OrdenFeed>("recientes");
 
-  const { data, loading, error, reload } = useAsync(
-    () => listarReclamos(staff ? { orden } : { ciudadano_id: usuario?.id, orden }),
-    [staff, usuario?.id, orden],
+  const consultaReclamos = useListarReclamosQuery(
+    usuario ? { size: 100, orden, usuario_cache: usuario.id } : undefined,
+    { skip: !usuario },
   );
-  const items = useMemo(() => data?.items ?? [], [data]);
+  const { data, isLoading, error } = consultaReclamos;
+
+  const respuestaTieneEsPropio = data
+    ? data.total <= data.items.length &&
+      data.items.every((reclamo) => typeof reclamo.es_propio === "boolean")
+    : null;
+
+  const consultaPropiosLegacy = useListarReclamosQuery(
+    usuario && !staff && respuestaTieneEsPropio === false
+      ? { ciudadano_id: usuario.id, size: 100, orden, usuario_cache: usuario.id }
+      : undefined,
+    { skip: !usuario || staff || respuestaTieneEsPropio !== false },
+  );
+  const consultaLegacyActiva = !staff && respuestaTieneEsPropio === false;
+  const cargando = isLoading || (consultaLegacyActiva && consultaPropiosLegacy.isLoading);
+  const errorCarga = error ?? (consultaLegacyActiva ? consultaPropiosLegacy.error : undefined);
+  const mensajeError =
+    errorCarga && "message" in errorCarga && typeof errorCarga.message === "string"
+      ? errorCarga.message
+      : null;
+  const todosLosReclamos = useMemo(() => data?.items ?? [], [data]);
+  const items = useMemo(() => {
+    if (staff) return todosLosReclamos;
+    if (consultaLegacyActiva) return consultaPropiosLegacy.data?.items ?? [];
+    return todosLosReclamos.filter((reclamo) => reclamo.es_propio);
+  }, [consultaLegacyActiva, consultaPropiosLegacy.data, staff, todosLosReclamos]);
+  const recargar = () => {
+    void consultaReclamos.refetch();
+    if (consultaLegacyActiva) void consultaPropiosLegacy.refetch();
+  };
   const counts = useMemo(() => contarPorTab(items), [items]);
   const visibles = useMemo(
     () => filtrarReclamos(items, tab, texto, categoria),
@@ -128,7 +156,7 @@ export function ReclamosPage() {
   return (
     <MotionConfig reducedMotion="user">
       <div className="flex flex-col gap-6">
-        <div className="flex flex-wrap items-end justify-between gap-4">
+        <div data-tour="reclamos-header" className="flex flex-wrap items-end justify-between gap-4">
           <div className="flex items-center gap-3">
             <div>
               <h1 className="font-heading text-2xl font-semibold tracking-tight">
@@ -143,6 +171,7 @@ export function ReclamosPage() {
           </div>
           <Button
             size="lg"
+            data-tour="reclamos-nuevo"
             onClick={() => navigate("/reclamos/nuevo")}
             className="h-10 gap-2 rounded-lg px-5 shadow-sm transition-shadow hover:shadow-md"
           >
@@ -151,7 +180,7 @@ export function ReclamosPage() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div data-tour="reclamos-kpis" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <KpiCard label="Total" value={counts.todos} icon={Inbox} tono="azul" />
           <KpiCard label="Abiertos" value={counts.abiertos} icon={FolderOpen} tono="azul" />
           <KpiCard label="En proceso" value={counts.en_proceso} icon={Timer} tono="ambar" />
@@ -159,9 +188,14 @@ export function ReclamosPage() {
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-card p-4 shadow-xs ring-1 ring-foreground/10">
-          <TabsFiltro value={tab} onChange={setTab} counts={counts} />
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="relative w-[220px]">
+          <div data-tour="reclamos-tabs" className="max-w-full overflow-x-auto pb-1">
+            <TabsFiltro value={tab} onChange={setTab} counts={counts} />
+          </div>
+          <div
+            data-tour="reclamos-filtros"
+            className="flex w-full flex-wrap items-center gap-2 sm:w-auto"
+          >
+            <div className="relative w-full sm:w-[220px]">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={texto}
@@ -174,7 +208,7 @@ export function ReclamosPage() {
               value={categoria ?? TODAS}
               onValueChange={(v) => setCategoria(v === TODAS ? null : (v as CategoriaReclamo))}
             >
-              <SelectTrigger className="w-[190px]" aria-label="Filtrar por categoria">
+              <SelectTrigger className="w-full sm:w-[190px]" aria-label="Filtrar por categoria">
                 <SelectValue placeholder="Todas las categorias" />
               </SelectTrigger>
               <SelectContent>
@@ -205,7 +239,7 @@ export function ReclamosPage() {
               </SelectContent>
             </Select>
             <Select value={orden} onValueChange={(v) => setOrden(v as OrdenFeed)}>
-              <SelectTrigger className="w-[170px]" aria-label="Ordenar por">
+              <SelectTrigger className="w-full sm:w-[170px]" aria-label="Ordenar por">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -228,27 +262,27 @@ export function ReclamosPage() {
           </div>
         </div>
 
-        {loading && (
+        {cargando && (
           <div className="flex items-center justify-center gap-2 py-12 text-muted-foreground">
             <Loader2 className="size-5 animate-spin" />
             Cargando reclamos...
           </div>
         )}
 
-        {error && (
+        {errorCarga && (
           <div className="flex flex-col items-center gap-3 py-12 text-center">
             <WifiOff className="size-9 text-destructive/80" strokeWidth={1.5} />
             <div>
               <p className="font-medium">No se pudo cargar</p>
-              <p className="text-sm text-muted-foreground">{error}</p>
+              <p className="text-sm text-muted-foreground">{mensajeError}</p>
             </div>
-            <Button variant="outline" onClick={reload}>
+            <Button variant="outline" onClick={recargar}>
               Reintentar
             </Button>
           </div>
         )}
 
-        {!loading && !error && visibles.length === 0 && (
+        {!cargando && !errorCarga && visibles.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-12 text-center">
             <Inbox className="size-9 text-primary/70" strokeWidth={1.5} />
             <p className="font-medium">Todavia no hay reclamos</p>
@@ -262,8 +296,12 @@ export function ReclamosPage() {
           </div>
         )}
 
-        {!loading && !error && visibles.length > 0 && (
-          <motion.div layout className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {!cargando && !errorCarga && visibles.length > 0 && (
+          <motion.div
+            layout
+            data-tour="reclamos-lista"
+            className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          >
             <AnimatePresence mode="popLayout" initial={false}>
               {visibles.map((reclamo) => (
                 <motion.div

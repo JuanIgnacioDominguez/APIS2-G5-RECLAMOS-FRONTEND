@@ -2,10 +2,6 @@ import { RefreshCw, WifiOff } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
-/**
- * Friendly error state with an explanation and a retry action, used wherever a
- * fetch can fail. Replaces the bare red alert with something recoverable.
- */
 export function EstadoError({
   titulo = "No se pudo cargar",
   mensaje,

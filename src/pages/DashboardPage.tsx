@@ -14,7 +14,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { contarResueltos, estadisticas, listarReclamos } from "@/api/reclamos";
 import type { Page, ReclamoResumen } from "@/api/types";
 import { useAuth } from "@/auth/AuthContext";
 import { Rol } from "@/auth/roles";
@@ -50,7 +49,11 @@ import {
 import { DashboardMapaReclamos } from "@/features/mapa/DashboardHeatMap";
 import { reclamosUbicados } from "@/features/mapa/coords";
 import { CategoriaLinea, EstadoBadge, PrioridadBadge } from "@/features/reclamos/EstadoBadges";
-import { useAsync } from "@/hooks/useAsync";
+import {
+  useContarResueltosQuery,
+  useEstadisticasQuery,
+  useListarReclamosQuery,
+} from "@/store/citypassApi";
 import { haceCuanto, idCorto } from "@/lib/format";
 
 type TonoIndicador = "azul" | "ambar" | "verde" | "neutro";
@@ -540,18 +543,24 @@ function DashboardCargando() {
   );
 }
 
+function errorMessage(err: unknown): string | null {
+  if (err && typeof err === "object" && "message" in err) {
+    const m = (err as { message?: unknown }).message;
+    if (typeof m === "string") return m;
+  }
+  return null;
+}
+
 export function DashboardPage() {
   const { usuario } = useAuth();
   const esAdmin = usuario?.rol === Rol.ADMIN;
-  const recientes = useAsync(() => listarReclamos({ orden: "recientes", page: 1, size: 100 }), []);
-  const metricasGlobales = useAsync(
-    () => (esAdmin ? estadisticas() : Promise.resolve(null)),
-    [esAdmin],
-  );
-  const resueltosGlobal = useAsync(
-    () => (esAdmin ? Promise.resolve(null) : contarResueltos()),
-    [esAdmin],
-  );
+  const recientes = useListarReclamosQuery({
+    orden: "recientes",
+    size: 100,
+    usuario_cache: usuario?.id,
+  });
+  const metricasGlobales = useEstadisticasQuery(undefined, { skip: !esAdmin });
+  const resueltosGlobal = useContarResueltosQuery(undefined, { skip: esAdmin });
 
   const resumenGlobal = useMemo(
     () => (metricasGlobales.data ? resumenDesdeEstadisticas(metricasGlobales.data) : null),
@@ -564,18 +573,22 @@ export function DashboardPage() {
   const datosGlobales = esAdmin && resumenGlobal !== null;
   const resumen = datosGlobales ? resumenGlobal : resumenMuestra;
   const items = recientes.data?.items ?? [];
-  const esperandoGlobal = esAdmin && metricasGlobales.loading && recientes.error === null;
+  const errorRecientes = errorMessage(recientes.error);
+  const errorMetricas = errorMessage(metricasGlobales.error);
+  const esperandoGlobal = esAdmin && metricasGlobales.isLoading && errorRecientes === null;
+
+  const recargar = () => {
+    recientes.refetch();
+    if (esAdmin) metricasGlobales.refetch();
+    else resueltosGlobal.refetch();
+  };
 
   if (!resumen || esperandoGlobal) {
-    if (recientes.loading || metricasGlobales.loading) return <DashboardCargando />;
+    if (recientes.isLoading || metricasGlobales.isLoading) return <DashboardCargando />;
     return (
       <EstadoError
-        mensaje={recientes.error ?? metricasGlobales.error ?? "Sin datos disponibles"}
-        onReintentar={() => {
-          recientes.reload();
-          metricasGlobales.reload();
-          resueltosGlobal.reload();
-        }}
+        mensaje={errorRecientes ?? errorMetricas ?? "Sin datos disponibles"}
+        onReintentar={recargar}
       />
     );
   }
@@ -591,12 +604,8 @@ export function DashboardPage() {
     resueltos: resueltosGlobal.data ?? resueltosResumen,
   });
   const actualizando =
-    recientes.loading || resueltosGlobal.loading || (esAdmin && metricasGlobales.loading);
-  const actualizar = () => {
-    recientes.reload();
-    metricasGlobales.reload();
-    resueltosGlobal.reload();
-  };
+    recientes.isFetching || resueltosGlobal.isFetching || (esAdmin && metricasGlobales.isFetching);
+  const actualizar = recargar;
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 sm:gap-4">
@@ -632,6 +641,7 @@ export function DashboardPage() {
 
       <section
         aria-label="Indicadores principales"
+        data-tour="dashboard-kpis"
         className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
       >
         {indicadores.map((indicador) => (
@@ -644,24 +654,26 @@ export function DashboardPage() {
         <PanelCategorias resumen={resumen} datosGlobales={datosGlobales} />
       </div>
 
-      <div className="grid gap-3 sm:gap-4 xl:grid-cols-12">
+      <div data-tour="dashboard-heatmap" className="grid gap-3 sm:gap-4 xl:grid-cols-12">
         <PanelMapa
-          data={recientes.data}
-          loading={recientes.loading}
-          error={recientes.error}
-          onReintentar={recientes.reload}
+          data={recientes.data ?? null}
+          loading={recientes.isLoading}
+          error={errorRecientes}
+          onReintentar={() => void recientes.refetch()}
         />
         <div className="xl:col-span-4">
           <PanelPrioridades resumen={resumen} datosGlobales={datosGlobales} />
         </div>
       </div>
 
-      <PanelUltimosReclamos
-        data={recientes.data}
-        loading={recientes.loading}
-        error={recientes.error}
-        onReintentar={recientes.reload}
-      />
+      <div data-tour="dashboard-recientes">
+        <PanelUltimosReclamos
+          data={recientes.data ?? null}
+          loading={recientes.isLoading}
+          error={errorRecientes}
+          onReintentar={() => void recientes.refetch()}
+        />
+      </div>
     </div>
   );
 }

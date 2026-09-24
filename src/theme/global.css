@@ -1,5 +1,66 @@
 /* Smooth, subtle interactions shared across the app. */
 
+.citypass-mobile-menu[data-side="top"] {
+  height: 100dvh;
+  max-height: 100dvh;
+  gap: 0;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.citypass-mobile-menu > [data-slot="sheet-close"] {
+  top: calc(0.75rem + env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
+  width: 2.75rem;
+  height: 2.75rem;
+}
+.citypass-mobile-menu [data-sidebar="header"] {
+  min-height: 4.5rem;
+  justify-content: center;
+  padding: 1rem 4.5rem 1rem 1.5rem;
+}
+.citypass-mobile-menu [data-sidebar="content"] {
+  padding: 1.25rem;
+  overscroll-behavior: contain;
+}
+.citypass-mobile-menu [data-sidebar="menu-button"] {
+  min-height: 3rem;
+  height: auto;
+  font-size: 1rem;
+}
+.citypass-mobile-menu [data-sidebar="footer"] {
+  padding: 1rem 1.5rem;
+}
+@media (max-width: 767px) {
+  .citypass-content {
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  }
+  [data-slot="button"],
+  [data-slot="select-trigger"],
+  [data-slot="tabs-trigger"] {
+    min-height: 2.75rem;
+  }
+  [data-slot="button"][data-size^="icon"] {
+    min-width: 2.75rem;
+  }
+  [data-slot="input"],
+  [data-slot="textarea"],
+  [data-slot="select-trigger"] {
+    font-size: 1rem;
+  }
+  [data-tour="ayuda-fab"] {
+    bottom: calc(1.25rem + env(safe-area-inset-bottom));
+  }
+  .mapa-columna-fill {
+    min-height: min(360px, 55dvh);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .citypass-mobile-menu {
+    animation: none;
+    transition: none;
+  }
+}
+
 /* Leaflet popups picked up to match the app's card language. */
 .leaflet-popup-content-wrapper {
   border-radius: var(--radius-lg);

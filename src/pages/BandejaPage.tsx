@@ -1,33 +1,30 @@
 import { useMemo } from "react";
 import { CheckCircle2, ClipboardList, Eye, Inbox, RefreshCw, Sparkles } from "lucide-react";
 
-import { bandeja, contarResueltos } from "@/api/reclamos";
-import { useAsync } from "@/hooks/useAsync";
 import { KpiCard } from "@/components/KpiCard";
 import { Button } from "@/components/ui/button";
 import { TablaBandeja } from "@/features/reclamos/TablaBandeja";
 import { calcularKpisBandeja } from "@/features/reclamos/bandejaTable";
+import { useBandejaQuery, useContarResueltosQuery } from "@/store/citypassApi";
 
-/**
- * Backoffice inbox for operators and admins (US-13). Reads `/reclamos/bandeja`
- * (incoming claims, newest first) and tops it with queue KPIs plus the global
- * resolved-and-closed total, so staff see the shape of the work at a glance.
- */
 export function BandejaPage() {
-  const { data, loading, error, reload } = useAsync(() => bandeja(), []);
-  const resueltos = useAsync(() => contarResueltos(), []);
+  const { data, isLoading, isFetching, error, refetch } = useBandejaQuery(undefined);
+  const resueltos = useContarResueltosQuery();
 
   const filas = useMemo(() => data?.items ?? [], [data]);
   const kpis = useMemo(() => calcularKpisBandeja(filas, data?.total), [data?.total, filas]);
-  const actualizando = loading || resueltos.loading;
+  const actualizando = isFetching || resueltos.isFetching;
+  const mensajeError =
+    (error && "message" in error && typeof error.message === "string" ? error.message : null) ??
+    null;
   const refrescar = () => {
-    reload();
-    resueltos.reload();
+    refetch();
+    resueltos.refetch();
   };
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div data-tour="bandeja-header" className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex items-center gap-3">
           <div>
             <h1 className="font-heading text-2xl font-semibold tracking-tight">
@@ -44,7 +41,10 @@ export function BandejaPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      <div
+        data-tour="bandeja-kpis"
+        className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5"
+      >
         <KpiCard label="Entrantes" value={kpis.entrantes} icon={Inbox} tono="azul" />
         <KpiCard
           label="Recibidos"
@@ -64,7 +64,14 @@ export function BandejaPage() {
         />
       </div>
 
-      <TablaBandeja filas={filas} loading={loading} error={error} onRefresh={refrescar} />
+      <div data-tour="bandeja-tabla">
+        <TablaBandeja
+          filas={filas}
+          loading={isLoading}
+          error={mensajeError}
+          onRefresh={refrescar}
+        />
+      </div>
     </div>
   );
 }

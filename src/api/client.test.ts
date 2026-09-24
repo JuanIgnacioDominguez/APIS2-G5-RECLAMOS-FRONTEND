@@ -21,6 +21,26 @@ afterEach(() => {
 });
 
 describe("request - manejo de 401", () => {
+  it("ignora un 401 tardio de una sesion anterior", async () => {
+    const onUnauthorized = vi.fn();
+    setUnauthorizedHandler(onUnauthorized);
+    setAuthToken("sesion-anterior");
+    let responder!: (response: Response) => void;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        () =>
+          new Promise<Response>((resolve) => {
+            responder = resolve;
+          }),
+      ),
+    );
+    const pedido = request("/reclamos");
+    setAuthToken("sesion-nueva");
+    responder(new Response("{}", { status: 401 }));
+    await expect(pedido).rejects.toBeInstanceOf(ApiError);
+    expect(onUnauthorized).not.toHaveBeenCalled();
+  });
   it("con sesion activa, un 401 dispara el handler de no-autorizado", async () => {
     const onUnauthorized = vi.fn();
     setUnauthorizedHandler(onUnauthorized);

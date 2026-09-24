@@ -15,13 +15,16 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { bandeja, contarResueltos, listarReclamos } from "@/api/reclamos";
+import {
+  useBandejaQuery,
+  useContarResueltosQuery,
+  useListarReclamosQuery,
+} from "@/store/citypassApi";
 import { useAuth } from "@/auth/AuthContext";
 import { esStaff, Rol, ROL_LABEL } from "@/auth/roles";
 import { navModulo, NAV_CUENTA, type NavItem } from "@/config/navigation";
 import { contarPorTab } from "@/features/reclamos/filters";
 import { calcularKpisBandeja } from "@/features/reclamos/bandejaTable";
-import { useAsync } from "@/hooks/useAsync";
 import { PageHeader } from "@/components/PageHeader";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +39,6 @@ function iniciales(nombre: string): string {
     .join("");
 }
 
-/** Compact stat for the summary card: tinted icon chip, big value, label. */
 function DatoResumen({
   icono: Icono,
   etiqueta,
@@ -67,32 +69,19 @@ function DatoResumen({
   );
 }
 
-/**
- * Read-only profile of the logged-in user. Identity comes from the JWT that
- * Group 2's federated login issues, and our backend exposes no profile
- * endpoint, so name, email and role cannot be edited from here.
- */
 export function CuentaPage() {
   const { usuario } = useAuth();
   const navigate = useNavigate();
   const esCiudadano = usuario?.rol === Rol.CIUDADANO;
   const staff = usuario ? esStaff(usuario.rol) : false;
 
-  // Citizen's own claims for the activity summary (role guard inside).
-  const resumenPropio = useAsync(
-    () =>
-      esCiudadano && usuario
-        ? listarReclamos({ ciudadano_id: usuario.id, size: 100 })
-        : Promise.resolve(null),
-    [esCiudadano, usuario?.id],
+  const resumenPropio = useListarReclamosQuery(
+    { ciudadano_id: usuario?.id, size: 100 },
+    { skip: !esCiudadano || !usuario },
   );
-  const datosBandeja = useAsync(() => (staff ? bandeja() : Promise.resolve(null)), [staff]);
-  const resueltosGlobal = useAsync(
-    () => (staff ? contarResueltos() : Promise.resolve(null)),
-    [staff],
-  );
+  const datosBandeja = useBandejaQuery(undefined, { skip: !staff });
+  const resueltosGlobal = useContarResueltosQuery(undefined, { skip: !staff });
 
-  // One-tap shortcuts: every page the role can reach, except this one.
   const atajos = useMemo<NavItem[]>(() => {
     if (!usuario) return [];
     const vistos = new Set<string>();
@@ -116,13 +105,13 @@ export function CuentaPage() {
   const enCurso = conteos.abiertos + conteos.en_proceso;
   const kpisBandeja = calcularKpisBandeja(datosBandeja.data?.items ?? [], datosBandeja.data?.total);
   const resueltos = resueltosGlobal.data ?? "–";
-  const cargandoBandeja = datosBandeja.loading;
+  const cargandoBandeja = datosBandeja.isLoading;
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
       <PageHeader titulo="Mi cuenta" descripcion="Tus datos dentro del modulo de Reclamos." />
       <div className="grid gap-6 lg:grid-cols-5">
-        <Card className="shadow-xs lg:col-span-3">
+        <Card data-tour="cuenta-datos" className="shadow-xs lg:col-span-3">
           <CardContent className="flex flex-col gap-6">
             <div className="flex items-center gap-4">
               <Avatar className="size-16 shadow-md">
@@ -165,7 +154,7 @@ export function CuentaPage() {
               <CardTitle className="text-base">Mi actividad</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-1 flex-col gap-4">
-              {resumenPropio.loading ? (
+              {resumenPropio.isLoading ? (
                 <div className="flex flex-1 items-center justify-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="size-4 animate-spin" />
                   Cargando resumen...
@@ -216,7 +205,9 @@ export function CuentaPage() {
                 </div>
               ) : !datosBandeja.data ? (
                 <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-                  {datosBandeja.error ?? "No se pudo cargar el resumen."}
+                  {datosBandeja.error && "message" in datosBandeja.error
+                    ? datosBandeja.error.message
+                    : "No se pudo cargar el resumen."}
                 </div>
               ) : (
                 <>

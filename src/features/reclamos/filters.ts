@@ -1,9 +1,3 @@
-/**
- * Grouping of claims into the status tabs the list shows (Todos / Abiertos /
- * En proceso / Resueltos). Pure functions so the buckets are unit-tested and
- * the page stays declarative.
- */
-
 import type { ReclamoResumen } from "@/api/types";
 import { CategoriaReclamo, EstadoReclamo } from "@/domain/enums";
 
@@ -41,7 +35,6 @@ export function perteneceATab(estado: EstadoReclamo, tab: TabReclamos): boolean 
   }
 }
 
-/** Filter a list by the active tab, a category, and a free-text query on the title. */
 export function filtrarReclamos(
   items: ReclamoResumen[],
   tab: TabReclamos,
@@ -57,7 +50,6 @@ export function filtrarReclamos(
   );
 }
 
-/** Count claims per tab, for the badges next to each tab. */
 export function contarPorTab(items: ReclamoResumen[]): Record<TabReclamos, number> {
   return {
     todos: items.length,

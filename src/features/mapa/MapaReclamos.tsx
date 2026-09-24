@@ -9,16 +9,8 @@ import { CategoriaIcono } from "@/features/reclamos/EstadoBadges";
 import { CENTRO_DEFAULT, type ReclamoUbicado } from "./coords";
 import { TILES } from "./tiles";
 
-/** Bright-green ring around the current user's own claims. */
 const MIO_ANILLO = "#22c55e";
 
-/**
- * Recomputes the map size after mount and frames the view. Without invalidateSize
- * the map often initializes before its container has its final width (inside a
- * card, behind a collapsing sidebar), leaving tiles unloaded. When there are
- * located claims we fit to them; otherwise we keep a tight city view so the frame
- * is filled by the city instead of the open river to the east.
- */
 function AjustarVista({ reclamos }: { reclamos: ReclamoUbicado[] }) {
   const map = useMap();
   useEffect(() => {
@@ -46,12 +38,6 @@ function AjustarVista({ reclamos }: { reclamos: ReclamoUbicado[] }) {
   return null;
 }
 
-/**
- * Public claims map (US-11): a colored dot per geolocated claim, tinted by state.
- * When `misIds` is given, the current user's own claims stand out with a gold
- * ring so they are easy to spot among the rest. The popup shows only category,
- * state and title, never the citizen's personal data.
- */
 export function MapaReclamos({
   reclamos,
   misIds,
@@ -59,8 +45,6 @@ export function MapaReclamos({
 }: {
   reclamos: ReclamoUbicado[];
   misIds?: Set<string>;
-  /** Fill the parent (height 100%, no rounded corners) instead of the default
-   * boxed 540px map. Used by the full-bleed map page. */
   fill?: boolean;
 }) {
   return (

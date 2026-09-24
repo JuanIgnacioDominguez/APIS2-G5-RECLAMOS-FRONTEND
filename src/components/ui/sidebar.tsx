@@ -18,12 +18,11 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { PanelLeftIcon } from "lucide-react";
+import { MenuIcon, PanelLeftIcon } from "lucide-react";
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state";
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 const SIDEBAR_WIDTH = "16rem";
-const SIDEBAR_WIDTH_MOBILE = "18rem";
 const SIDEBAR_WIDTH_ICON = "3rem";
 const SIDEBAR_KEYBOARD_SHORTCUT = "b";
 
@@ -63,6 +62,9 @@ function SidebarProvider({
 }) {
   const isMobile = useIsMobile();
   const [openMobile, setOpenMobile] = React.useState(false);
+  React.useEffect(() => {
+    if (!isMobile) setOpenMobile(false);
+  }, [isMobile]);
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
@@ -179,19 +181,14 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
-          style={
-            {
-              "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
-            } as React.CSSProperties
-          }
-          side={side}
+          className="citypass-mobile-menu bg-sidebar p-0 text-sidebar-foreground"
+          side="top"
         >
           <SheetHeader className="sr-only">
-            <SheetTitle>Sidebar</SheetTitle>
-            <SheetDescription>Displays the mobile sidebar.</SheetDescription>
+            <SheetTitle>Menú principal</SheetTitle>
+            <SheetDescription>Navegación y opciones de tu cuenta de CityPass.</SheetDescription>
           </SheetHeader>
-          <div className="flex h-full w-full flex-col">{children}</div>
+          <div className="flex min-h-0 w-full flex-1 flex-col">{children}</div>
         </SheetContent>
       </Sheet>
     );
@@ -259,7 +256,8 @@ function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<t
       }}
       {...props}
     >
-      <PanelLeftIcon />
+      <MenuIcon className="md:hidden" />
+      <PanelLeftIcon className="hidden md:block" />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   );
@@ -502,7 +500,11 @@ const SidebarMenuButton = React.forwardRef<
       />
     );
 
-    if (!tooltip) {
+    // On mobile the menu is a full sheet, not a collapsed icon rail, so the
+    // tooltip is never shown. Skip the wrapper entirely: otherwise focusing a
+    // menu button opens the (hidden) tooltip, whose Escape handler swallows the
+    // first Escape and keeps the sheet open.
+    if (!tooltip || isMobile) {
       return button;
     }
 

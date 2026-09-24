@@ -2,7 +2,6 @@ import type { LucideIcon } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 
-/** Accent tones for the KPI icon, mapped to the CityPass+ chart tokens. */
 const TONO: Record<string, string> = {
   azul: "var(--chart-1)",
   verde: "var(--chart-2)",
@@ -13,11 +12,6 @@ const TONO: Record<string, string> = {
 
 export type KpiTono = keyof typeof TONO;
 
-/**
- * A single dashboard KPI: a tinted icon chip, the label, the value, and an
- * optional hint. The color lives in the icon chip (not a decorative border),
- * so the metric stays scannable and the panel reads as a professional tool.
- */
 export function KpiCard({
   label,
   value,

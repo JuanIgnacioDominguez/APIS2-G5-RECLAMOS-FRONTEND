@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { cambiarEstado } from "@/api/reclamos";
+import { useCambiarEstadoMutation } from "@/store/citypassApi";
 import type { ReclamoBandeja } from "@/api/types";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -80,6 +80,7 @@ function descargarBlob(blob: Blob, filename: string): void {
 }
 
 export function TablaBandeja({ filas, loading, error, onRefresh }: TablaBandejaProps) {
+  const [cambiarEstado] = useCambiarEstadoMutation();
   const navigate = useNavigate();
   const [busqueda, setBusqueda] = useState("");
   const [idsSeleccionados, setIdsSeleccionados] = useState<string[]>([]);
@@ -191,10 +192,13 @@ export function TablaBandeja({ filas, loading, error, onRefresh }: TablaBandejaP
     try {
       const resultados = await Promise.allSettled(
         seleccionadas.map((fila) =>
-          cambiarEstado(fila.id, {
-            estado,
-            motivo: "Cambio masivo desde la bandeja",
-          }),
+          cambiarEstado({
+            id: fila.id,
+            cambio: {
+              estado,
+              motivo: "Cambio masivo desde la bandeja",
+            },
+          }).unwrap(),
         ),
       );
       const fallidos = seleccionadas.filter((_, index) => resultados[index]?.status === "rejected");
@@ -208,12 +212,10 @@ export function TablaBandeja({ filas, loading, error, onRefresh }: TablaBandejaP
 
       if (exitosos === 0) {
         toast.error("No se pudo actualizar el estado", {
-          description: primerError instanceof Error ? primerError.message : "Error inesperado",
+          description: primerError?.message ?? "Error inesperado",
         });
         return;
       }
-
-      onRefresh();
 
       if (fallidos.length === 0) {
         setModoSeleccion(false);
@@ -228,7 +230,7 @@ export function TablaBandeja({ filas, loading, error, onRefresh }: TablaBandejaP
       toast.error("Actualizacion parcial", {
         description: `${fallidos.length} no ${
           fallidos.length === 1 ? "pudo actualizarse" : "pudieron actualizarse"
-        }. ${primerError instanceof Error ? primerError.message : ""}`,
+        }. ${primerError?.message ?? ""}`,
       });
     } finally {
       setActualizandoEstado(false);
@@ -238,7 +240,7 @@ export function TablaBandeja({ filas, loading, error, onRefresh }: TablaBandejaP
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:max-w-sm">
+        <div data-tour="bandeja-buscar" className="relative w-full sm:max-w-sm">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={busqueda}
