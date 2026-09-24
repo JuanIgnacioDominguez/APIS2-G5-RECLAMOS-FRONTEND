@@ -6,9 +6,15 @@ Frontend de **CityPass+** para el modulo de **Reclamos y Participacion Ciudadana
 Interfaz web para que un ciudadano cree, siga y gestione sus reclamos urbanos.
 Consume la API REST del backend del grupo (`APIS2-G5-RECLAMOS-BACKEND`).
 
+![cobertura](https://img.shields.io/badge/cobertura-%3E90%25-brightgreen)
+![gate](https://img.shields.io/badge/gate%20de%20cobertura-60%25-blue)
+
 ## Stack
 
-React 18 + TypeScript · Vite 5 · Mantine 7 · React Router 6 · Vitest.
+React 18 + TypeScript · Vite 5 · shadcn/ui (Radix + Tailwind) · React Router 6 ·
+Leaflet + OpenStreetMap · Vitest.
+
+Las decisiones de arquitectura estan documentadas en [`docs/adr/`](docs/adr/).
 
 ## Puesta en marcha
 
@@ -77,14 +83,24 @@ src/
 ├── components/  Layout y UI compartida
 ├── hooks/       Hooks propios
 ├── lib/         Utilidades puras
-└── theme/       Tema Mantine (paleta CityPass+)
+└── theme/       Estilos globales y paleta CityPass+ (tokens de Tailwind)
 ```
 
 Convenciones detalladas del repo en [`CLAUDE.md`](CLAUDE.md).
 
-## Estado (Sprint 0)
+## Estado
 
-- Scaffold, tema y estructura de capas.
-- Modulo de reclamos: listado con filtros, alta y detalle con trazabilidad.
-- Suite de tests con gate de cobertura y CI.
-- Login: placeholder; se conecta al Login Federado (Grupo 2) mas adelante.
+- **Autenticacion:** login contra el endpoint de desarrollo del backend
+  (JWT real). Manejo de sesion vencida (401) y de token al recargar. El Login
+  Federado del Grupo 2 se integra mas adelante; el boton de Google es su
+  placeholder.
+- **Reclamos:** listado con filtros y KPIs, alta con clasificacion sugerida y
+  mapa, detalle con trazabilidad, comentarios y adhesiones.
+- **Feed publico** de la ciudad con filtros y orden (US-06/US-07).
+- **Backoffice:** bandeja del operador, gestion de estado y reclasificacion.
+- **Mapa publico** de reclamos geolocalizados (US-11) y **panel de metricas**
+  para admin.
+- **Calidad:** suite de Vitest con gate de cobertura (60%), ESLint + Prettier,
+  build de produccion, imagen Docker y SonarCloud en el CI.
+- **UI:** migrada de Mantine a shadcn/ui, con paleta Azul Urbano y modo oscuro
+  opcional.
