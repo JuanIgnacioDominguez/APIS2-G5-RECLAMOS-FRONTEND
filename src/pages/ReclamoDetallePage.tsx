@@ -218,6 +218,133 @@ function HistorialTimeline({ historial }: { historial: HistorialOut[] }) {
   );
 }
 
+/** "Creado el ..." plus the refresh button, shared by both detail views. */
+function AccionesActualizar({
+  createdAt,
+  refrescando,
+  onRecargar,
+}: {
+  createdAt: string;
+  refrescando: boolean;
+  onRecargar: () => void;
+}) {
+  return (
+    <>
+      <p className="text-xs text-muted-foreground">Creado el {formatFechaCreacion(createdAt)}</p>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        onClick={onRecargar}
+        disabled={refrescando}
+        aria-label="Actualizar reclamo"
+      >
+        <RefreshCw className={cn(refrescando && "animate-spin")} />
+      </Button>
+    </>
+  );
+}
+
+/** Location card with the embedded map or the plain address. Renders nothing
+    when the reclamo has neither coordinates nor an address. */
+function TarjetaUbicacion({ reclamo }: { reclamo: ReclamoDetalle }) {
+  const tieneUbicacion = reclamo.latitud !== null && reclamo.longitud !== null;
+  const mapaUrl = tieneUbicacion
+    ? `https://www.openstreetmap.org/?mlat=${reclamo.latitud}&mlon=${reclamo.longitud}#map=17/${reclamo.latitud}/${reclamo.longitud}`
+    : null;
+  if (!tieneUbicacion && !reclamo.direccion) return null;
+
+  return (
+    <Card data-tour="detalle-ubicacion" className="rounded-2xl ring-1 ring-border">
+      <CardHeader className="flex-row items-center justify-between gap-3">
+        <SeccionTitulo icon={MapPin}>Ubicación</SeccionTitulo>
+        {mapaUrl && (
+          <CardAction>
+            <Button asChild variant="outline" size="sm" className="text-primary">
+              <a href={mapaUrl} target="_blank" rel="noreferrer">
+                Ver en mapa
+                <ExternalLink />
+              </a>
+            </Button>
+          </CardAction>
+        )}
+      </CardHeader>
+      <CardContent>
+        {tieneUbicacion && (
+          <MapaUbicacion latitud={reclamo.latitud!} longitud={reclamo.longitud!} alto={180} />
+        )}
+        {reclamo.direccion && !tieneUbicacion && (
+          <p className="flex items-start gap-2 text-sm leading-relaxed text-muted-foreground">
+            <MapPin className="mt-0.5 size-4 shrink-0 text-primary" />
+            {reclamo.direccion}
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+/** Description card with the optional resolution note and attached photos. */
+function TarjetaDescripcion({ reclamo, titulo }: { reclamo: ReclamoDetalle; titulo: string }) {
+  return (
+    <Card data-tour="detalle-informacion" className="rounded-2xl ring-1 ring-border">
+      <CardHeader>
+        <SeccionTitulo icon={FileText}>{titulo}</SeccionTitulo>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="max-w-3xl text-sm leading-6 text-pretty text-foreground/80">
+          {reclamo.descripcion || "El reclamo no incluye una descripción adicional."}
+        </p>
+        {reclamo.resolucion && (
+          <div className="rounded-xl border border-success/30 bg-success-surface p-4">
+            <p className="mb-1 text-sm font-semibold text-success">Resolución</p>
+            <p className="text-sm leading-relaxed text-foreground/80">{reclamo.resolucion}</p>
+          </div>
+        )}
+        {reclamo.fotos.length > 0 && (
+          <div className="space-y-2">
+            {reclamo.fotos.map((foto, indice) => (
+              <FotoAdjunta key={`${foto}-${indice}`} foto={foto} />
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+/** "Detalles" card shell; the rows differ per view and come in as children. */
+function TarjetaDetalles({ children }: { children: ReactNode }) {
+  return (
+    <Card data-tour="detalle-detalles" className="rounded-2xl ring-1 ring-border">
+      <CardHeader>
+        <SeccionTitulo icon={ListChecks}>Detalles</SeccionTitulo>
+      </CardHeader>
+      <CardContent className="divide-y px-5 pb-3">{children}</CardContent>
+    </Card>
+  );
+}
+
+/** History timeline card ("Trazabilidad" for staff, "Seguimiento" for citizens). */
+function TarjetaSeguimiento({
+  historial,
+  titulo,
+}: {
+  historial: ReclamoDetalle["historial"];
+  titulo: string;
+}) {
+  return (
+    <Card data-tour="detalle-trazabilidad" className="rounded-2xl ring-1 ring-border">
+      <CardHeader>
+        <SeccionTitulo icon={History}>{titulo}</SeccionTitulo>
+      </CardHeader>
+      <CardContent>
+        <HistorialTimeline historial={historial} />
+      </CardContent>
+    </Card>
+  );
+}
+
 interface VistaGestionProps {
   reclamo: ReclamoDetalle;
   refrescando: boolean;
@@ -226,12 +353,6 @@ interface VistaGestionProps {
 }
 
 function VistaGestionReclamo({ reclamo, refrescando, onRecargar, onVolver }: VistaGestionProps) {
-  const tieneUbicacion = reclamo.latitud !== null && reclamo.longitud !== null;
-  const mapaUrl =
-    reclamo.latitud !== null && reclamo.longitud !== null
-      ? `https://www.openstreetmap.org/?mlat=${reclamo.latitud}&mlon=${reclamo.longitud}#map=17/${reclamo.latitud}/${reclamo.longitud}`
-      : null;
-
   return (
     <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-5">
       <section
@@ -274,19 +395,11 @@ function VistaGestionReclamo({ reclamo, refrescando, onRecargar, onVolver }: Vis
             <ArrowLeft className="size-4" />
             Volver
           </Button>
-          <p className="text-xs text-muted-foreground">
-            Creado el {formatFechaCreacion(reclamo.created_at)}
-          </p>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            onClick={onRecargar}
-            disabled={refrescando}
-            aria-label="Actualizar reclamo"
-          >
-            <RefreshCw className={cn(refrescando && "animate-spin")} />
-          </Button>
+          <AccionesActualizar
+            createdAt={reclamo.created_at}
+            refrescando={refrescando}
+            onRecargar={onRecargar}
+          />
         </div>
       </section>
 
@@ -319,96 +432,31 @@ function VistaGestionReclamo({ reclamo, refrescando, onRecargar, onVolver }: Vis
         </Card>
 
         <aside className="flex min-w-0 flex-col gap-4 lg:col-start-3 lg:row-span-2">
-          {(tieneUbicacion || reclamo.direccion) && (
-            <Card data-tour="detalle-ubicacion" className="rounded-2xl ring-1 ring-border">
-              <CardHeader className="flex-row items-center justify-between gap-3">
-                <SeccionTitulo icon={MapPin}>Ubicación</SeccionTitulo>
-                {mapaUrl && (
-                  <CardAction>
-                    <Button asChild variant="outline" size="sm" className="text-primary">
-                      <a href={mapaUrl} target="_blank" rel="noreferrer">
-                        Ver en mapa
-                        <ExternalLink />
-                      </a>
-                    </Button>
-                  </CardAction>
-                )}
-              </CardHeader>
-              <CardContent>
-                {tieneUbicacion && (
-                  <MapaUbicacion
-                    latitud={reclamo.latitud!}
-                    longitud={reclamo.longitud!}
-                    alto={180}
-                  />
-                )}
-                {reclamo.direccion && !tieneUbicacion && (
-                  <p className="flex items-start gap-2 text-sm leading-relaxed text-muted-foreground">
-                    <MapPin className="mt-0.5 size-4 shrink-0 text-primary" />
-                    {reclamo.direccion}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          )}
+          <TarjetaUbicacion reclamo={reclamo} />
 
-          <Card data-tour="detalle-detalles" className="rounded-2xl ring-1 ring-border">
-            <CardHeader>
-              <SeccionTitulo icon={ListChecks}>Detalles</SeccionTitulo>
-            </CardHeader>
-            <CardContent className="divide-y px-5 pb-3">
-              <DatoFila etiqueta="Barrio" valor={reclamo.barrio ?? "Sin barrio"} />
-              <DatoFila
-                etiqueta="Asignado a"
-                valor={reclamo.asignado_a ?? "Sin asignar"}
-                icono={Users}
-              />
-              <DatoFila
-                etiqueta="Área responsable"
-                valor={reclamo.area_responsable ?? "Sin definir"}
-                icono={Building2}
-              />
-              <DatoFila etiqueta="Canal" valor={CANAL_LABEL[reclamo.canal]} icono={Radio} />
-              <DatoFila etiqueta="Última actualización" valor={haceCuanto(reclamo.updated_at)} />
-            </CardContent>
-          </Card>
+          <TarjetaDetalles>
+            <DatoFila etiqueta="Barrio" valor={reclamo.barrio ?? "Sin barrio"} />
+            <DatoFila
+              etiqueta="Asignado a"
+              valor={reclamo.asignado_a ?? "Sin asignar"}
+              icono={Users}
+            />
+            <DatoFila
+              etiqueta="Área responsable"
+              valor={reclamo.area_responsable ?? "Sin definir"}
+              icono={Building2}
+            />
+            <DatoFila etiqueta="Canal" valor={CANAL_LABEL[reclamo.canal]} icono={Radio} />
+            <DatoFila etiqueta="Última actualización" valor={haceCuanto(reclamo.updated_at)} />
+          </TarjetaDetalles>
 
-          <Card data-tour="detalle-trazabilidad" className="rounded-2xl ring-1 ring-border">
-            <CardHeader>
-              <SeccionTitulo icon={History}>Trazabilidad</SeccionTitulo>
-            </CardHeader>
-            <CardContent>
-              <HistorialTimeline historial={reclamo.historial} />
-            </CardContent>
-          </Card>
+          <TarjetaSeguimiento historial={reclamo.historial} titulo="Trazabilidad" />
         </aside>
 
         <div className="flex min-w-0 flex-col gap-4 lg:col-span-2 lg:col-start-1">
           <PosiblesDuplicados reclamoId={reclamo.id} />
 
-          <Card data-tour="detalle-informacion" className="rounded-2xl ring-1 ring-border">
-            <CardHeader>
-              <SeccionTitulo icon={FileText}>Información del reclamo</SeccionTitulo>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="max-w-3xl text-sm leading-6 text-pretty text-foreground/80">
-                {reclamo.descripcion || "El reclamo no incluye una descripción adicional."}
-              </p>
-              {reclamo.resolucion && (
-                <div className="rounded-xl border border-success/30 bg-success-surface p-4">
-                  <p className="mb-1 text-sm font-semibold text-success">Resolución</p>
-                  <p className="text-sm leading-relaxed text-foreground/80">{reclamo.resolucion}</p>
-                </div>
-              )}
-              {reclamo.fotos.length > 0 && (
-                <div className="space-y-2">
-                  {reclamo.fotos.map((foto, indice) => (
-                    <FotoAdjunta key={`${foto}-${indice}`} foto={foto} />
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <TarjetaDescripcion reclamo={reclamo} titulo="Información del reclamo" />
 
           <div data-tour="detalle-comentarios">
             <ComentariosReclamo reclamoId={reclamo.id} comentarios={reclamo.comentarios} />
@@ -442,12 +490,6 @@ function VistaCiudadanoReclamo({
   onRecargar,
   onVolver,
 }: VistaCiudadanoProps) {
-  const tieneUbicacion = reclamo.latitud !== null && reclamo.longitud !== null;
-  const mapaUrl =
-    reclamo.latitud !== null && reclamo.longitud !== null
-      ? `https://www.openstreetmap.org/?mlat=${reclamo.latitud}&mlon=${reclamo.longitud}#map=17/${reclamo.latitud}/${reclamo.longitud}`
-      : null;
-
   return (
     <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-5">
       <section
@@ -477,19 +519,11 @@ function VistaCiudadanoReclamo({
           </div>
         </div>
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 xl:justify-end">
-          <p className="text-xs text-muted-foreground">
-            Creado el {formatFechaCreacion(reclamo.created_at)}
-          </p>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            onClick={onRecargar}
-            disabled={refrescando}
-            aria-label="Actualizar reclamo"
-          >
-            <RefreshCw className={cn(refrescando && "animate-spin")} />
-          </Button>
+          <AccionesActualizar
+            createdAt={reclamo.created_at}
+            refrescando={refrescando}
+            onRecargar={onRecargar}
+          />
         </div>
       </section>
 
@@ -530,29 +564,7 @@ function VistaCiudadanoReclamo({
             </CardContent>
           </Card>
 
-          <Card data-tour="detalle-informacion" className="rounded-2xl ring-1 ring-border">
-            <CardHeader>
-              <SeccionTitulo icon={FileText}>Descripción</SeccionTitulo>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="max-w-3xl text-sm leading-6 text-pretty text-foreground/80">
-                {reclamo.descripcion || "El reclamo no incluye una descripción adicional."}
-              </p>
-              {reclamo.resolucion && (
-                <div className="rounded-xl border border-success/30 bg-success-surface p-4">
-                  <p className="mb-1 text-sm font-semibold text-success">Resolución</p>
-                  <p className="text-sm leading-relaxed text-foreground/80">{reclamo.resolucion}</p>
-                </div>
-              )}
-              {reclamo.fotos.length > 0 && (
-                <div className="space-y-2">
-                  {reclamo.fotos.map((foto, indice) => (
-                    <FotoAdjunta key={`${foto}-${indice}`} foto={foto} />
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <TarjetaDescripcion reclamo={reclamo} titulo="Descripción" />
 
           <div data-tour="detalle-comentarios">
             <ComentariosReclamo reclamoId={reclamo.id} comentarios={reclamo.comentarios} />
@@ -560,59 +572,16 @@ function VistaCiudadanoReclamo({
         </div>
 
         <aside className="flex min-w-0 flex-col gap-4">
-          <Card data-tour="detalle-trazabilidad" className="rounded-2xl ring-1 ring-border">
-            <CardHeader>
-              <SeccionTitulo icon={History}>Seguimiento</SeccionTitulo>
-            </CardHeader>
-            <CardContent>
-              <HistorialTimeline historial={reclamo.historial} />
-            </CardContent>
-          </Card>
+          <TarjetaSeguimiento historial={reclamo.historial} titulo="Seguimiento" />
 
-          {(tieneUbicacion || reclamo.direccion) && (
-            <Card data-tour="detalle-ubicacion" className="rounded-2xl ring-1 ring-border">
-              <CardHeader className="flex-row items-center justify-between gap-3">
-                <SeccionTitulo icon={MapPin}>Ubicación</SeccionTitulo>
-                {mapaUrl && (
-                  <CardAction>
-                    <Button asChild variant="outline" size="sm" className="text-primary">
-                      <a href={mapaUrl} target="_blank" rel="noreferrer">
-                        Ver en mapa
-                        <ExternalLink />
-                      </a>
-                    </Button>
-                  </CardAction>
-                )}
-              </CardHeader>
-              <CardContent>
-                {tieneUbicacion && (
-                  <MapaUbicacion
-                    latitud={reclamo.latitud!}
-                    longitud={reclamo.longitud!}
-                    alto={180}
-                  />
-                )}
-                {reclamo.direccion && !tieneUbicacion && (
-                  <p className="flex items-start gap-2 text-sm leading-relaxed text-muted-foreground">
-                    <MapPin className="mt-0.5 size-4 shrink-0 text-primary" />
-                    {reclamo.direccion}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          )}
+          <TarjetaUbicacion reclamo={reclamo} />
 
-          <Card data-tour="detalle-detalles" className="rounded-2xl ring-1 ring-border">
-            <CardHeader>
-              <SeccionTitulo icon={ListChecks}>Detalles</SeccionTitulo>
-            </CardHeader>
-            <CardContent className="divide-y px-5 pb-3">
-              <DatoFila etiqueta="Barrio" valor={reclamo.barrio ?? "Sin barrio"} />
-              <DatoFila etiqueta="Canal" valor={CANAL_LABEL[reclamo.canal]} icono={Radio} />
-              <DatoFila etiqueta="Adhesiones" valor={totalAdhesiones} icono={Users} />
-              <DatoFila etiqueta="Última actualización" valor={haceCuanto(reclamo.updated_at)} />
-            </CardContent>
-          </Card>
+          <TarjetaDetalles>
+            <DatoFila etiqueta="Barrio" valor={reclamo.barrio ?? "Sin barrio"} />
+            <DatoFila etiqueta="Canal" valor={CANAL_LABEL[reclamo.canal]} icono={Radio} />
+            <DatoFila etiqueta="Adhesiones" valor={totalAdhesiones} icono={Users} />
+            <DatoFila etiqueta="Última actualización" valor={haceCuanto(reclamo.updated_at)} />
+          </TarjetaDetalles>
         </aside>
       </div>
     </div>
