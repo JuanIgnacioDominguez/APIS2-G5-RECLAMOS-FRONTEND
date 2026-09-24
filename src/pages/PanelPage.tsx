@@ -1,4 +1,4 @@
-import { BarChart3, Clock, Inbox, Loader2 } from "lucide-react";
+import { Clock, Inbox, Loader2 } from "lucide-react";
 
 import { EstadoError } from "@/components/EstadoError";
 import { PageHeader } from "@/components/PageHeader";
@@ -60,11 +60,7 @@ export function PanelPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        icono={BarChart3}
-        titulo="Panel de metricas"
-        descripcion="Resumen del modulo de reclamos."
-      />
+      <PageHeader titulo="Panel de metricas" descripcion="Resumen del modulo de reclamos." />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <KpiCard label="Total de reclamos" value={data.total} icon={Inbox} tono="azul" />

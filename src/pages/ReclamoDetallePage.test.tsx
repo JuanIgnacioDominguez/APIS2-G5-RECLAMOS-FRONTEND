@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { Route, Routes } from "react-router-dom";
 
 import * as reclamosApi from "@/api/reclamos";
-import type { ReclamoDetalle } from "@/api/types";
+import type { ReclamoDetalle, ReclamoSimilar } from "@/api/types";
 import {
   CanalOrigen,
   CategoriaReclamo,
@@ -13,7 +13,7 @@ import {
   PrioridadReclamo,
 } from "@/domain/enums";
 import { renderWithProviders } from "@/test/render";
-import { CIUDADANO } from "@/test/usuarios";
+import { ADMIN, CIUDADANO, OPERADOR } from "@/test/usuarios";
 import { ReclamoDetallePage } from "./ReclamoDetallePage";
 
 const detalle: ReclamoDetalle = {
@@ -75,6 +75,9 @@ describe("ReclamoDetallePage", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     vi.spyOn(reclamosApi, "obtenerReclamo").mockResolvedValue(detalle);
+    // Staff detail loads possible duplicates; default to none so cases that do
+    // not care about it are unaffected.
+    vi.spyOn(reclamosApi, "similaresDe").mockResolvedValue([]);
   });
 
   it("muestra el titulo, los detalles y la trazabilidad", async () => {
@@ -93,7 +96,7 @@ describe("ReclamoDetallePage", () => {
     renderDetalle();
     await screen.findByText(detalle.titulo);
 
-    await userEvent.click(screen.getByRole("button", { name: /a mi tambien me pasa/i }));
+    await userEvent.click(screen.getByRole("button", { name: /a mí también me pasa/i }));
 
     await waitFor(() => expect(screen.getByText("5 vecinos adheridos")).toBeInTheDocument());
     expect(reclamosApi.adherir).toHaveBeenCalledWith(detalle.id);
@@ -104,13 +107,74 @@ describe("ReclamoDetallePage", () => {
     renderDetalle(CIUDADANO);
     await screen.findByText(detalle.titulo);
 
-    expect(screen.queryByRole("button", { name: /a mi tambien me pasa/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /a mí también me pasa/i })).not.toBeInTheDocument();
     expect(screen.getByText(/es tu reclamo/i)).toBeInTheDocument();
+  });
+
+  it.each([OPERADOR, ADMIN])(
+    "muestra las herramientas de gestión al usuario %s",
+    async (usuario) => {
+      renderDetalle(usuario);
+      await screen.findByRole("heading", { name: `Reclamo #${detalle.id.slice(0, 8)}` });
+
+      expect(
+        screen.queryByRole("button", { name: /a mí también me pasa/i }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByText("Gestión del reclamo")).toBeInTheDocument();
+      expect(screen.getByText("Clasificación")).toBeInTheDocument();
+      expect(screen.getByText("Información del reclamo")).toBeInTheDocument();
+      expect(screen.getByText("Trazabilidad")).toBeInTheDocument();
+    },
+  );
+
+  it("muestra las fotos adjuntas con una acción para abrirlas", async () => {
+    const foto = "https://cdn.citypass.local/evidencias/IMG_20260923_2054.jpg";
+    vi.spyOn(reclamosApi, "obtenerReclamo").mockResolvedValue({
+      ...detalle,
+      fotos: [foto],
+    });
+    renderDetalle(OPERADOR);
+
+    expect(
+      await screen.findByRole("img", { name: /evidencia del reclamo: IMG_20260923_2054\.jpg/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("IMG_20260923_2054.jpg")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /descargar IMG_20260923_2054\.jpg/i })).toHaveAttribute(
+      "href",
+      foto,
+    );
   });
 
   it("muestra un error si el reclamo no se puede cargar", async () => {
     vi.spyOn(reclamosApi, "obtenerReclamo").mockRejectedValue(new Error("404 no existe"));
     renderDetalle();
     expect(await screen.findByText(/no se pudo cargar/i)).toBeInTheDocument();
+  });
+
+  it("muestra posibles duplicados al staff cuando el backend los encuentra", async () => {
+    const duplicado: ReclamoSimilar = {
+      id: "dup-1",
+      titulo: "Bache en la misma esquina",
+      categoria: CategoriaReclamo.BACHES,
+      prioridad: PrioridadReclamo.MEDIA,
+      estado: EstadoReclamo.RECIBIDO,
+      barrio: "Centro",
+      latitud: -34.6,
+      longitud: -58.4,
+      adhesiones_count: 2,
+      created_at: new Date().toISOString(),
+      similitud: 0.72,
+      distancia_metros: 30,
+      terminos_en_comun: ["bache", "esquina"],
+      es_propio: false,
+      ya_adherido: false,
+    };
+    vi.spyOn(reclamosApi, "similaresDe").mockResolvedValue([duplicado]);
+
+    renderDetalle(OPERADOR);
+    await screen.findByRole("heading", { name: `Reclamo #${detalle.id.slice(0, 8)}` });
+
+    expect(await screen.findByText(/posibles duplicados/i)).toBeInTheDocument();
+    expect(screen.getByText("Bache en la misma esquina")).toBeInTheDocument();
   });
 });

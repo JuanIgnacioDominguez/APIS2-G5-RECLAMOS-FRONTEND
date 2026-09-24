@@ -65,7 +65,7 @@ describe("GestionarEstado", () => {
     // Area suggested from the category,.
     expect(screen.getByPlaceholderText("Higiene Urbana")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: /asignarme/i }));
-    await userEvent.type(screen.getByLabelText(/area responsable/i), "Higiene");
+    await userEvent.type(screen.getByLabelText(/área responsable/i), "Higiene");
     await userEvent.click(screen.getByRole("button", { name: /aplicar cambio/i }));
 
     await waitFor(() => expect(cambiar).toHaveBeenCalled());

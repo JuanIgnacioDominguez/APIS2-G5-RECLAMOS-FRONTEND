@@ -14,4 +14,4 @@ backend (`APIS2-G5-RECLAMOS-BACKEND/docs/adr/`):
 | 0003 | Sesión: JWT en localStorage                     | Aceptada |
 
 Una decisión no se edita cuando cambia: se agrega un ADR nuevo que la supersede
-y se marca la vieja como *Reemplazada por ADR N*.
+y se marca la vieja como _Reemplazada por ADR N_.

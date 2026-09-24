@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { CircleMarker, MapContainer, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
+import { TILES } from "./tiles";
+
 // Leaflet paths take raw colors, so map the brand key to hex here.
 const AZUL_URBANO = "#2563a6";
 
@@ -43,10 +45,10 @@ export function MapaUbicacion({ latitud, longitud, alto = 240 }: Props) {
     >
       <AjustarVista punto={punto} />
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        subdomains="abc"
-        maxZoom={19}
+        attribution={TILES.attribution}
+        url={TILES.url}
+        subdomains={TILES.subdomains}
+        maxZoom={TILES.maxZoom}
       />
       <CircleMarker
         center={punto}

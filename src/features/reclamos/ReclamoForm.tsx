@@ -1,11 +1,24 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Loader2, LocateFixed, MapPin, Search, Sparkles } from "lucide-react";
+import {
+  FileText,
+  Loader2,
+  LocateFixed,
+  MapPin,
+  Plus,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  Tags,
+  type LucideIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import type { ReclamoCrear } from "@/api/types";
 import type { CategoriaReclamo, PrioridadReclamo } from "@/domain/enums";
 import {
+  CATEGORIA_HEX,
   CATEGORIA_LABEL,
+  PRIORIDAD_HEX,
   PRIORIDAD_LABEL,
   opcionesCategoria,
   opcionesPrioridad,
@@ -25,11 +38,15 @@ import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapaSelector } from "@/features/mapa/MapaSelector";
 import {
   buscarDireccion,
@@ -39,9 +56,9 @@ import {
   type SugerenciaDireccion,
 } from "@/features/mapa/geocoding";
 import { esFormularioValido, reclamoValidators, type ReclamoFormValues } from "./validation";
+import { ICONO_CATEGORIA, ICONO_PRIORIDAD } from "./iconos";
 import { useSugerenciaClasificacion } from "./useSugerencia";
 
-/** Sentinel select value meaning "no elegido, lo sugiere el clasificador". */
 const AUTO = "auto";
 
 interface Props {
@@ -59,6 +76,15 @@ const VALORES_INICIALES: ReclamoFormValues = {
   latitud: null,
   longitud: null,
 };
+
+function SeccionTitulo({ icon: Icon, children }: { icon: LucideIcon; children: string }) {
+  return (
+    <CardTitle className="flex items-center gap-2 text-base font-semibold">
+      <Icon className="size-[18px] text-primary" strokeWidth={2.2} />
+      {children}
+    </CardTitle>
+  );
+}
 
 export function ReclamoForm({ onSubmit, loading }: Props) {
   const [values, setValues] = useState<ReclamoFormValues>(VALORES_INICIALES);
@@ -80,36 +106,18 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
 
   const { sugerencia } = useSugerenciaClasificacion(values.titulo, values.descripcion);
   const [ubicando, setUbicando] = useState(false);
+  const [errorUbicacion, setErrorUbicacion] = useState<string | null>(null);
   const [buscandoDir, setBuscandoDir] = useState(false);
   const [opcionesDir, setOpcionesDir] = useState<SugerenciaDireccion[]>([]);
-  // Skips the next autocomplete fetch when the address was set programmatically
-  // (map click, geolocation, a picked suggestion) instead of typed by the user.
   const omitirSugerencia = useRef(false);
-  // Nominatim's usage policy allows ~1 request/second. A 1s debounce (plus the
-  // in-module response cache) keeps us under that limit even when typing fast.
   const dirDebounced = useDebouncedValue(values.direccion, 1000);
 
-  // Proximity centre for ranking suggestions: the dropped pin if any, else the
-  // citizen's device location, else Greater Buenos Aires. Kept in a ref so the
-  // fetch effect reads the latest centre without re-running on every pin move.
-  const [centroDispositivo, setCentroDispositivo] = useState(CENTRO_AMBA);
   const centroRef = useRef(CENTRO_AMBA);
   centroRef.current =
     values.latitud !== null && values.longitud !== null
       ? { lat: values.latitud, lng: values.longitud }
-      : centroDispositivo;
+      : CENTRO_AMBA;
 
-  // Best-effort: bias toward the citizen's real location. Denied → stays AMBA.
-  useEffect(() => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => setCentroDispositivo({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => {},
-      { timeout: 8000, maximumAge: 600000 },
-    );
-  }, []);
-
-  // Fetch address candidates as the citizen types, cancelling stale requests.
   useEffect(() => {
     if (omitirSugerencia.current) {
       omitirSugerencia.current = false;
@@ -122,9 +130,7 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
     const ctrl = new AbortController();
     sugerirDirecciones(dirDebounced, { cerca: centroRef.current, signal: ctrl.signal })
       .then(setOpcionesDir)
-      .catch(() => {
-        /* aborted or offline: keep the previous options */
-      });
+      .catch(() => undefined);
     return () => ctrl.abort();
   }, [dirDebounced]);
 
@@ -133,7 +139,6 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
     setValues((v) => ({ ...v, categoria: sugerencia.categoria, prioridad: sugerencia.prioridad }));
   }
 
-  // A candidate chosen from the dropdown: fill address, neighbourhood and pin.
   function elegirSugerenciaDir(elegida: SugerenciaDireccion) {
     omitirSugerencia.current = true;
     setValues((v) => ({
@@ -146,8 +151,6 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
     setOpcionesDir([]);
   }
 
-  // Point picked on the map (or from geolocation): drop the pin and reverse
-  // geocode so the address and neighbourhood fields fill themselves in.
   async function fijarUbicacion(lat: number, lng: number) {
     setValues((v) => ({ ...v, latitud: lat, longitud: lng }));
     try {
@@ -158,11 +161,10 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
       }
       if (lugar?.barrio) setValue("barrio", lugar.barrio);
     } catch {
-      // Keep the coordinates even if the address lookup fails.
+      return;
     }
   }
 
-  // Address typed by the citizen: geocode it and move the pin to the real point.
   async function buscarPorDireccion() {
     const texto = values.direccion.trim();
     if (texto.length < 4) return;
@@ -170,8 +172,8 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
     try {
       const lugar = await buscarDireccion(texto, centroRef.current);
       if (!lugar) {
-        toast("No encontramos esa direccion", {
-          description: "Revisa como esta escrita o marca el punto en el mapa.",
+        toast("No encontramos esa dirección", {
+          description: "Revisá cómo está escrita o marcá el punto en el mapa.",
         });
         return;
       }
@@ -185,8 +187,8 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
       }));
       setOpcionesDir([]);
     } catch {
-      toast.error("No se pudo buscar la direccion", {
-        description: "Intenta de nuevo en unos segundos.",
+      toast.error("No se pudo buscar la dirección", {
+        description: "Intentá de nuevo en unos segundos.",
       });
     } finally {
       setBuscandoDir(false);
@@ -194,14 +196,32 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
   }
 
   function usarMiUbicacion() {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      const mensaje = "Tu navegador no permite acceder a la ubicación.";
+      setErrorUbicacion(mensaje);
+      toast.error("No se pudo usar tu ubicación", { description: mensaje });
+      return;
+    }
+    setErrorUbicacion(null);
     setUbicando(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         void fijarUbicacion(pos.coords.latitude, pos.coords.longitude);
         setUbicando(false);
+        toast.success("Ubicación actualizada", {
+          description: "Marcamos tu ubicación en el mapa.",
+        });
       },
-      () => setUbicando(false),
+      (error) => {
+        const mensaje =
+          error.code === 1
+            ? "Permití el acceso a tu ubicación desde el navegador."
+            : "No pudimos obtener tu ubicación. Intentá de nuevo.";
+        setUbicando(false);
+        setErrorUbicacion(mensaje);
+        toast.error("No se pudo usar tu ubicación", { description: mensaje });
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
     );
   }
 
@@ -222,214 +242,311 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 min-w-0 flex-col">
-      <div className="flex min-h-0 flex-1 flex-col gap-6 md:flex-row md:items-stretch">
-        <div className="min-h-0 min-w-0 md:flex-[5_5_0%]">
-          <div className="flex h-full flex-col gap-4 overflow-x-hidden overflow-y-auto">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="titulo">
-                Titulo <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="titulo"
-                placeholder="Luminaria apagada en la plaza"
-                value={values.titulo}
-                aria-invalid={!!errores.titulo}
-                onBlur={() => setTouched((t) => ({ ...t, titulo: true }))}
-                onChange={(e) => setValue("titulo", e.target.value)}
-              />
-              {errores.titulo && <p className="text-xs text-destructive">{errores.titulo}</p>}
-            </div>
+    <form onSubmit={handleSubmit} className="flex min-w-0 flex-col gap-4">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(17rem,0.9fr)] lg:gap-5">
+        <div className="flex min-w-0 flex-col gap-4">
+          <Card className="rounded-2xl ring-1 ring-border">
+            <CardHeader className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+              <SeccionTitulo icon={FileText}>Información del reclamo</SeccionTitulo>
+              <p className="text-sm text-muted-foreground sm:text-right">
+                Describí el problema con tus propias palabras.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="titulo">
+                  Título <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="titulo"
+                  placeholder="Luminaria apagada en la plaza"
+                  value={values.titulo}
+                  aria-invalid={!!errores.titulo}
+                  onBlur={() => setTouched((t) => ({ ...t, titulo: true }))}
+                  onChange={(e) => setValue("titulo", e.target.value)}
+                />
+                {errores.titulo && <p className="text-xs text-destructive">{errores.titulo}</p>}
+              </div>
 
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="descripcion">
-                Descripcion <span className="text-destructive">*</span>
-              </Label>
-              <Textarea
-                id="descripcion"
-                placeholder="Contanos que pasa, hace cuanto y donde."
-                rows={4}
-                value={values.descripcion}
-                aria-invalid={!!errores.descripcion}
-                onBlur={() => setTouched((t) => ({ ...t, descripcion: true }))}
-                onChange={(e) => setValue("descripcion", e.target.value)}
-              />
-              {errores.descripcion && (
-                <p className="text-xs text-destructive">{errores.descripcion}</p>
+              <div className="space-y-1.5">
+                <Label htmlFor="descripcion">
+                  Descripción <span className="text-destructive">*</span>
+                </Label>
+                <Textarea
+                  id="descripcion"
+                  placeholder="Contanos qué pasa, hace cuánto y dónde."
+                  rows={5}
+                  value={values.descripcion}
+                  aria-invalid={!!errores.descripcion}
+                  onBlur={() => setTouched((t) => ({ ...t, descripcion: true }))}
+                  onChange={(e) => setValue("descripcion", e.target.value)}
+                  className="resize-y"
+                />
+                {errores.descripcion && (
+                  <p className="text-xs text-destructive">{errores.descripcion}</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-2xl ring-1 ring-border">
+            <CardHeader>
+              <SeccionTitulo icon={MapPin}>Ubicación</SeccionTitulo>
+              <CardAction>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={ubicando}
+                  onClick={usarMiUbicacion}
+                >
+                  {ubicando ? <Loader2 className="animate-spin" /> : <LocateFixed />}
+                  Usar mi ubicación
+                </Button>
+              </CardAction>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {errorUbicacion && (
+                <p
+                  role="alert"
+                  className="rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive"
+                >
+                  {errorUbicacion}
+                </p>
               )}
-            </div>
-
-            {sugerencia && (
-              <Alert className="border-primary/20 bg-primary/5">
-                <Sparkles className="size-4 text-primary" />
-                <AlertTitle>Sugerencia automatica</AlertTitle>
-                <AlertDescription>
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span>
-                      Categoria <b>{CATEGORIA_LABEL[sugerencia.categoria]}</b>, prioridad{" "}
-                      <b>{PRIORIDAD_LABEL[sugerencia.prioridad]}</b> (
-                      {formatConfianza(sugerencia.confianza)} de confianza).
-                    </span>
-                    <Button type="button" size="xs" variant="secondary" onClick={aplicarSugerencia}>
-                      Aplicar
-                    </Button>
-                  </div>
-                </AlertDescription>
-              </Alert>
-            )}
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="categoria">Categoria</Label>
-                <Select
-                  value={values.categoria ?? AUTO}
-                  onValueChange={(v) => setValue("categoria", v === AUTO ? null : v)}
-                >
-                  <SelectTrigger id="categoria" className="w-full" aria-label="Categoria">
-                    <SelectValue placeholder="La sugiere el clasificador" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={AUTO}>La sugiere el clasificador</SelectItem>
-                    {opcionesCategoria().map((o) => (
-                      <SelectItem key={o.value} value={o.value}>
-                        {o.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="prioridad">Prioridad</Label>
-                <Select
-                  value={values.prioridad ?? AUTO}
-                  onValueChange={(v) => setValue("prioridad", v === AUTO ? null : v)}
-                >
-                  <SelectTrigger id="prioridad" className="w-full" aria-label="Prioridad">
-                    <SelectValue placeholder="La sugiere el clasificador" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={AUTO}>La sugiere el clasificador</SelectItem>
-                    {opcionesPrioridad().map((o) => (
-                      <SelectItem key={o.value} value={o.value}>
-                        {o.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="col-span-2 flex flex-col gap-1.5 sm:col-span-1">
-                <Label htmlFor="direccion">Direccion</Label>
-                <div className="relative">
-                  <InputGroup>
-                    <InputGroupInput
-                      id="direccion"
-                      placeholder="Av. Rivadavia 800"
-                      autoComplete="off"
-                      value={values.direccion}
-                      onChange={(e) => setValue("direccion", e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          void buscarPorDireccion();
-                        }
-                      }}
-                    />
-                    <InputGroupAddon align="inline-end">
-                      <InputGroupButton
-                        type="button"
-                        size="icon-xs"
-                        aria-label="Buscar direccion en el mapa"
-                        onClick={() => void buscarPorDireccion()}
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="direccion">Dirección</Label>
+                  <div className="relative">
+                    <InputGroup>
+                      <InputGroupInput
+                        id="direccion"
+                        placeholder="Av. Rivadavia 800"
+                        autoComplete="off"
+                        value={values.direccion}
+                        onChange={(e) => setValue("direccion", e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            void buscarPorDireccion();
+                          }
+                        }}
+                      />
+                      <InputGroupAddon align="inline-end">
+                        <InputGroupButton
+                          type="button"
+                          size="icon-xs"
+                          aria-label="Buscar dirección en el mapa"
+                          onClick={() => void buscarPorDireccion()}
+                        >
+                          {buscandoDir ? <Loader2 className="animate-spin" /> : <Search />}
+                        </InputGroupButton>
+                      </InputGroupAddon>
+                    </InputGroup>
+                    {opcionesDir.length > 0 && (
+                      <ul
+                        role="listbox"
+                        className="absolute z-10 mt-1 max-h-64 w-full overflow-auto rounded-xl border bg-popover p-1 text-popover-foreground shadow-lg"
                       >
-                        {buscandoDir ? <Loader2 className="animate-spin" /> : <Search />}
-                      </InputGroupButton>
-                    </InputGroupAddon>
-                  </InputGroup>
-                  {opcionesDir.length > 0 && (
-                    <ul
-                      role="listbox"
-                      className="absolute z-10 mt-1 max-h-64 w-full overflow-auto rounded-lg bg-popover py-1 text-popover-foreground shadow-md ring-1 ring-foreground/10"
-                    >
-                      {opcionesDir.map((o) => (
-                        <li key={o.etiqueta}>
-                          <button
-                            type="button"
-                            role="option"
-                            aria-selected={false}
-                            className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
-                            onClick={() => elegirSugerenciaDir(o)}
-                          >
-                            <MapPin className="size-3.5 shrink-0 text-primary" />
-                            <span className="min-w-0">
-                              <span className="block truncate font-medium">{o.principal}</span>
-                              {o.secundaria && (
-                                <span className="block truncate text-xs text-muted-foreground">
-                                  {o.secundaria}
-                                </span>
-                              )}
-                            </span>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                        {opcionesDir.map((o) => (
+                          <li key={o.etiqueta}>
+                            <button
+                              type="button"
+                              role="option"
+                              aria-selected={false}
+                              className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+                              onClick={() => elegirSugerenciaDir(o)}
+                            >
+                              <MapPin className="size-3.5 shrink-0 text-primary" />
+                              <span className="min-w-0">
+                                <span className="block truncate font-medium">{o.principal}</span>
+                                {o.secundaria && (
+                                  <span className="block truncate text-xs text-muted-foreground">
+                                    {o.secundaria}
+                                  </span>
+                                )}
+                              </span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="barrio">Barrio</Label>
+                  <Input
+                    id="barrio"
+                    placeholder="Centro"
+                    value={values.barrio}
+                    onChange={(e) => setValue("barrio", e.target.value)}
+                  />
                 </div>
               </div>
+            </CardContent>
+          </Card>
 
-              <div className="col-span-2 flex flex-col gap-1.5 sm:col-span-1">
-                <Label htmlFor="barrio">Barrio</Label>
-                <Input
-                  id="barrio"
-                  value={values.barrio}
-                  onChange={(e) => setValue("barrio", e.target.value)}
-                />
+          <Card className="rounded-2xl ring-1 ring-border">
+            <CardHeader className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+              <SeccionTitulo icon={Tags}>Clasificación</SeccionTitulo>
+              <p className="text-sm text-muted-foreground sm:text-right">
+                Elegí una opción o dejá que el sistema la sugiera.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {sugerencia && (
+                <Alert className="border-primary/20 bg-primary/5 p-3">
+                  <Sparkles className="size-4 text-primary" />
+                  <AlertTitle className="font-semibold">Sugerencia automática</AlertTitle>
+                  <AlertDescription>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <span>
+                        Categoría <b>{CATEGORIA_LABEL[sugerencia.categoria]}</b>, prioridad{" "}
+                        <b>{PRIORIDAD_LABEL[sugerencia.prioridad]}</b> (
+                        {formatConfianza(sugerencia.confianza)} de confianza).
+                      </span>
+                      <Button
+                        type="button"
+                        size="xs"
+                        variant="secondary"
+                        onClick={aplicarSugerencia}
+                      >
+                        Aplicar
+                      </Button>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="categoria">Categoría</Label>
+                  <Select
+                    value={values.categoria ?? AUTO}
+                    onValueChange={(v) => setValue("categoria", v === AUTO ? null : v)}
+                  >
+                    <SelectTrigger id="categoria" className="w-full" aria-label="Categoría">
+                      <SelectValue placeholder="La sugiere el clasificador" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Categoría</SelectLabel>
+                        <SelectItem value={AUTO}>
+                          <span className="flex items-center gap-2">
+                            <Sparkles className="size-4 text-muted-foreground" />
+                            La sugiere el clasificador
+                          </span>
+                        </SelectItem>
+                        <SelectSeparator />
+                        {opcionesCategoria().map((o) => {
+                          const Icono = ICONO_CATEGORIA[o.value as CategoriaReclamo];
+                          return (
+                            <SelectItem key={o.value} value={o.value}>
+                              <span className="flex items-center gap-2">
+                                <Icono
+                                  className="size-4"
+                                  style={{ color: CATEGORIA_HEX[o.value as CategoriaReclamo] }}
+                                />
+                                {o.label}
+                              </span>
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="prioridad">Prioridad</Label>
+                  <Select
+                    value={values.prioridad ?? AUTO}
+                    onValueChange={(v) => setValue("prioridad", v === AUTO ? null : v)}
+                  >
+                    <SelectTrigger id="prioridad" className="w-full" aria-label="Prioridad">
+                      <SelectValue placeholder="La sugiere el clasificador" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Prioridad</SelectLabel>
+                        <SelectItem value={AUTO}>
+                          <span className="flex items-center gap-2">
+                            <Sparkles className="size-4 text-muted-foreground" />
+                            La sugiere el clasificador
+                          </span>
+                        </SelectItem>
+                        <SelectSeparator />
+                        {opcionesPrioridad().map((o) => {
+                          const Icono = ICONO_PRIORIDAD[o.value as PrioridadReclamo];
+                          return (
+                            <SelectItem key={o.value} value={o.value}>
+                              <span className="flex items-center gap-2">
+                                <Icono
+                                  className="size-4"
+                                  style={{ color: PRIORIDAD_HEX[o.value as PrioridadReclamo] }}
+                                />
+                                {o.label}
+                              </span>
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
+            </CardContent>
+          </Card>
+        </div>
 
-              <p className="col-span-2 -mt-1.5 text-xs text-muted-foreground">
-                Empeza a escribir y elegi una sugerencia, o marca el punto en el mapa.
+        <aside className="flex min-w-0 flex-col gap-4">
+          <Card className="flex flex-col rounded-2xl ring-1 ring-border">
+            <CardHeader>
+              <SeccionTitulo icon={MapPin}>Mapa del reclamo</SeccionTitulo>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <MapaSelector
+                lat={values.latitud}
+                lng={values.longitud}
+                onPick={fijarUbicacion}
+                altura={360}
+                className="mapa-columna-fill lg:!h-[380px] lg:!min-h-[320px]"
+              />
+              <div className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
+                {values.latitud !== null && values.longitud !== null
+                  ? `Lat ${values.latitud.toFixed(5)}, Lng ${values.longitud.toFixed(5)}`
+                  : "Tocá el mapa o usá tu ubicación para marcar el punto."}
+              </div>
+            </CardContent>
+          </Card>
+        </aside>
+      </div>
+
+      <Card className="rounded-2xl ring-1 ring-border">
+        <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+              <ShieldCheck className="size-4" />
+            </span>
+            <div>
+              <p className="font-semibold">Todo listo para enviar</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Revisá los datos. Tu información se usa únicamente para gestionar este reclamo.
               </p>
             </div>
           </div>
-        </div>
-
-        <div className="min-h-0 min-w-0 md:flex-[7_7_0%]">
-          <div className="flex h-full flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Ubicacion en el mapa</span>
-              <Button
-                type="button"
-                size="xs"
-                variant="secondary"
-                disabled={ubicando}
-                onClick={usarMiUbicacion}
-              >
-                {ubicando ? <Loader2 className="animate-spin" /> : <LocateFixed />}
-                Usar mi ubicacion
-              </Button>
-            </div>
-            <MapaSelector
-              lat={values.latitud}
-              lng={values.longitud}
-              onPick={fijarUbicacion}
-              altura={620}
-              className="mapa-columna-fill"
-            />
-            <p className="text-xs text-muted-foreground">
-              {values.latitud !== null && values.longitud !== null
-                ? `Lat ${values.latitud.toFixed(5)}, Lng ${values.longitud.toFixed(5)}`
-                : "Toca el mapa o usa tu ubicacion para marcar el punto."}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-4 mb-4 flex shrink-0 justify-end">
-        <Button type="submit" disabled={loading}>
-          {loading && <Loader2 className="animate-spin" />}
-          Enviar reclamo
-        </Button>
-      </div>
+          <Button
+            type="submit"
+            size="lg"
+            disabled={loading}
+            className="h-10 w-full gap-2 px-5 sm:w-auto"
+          >
+            {loading ? <Loader2 className="animate-spin" /> : <Plus className="size-4" />}
+            {loading ? "Procesando..." : "Enviar reclamo"}
+          </Button>
+        </CardContent>
+      </Card>
     </form>
   );
 }

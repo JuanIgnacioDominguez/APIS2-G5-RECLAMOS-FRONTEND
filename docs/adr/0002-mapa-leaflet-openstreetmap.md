@@ -31,7 +31,7 @@ exija tarjeta o facturación.
 - ➡️ Lo dejamos como mejora opcional: el código lee `VITE_JAWG_ACCESS_TOKEN` y,
   si está, usa Jawg; si no, cae a OSM. Sin token, funciona igual.
 
-### C. Leaflet + OpenStreetMap + Nominatim *(elegida)*
+### C. Leaflet + OpenStreetMap + Nominatim _(elegida)_
 
 - ✅ Todo gratis y sin API key: tiles de OSM, geocodificación con Nominatim.
 - ✅ `react-leaflet` se integra bien con React; `CircleMarker` evita el problema

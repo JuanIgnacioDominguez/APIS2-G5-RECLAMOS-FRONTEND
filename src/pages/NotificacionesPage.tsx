@@ -8,11 +8,7 @@ import { Card } from "@/components/ui/card";
 export function NotificacionesPage() {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
-      <PageHeader
-        icono={Bell}
-        titulo="Notificaciones"
-        descripcion="Avisos sobre el avance de tus reclamos."
-      />
+      <PageHeader titulo="Notificaciones" descripcion="Avisos sobre el avance de tus reclamos." />
       <Card>
         <EstadoVacio
           icono={Bell}

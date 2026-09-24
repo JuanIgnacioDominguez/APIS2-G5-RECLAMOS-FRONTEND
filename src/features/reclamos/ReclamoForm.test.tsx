@@ -37,8 +37,8 @@ describe("ReclamoForm", () => {
     const onSubmit = vi.fn();
     renderWithProviders(<ReclamoForm onSubmit={onSubmit} />);
 
-    await user.type(screen.getByLabelText(/titulo/i), TITULO);
-    await user.type(screen.getByLabelText(/descripcion/i), DESCRIPCION);
+    await user.type(screen.getByLabelText(/título/i), TITULO);
+    await user.type(screen.getByLabelText(/descripción/i), DESCRIPCION);
     await user.click(screen.getByRole("button", { name: /enviar reclamo/i }));
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
@@ -47,7 +47,15 @@ describe("ReclamoForm", () => {
     );
   });
 
-  it("muestra la sugerencia automatica y la aplica al formulario", async () => {
+  it("no ofrece controles exclusivos del operador", () => {
+    renderWithProviders(<ReclamoForm onSubmit={vi.fn()} />);
+
+    expect(screen.queryByText("Gestión del reclamo")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /aplicar cambio/i })).not.toBeInTheDocument();
+    expect(screen.queryByText("Trazabilidad")).not.toBeInTheDocument();
+  });
+
+  it("muestra la sugerencia automática y la aplica al formulario", async () => {
     const sugerencia: SugerenciaClasificacion = {
       categoria: CategoriaReclamo.ALUMBRADO,
       prioridad: PrioridadReclamo.ALTA,
@@ -58,18 +66,18 @@ describe("ReclamoForm", () => {
     vi.spyOn(reclamosApi, "sugerirClasificacion").mockResolvedValue(sugerencia);
 
     renderWithProviders(<ReclamoForm onSubmit={vi.fn()} />);
-    await user.type(screen.getByLabelText(/titulo/i), TITULO);
-    await user.type(screen.getByLabelText(/descripcion/i), DESCRIPCION);
+    await user.type(screen.getByLabelText(/título/i), TITULO);
+    await user.type(screen.getByLabelText(/descripción/i), DESCRIPCION);
 
     // La sugerencia aparece tras el debounce.
     expect(
-      await screen.findByText(/sugerencia automatica/i, {}, { timeout: 2000 }),
+      await screen.findByText(/sugerencia automática/i, {}, { timeout: 2000 }),
     ).toBeInTheDocument();
     expect(screen.getByText(/de confianza/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /^aplicar$/i }));
 
     // La categoria del select queda seteada al valor sugerido.
-    expect(screen.getByRole("combobox", { name: /categoria/i })).toHaveTextContent("Alumbrado");
+    expect(screen.getByRole("combobox", { name: /categoría/i })).toHaveTextContent("Alumbrado");
   });
 });

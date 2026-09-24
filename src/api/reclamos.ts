@@ -1,5 +1,7 @@
 /** Typed endpoints of the Reclamos module. Mirrors `app/api/v1/reclamos.py`. */
 
+import { ESTADOS_RESUELTOS } from "@/domain/enums";
+
 import { request } from "./client";
 import type {
   BusquedaSimilares,
@@ -21,6 +23,13 @@ import type {
 
 export function listarReclamos(filtro: FiltroReclamos = {}): Promise<Page<ReclamoResumen>> {
   return request<Page<ReclamoResumen>>("/reclamos", { query: { ...filtro } });
+}
+
+export async function contarResueltos(): Promise<number> {
+  const paginas = await Promise.all(
+    [...ESTADOS_RESUELTOS].map((estado) => listarReclamos({ estado, page: 1, size: 1 })),
+  );
+  return paginas.reduce((total, pagina) => total + pagina.total, 0);
 }
 
 export function obtenerReclamo(id: string): Promise<ReclamoDetalle> {

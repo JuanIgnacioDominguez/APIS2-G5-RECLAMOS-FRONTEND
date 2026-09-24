@@ -3,6 +3,7 @@ import {
   Bell,
   CircleHelp,
   Inbox,
+  LayoutDashboard,
   List,
   MapPin,
   Newspaper,
@@ -69,6 +70,7 @@ export function navModulo(rol: Rol): NavSection[] {
     {
       label: "Gestion",
       items: [
+        { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
         { label: "Bandeja", to: "/backoffice", icon: Inbox, contador: true },
         { label: "Todos los reclamos", to: "/reclamos", icon: List },
       ],
@@ -120,6 +122,7 @@ export function migasPara(pathname: string, staff: boolean, origen?: Miga): Miga
     return [padre, { label: idCorto(detalle[1]) }];
   }
   if (pathname === "/feed") return [{ label: "Reclamos de la ciudad" }];
+  if (pathname === "/dashboard") return [{ label: "Dashboard" }];
   if (pathname === "/backoffice") return [{ label: "Bandeja de reclamos" }];
   if (pathname === "/panel") return [{ label: "Panel de metricas" }];
   if (pathname === "/mapa") return [{ label: "Mapa de reclamos" }];

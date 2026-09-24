@@ -3,6 +3,7 @@ import { CircleMarker, MapContainer, TileLayer, useMap, useMapEvents } from "rea
 import "leaflet/dist/leaflet.css";
 
 import { CENTRO_DEFAULT } from "./coords";
+import { TILES } from "./tiles";
 
 /** Zoom level the map flies to once a location is set: close enough to place a pin precisely. */
 const ZOOM_UBICACION = 17;
@@ -66,14 +67,14 @@ export function MapaSelector({
         width: "100%",
         borderRadius: "0.75rem",
         border: "1px solid var(--border)",
-        boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+        boxShadow: "var(--popover-shadow)",
       }}
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        subdomains="abc"
-        maxZoom={19}
+        attribution={TILES.attribution}
+        url={TILES.url}
+        subdomains={TILES.subdomains}
+        maxZoom={TILES.maxZoom}
       />
       <ClickHandler onPick={onPick} />
       <Recenter lat={lat} lng={lng} />

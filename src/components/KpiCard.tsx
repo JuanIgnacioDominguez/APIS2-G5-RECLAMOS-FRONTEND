@@ -14,8 +14,9 @@ const TONO: Record<string, string> = {
 export type KpiTono = keyof typeof TONO;
 
 /**
- * A single dashboard KPI: label, value, an optional hint, and a tinted icon.
- * Built on the shadcn Card so it inherits the app's light/dark tokens.
+ * A single dashboard KPI: a tinted icon chip, the label, the value, and an
+ * optional hint. The color lives in the icon chip (not a decorative border),
+ * so the metric stays scannable and the panel reads as a professional tool.
  */
 export function KpiCard({
   label,
@@ -32,19 +33,22 @@ export function KpiCard({
 }) {
   const color = TONO[tono] ?? TONO.azul;
   return (
-    <Card
-      className="overflow-hidden transition-shadow hover:shadow-md"
-      style={{ boxShadow: `inset 0 2px 0 0 ${color}` }}
-    >
-      <CardContent className="flex items-center justify-between gap-3">
+    <Card className="transition-shadow hover:shadow-sm">
+      <CardContent className="flex items-center gap-3">
+        <div
+          aria-hidden
+          className="grid size-10 shrink-0 place-items-center rounded-lg"
+          style={{ backgroundColor: `color-mix(in oklab, ${color} 14%, transparent)`, color }}
+        >
+          <Icon className="size-5" />
+        </div>
         <div className="min-w-0">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
             {label}
           </p>
-          <p className="mt-1 text-2xl font-semibold leading-none tabular-nums">{value}</p>
+          <p className="mt-0.5 text-2xl font-semibold leading-none tabular-nums">{value}</p>
           {hint && <p className="mt-1.5 truncate text-xs text-muted-foreground">{hint}</p>}
         </div>
-        <Icon aria-hidden className="size-6 shrink-0" style={{ color }} />
       </CardContent>
     </Card>
   );

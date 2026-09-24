@@ -6,6 +6,7 @@ import { adherir, buscarSimilares, crearReclamo } from "@/api/reclamos";
 import type { ReclamoCrear, ReclamoSimilar } from "@/api/types";
 import { ReclamoForm } from "@/features/reclamos/ReclamoForm";
 import { ReclamosSimilaresDialog } from "@/features/reclamos/ReclamosSimilares";
+import { PageHeader } from "@/components/PageHeader";
 
 export function NuevoReclamoPage() {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ export function NuevoReclamoPage() {
     setLoading(true);
     try {
       const reclamo = await crearReclamo(datos);
-      toast.success("Reclamo creado", { description: "Ya podes seguir su estado." });
+      toast.success("Reclamo creado", { description: "Ya podés seguir su estado." });
       navigate(`/reclamos/${reclamo.id}`);
     } catch (err) {
       toast.error("No se pudo crear el reclamo", {
@@ -87,13 +88,11 @@ export function NuevoReclamoPage() {
   }
 
   return (
-    <div className="pantalla-sin-scroll flex flex-1 flex-col gap-4">
-      <div>
-        <h2 className="text-xl font-semibold">Nuevo reclamo</h2>
-        <p className="text-muted-foreground">
-          Si no elegis categoria y prioridad, las sugiere el clasificador automatico.
-        </p>
-      </div>
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-4">
+      <PageHeader
+        titulo="Nuevo reclamo"
+        descripcion="Contanos qué pasa y ayudanos a encontrarlo más rápido."
+      />
 
       <ReclamoForm onSubmit={handleSubmit} loading={loading} />
 

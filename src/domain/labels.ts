@@ -18,31 +18,37 @@ export const ESTADO_LABEL: Record<EstadoReclamo, string> = {
 };
 
 /**
- * CityPass+ brand color keys, hex values. Every badge/marker/legend in the app
- * reads from this single map (see `COLOR_HEX` below) so a color never drifts
- * between screens. Deliberately no gray: every state and priority, including
- * "Recibido" and "Baja", carries a real brand color, never a neutral one.
+ * Concrete status fills shared by DOM badges and canvas map markers. Text and
+ * badge foregrounds use the adjacent theme-aware token maps instead.
  */
-export const COLOR_HEX = {
-  azulUrbano: "#2563a6",
-  cian: "#0f9bc7",
-  violeta: "#7a5cc2",
-  azulNoche: "#142430",
-  ambar: "#d99838",
-  verdeUrbano: "#4f8a72",
-  rojoEmergencia: "#c83e4d",
-} as const;
-export type ColorKey = keyof typeof COLOR_HEX;
+export const ESTADO_HEX: Record<EstadoReclamo, string> = {
+  [EstadoReclamo.RECIBIDO]: "#2563eb", // bright blue: just arrived
+  [EstadoReclamo.EN_REVISION]: "#d9a406", // deep sunflower yellow: being triaged
+  [EstadoReclamo.ASIGNADO]: "#0891b2", // cyan: has an owner (kept apart from blue)
+  [EstadoReclamo.EN_PROCESO]: "#ea580c", // orange: work in progress
+  [EstadoReclamo.RESUELTO]: "#16a34a", // green: solved
+  [EstadoReclamo.RECHAZADO]: "#dc2626", // red: rejected
+  [EstadoReclamo.CERRADO]: "#64748b", // slate: closed / archived
+};
 
-/** Brand color key per state, for badges, map markers and legends. */
-export const ESTADO_COLOR: Record<EstadoReclamo, ColorKey> = {
-  [EstadoReclamo.RECIBIDO]: "cian",
-  [EstadoReclamo.EN_REVISION]: "violeta",
-  [EstadoReclamo.ASIGNADO]: "azulUrbano",
-  [EstadoReclamo.EN_PROCESO]: "ambar",
-  [EstadoReclamo.RESUELTO]: "verdeUrbano",
-  [EstadoReclamo.RECHAZADO]: "rojoEmergencia",
-  [EstadoReclamo.CERRADO]: "azulNoche",
+export const ESTADO_ON_COLOR: Record<EstadoReclamo, string> = {
+  [EstadoReclamo.RECIBIDO]: "var(--status-received-on)",
+  [EstadoReclamo.EN_REVISION]: "var(--status-review-on)",
+  [EstadoReclamo.ASIGNADO]: "var(--status-assigned-on)",
+  [EstadoReclamo.EN_PROCESO]: "var(--status-progress-on)",
+  [EstadoReclamo.RESUELTO]: "var(--status-resolved-on)",
+  [EstadoReclamo.RECHAZADO]: "var(--status-rejected-on)",
+  [EstadoReclamo.CERRADO]: "var(--status-closed-on)",
+};
+
+export const ESTADO_TEXT_COLOR: Record<EstadoReclamo, string> = {
+  [EstadoReclamo.RECIBIDO]: "var(--status-received-text)",
+  [EstadoReclamo.EN_REVISION]: "var(--status-review-text)",
+  [EstadoReclamo.ASIGNADO]: "var(--status-assigned-text)",
+  [EstadoReclamo.EN_PROCESO]: "var(--status-progress-text)",
+  [EstadoReclamo.RESUELTO]: "var(--status-resolved-text)",
+  [EstadoReclamo.RECHAZADO]: "var(--status-rejected-text)",
+  [EstadoReclamo.CERRADO]: "var(--status-closed-text)",
 };
 
 export const PRIORIDAD_LABEL: Record<PrioridadReclamo, string> = {
@@ -52,12 +58,12 @@ export const PRIORIDAD_LABEL: Record<PrioridadReclamo, string> = {
   [PrioridadReclamo.CRITICA]: "Critica",
 };
 
-/** Low to critical reads as a calm-to-urgent ramp: green, blue, amber, red. */
-export const PRIORIDAD_COLOR: Record<PrioridadReclamo, ColorKey> = {
-  [PrioridadReclamo.BAJA]: "verdeUrbano",
-  [PrioridadReclamo.MEDIA]: "azulUrbano",
-  [PrioridadReclamo.ALTA]: "ambar",
-  [PrioridadReclamo.CRITICA]: "rojoEmergencia",
+/** Theme-aware priority colors shared by labels, icons and charts. */
+export const PRIORIDAD_HEX: Record<PrioridadReclamo, string> = {
+  [PrioridadReclamo.BAJA]: "var(--priority-low)",
+  [PrioridadReclamo.MEDIA]: "var(--priority-medium)",
+  [PrioridadReclamo.ALTA]: "var(--priority-high)",
+  [PrioridadReclamo.CRITICA]: "var(--priority-critical)",
 };
 
 /**
@@ -76,6 +82,20 @@ export const AREA_SUGERIDA: Record<CategoriaReclamo, string> = {
   [CategoriaReclamo.ESPACIOS_PUBLICOS]: "Espacios Publicos",
   [CategoriaReclamo.SEGURIDAD]: "Seguridad Ciudadana",
   [CategoriaReclamo.OTROS]: "Mesa de Entradas",
+};
+
+/** Theme-aware category colors shared by labels, icons and charts. */
+export const CATEGORIA_HEX: Record<CategoriaReclamo, string> = {
+  [CategoriaReclamo.ALUMBRADO]: "var(--category-alumbrado)",
+  [CategoriaReclamo.BACHES]: "var(--category-baches)",
+  [CategoriaReclamo.RESIDUOS]: "var(--category-residuos)",
+  [CategoriaReclamo.ARBOLADO]: "var(--category-arbolado)",
+  [CategoriaReclamo.AGUA_CLOACAS]: "var(--category-agua)",
+  [CategoriaReclamo.TRANSITO]: "var(--category-transito)",
+  [CategoriaReclamo.RUIDOS]: "var(--category-ruidos)",
+  [CategoriaReclamo.ESPACIOS_PUBLICOS]: "var(--category-espacios)",
+  [CategoriaReclamo.SEGURIDAD]: "var(--category-seguridad)",
+  [CategoriaReclamo.OTROS]: "var(--category-otros)",
 };
 
 export const CATEGORIA_LABEL: Record<CategoriaReclamo, string> = {

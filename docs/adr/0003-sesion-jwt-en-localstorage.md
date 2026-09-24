@@ -30,7 +30,7 @@ que eso necesita.
   la Entrega 1.
 - ❌ Complica el envío del token a nuestra API si los dominios no coinciden.
 
-### C. `localStorage` *(elegida)*
+### C. `localStorage` _(elegida)_
 
 - ✅ Sobrevive al F5 y es trivial de leer para poner el header.
 - ✅ No depende de nada del backend de auth: lo maneja el frontend solo.

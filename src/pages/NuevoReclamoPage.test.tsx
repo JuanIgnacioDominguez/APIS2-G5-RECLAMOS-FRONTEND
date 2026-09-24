@@ -41,9 +41,9 @@ function renderNuevo() {
 }
 
 async function completarYEnviar(user: ReturnType<typeof userEvent.setup>) {
-  await user.type(screen.getByLabelText(/titulo/i), "Bache profundo");
+  await user.type(screen.getByLabelText(/título/i), "Bache profundo");
   await user.type(
-    screen.getByLabelText(/descripcion/i),
+    screen.getByLabelText(/descripción/i),
     "Hay un bache peligroso hace varios dias.",
   );
   await user.click(screen.getByRole("button", { name: /enviar reclamo/i }));

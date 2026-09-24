@@ -6,9 +6,11 @@ import { renderWithProviders } from "@/test/render";
 import { CategoriaBadge, EstadoBadge, IaBadge, PrioridadBadge } from "./EstadoBadges";
 
 describe("badges de reclamo", () => {
-  it("muestra la etiqueta del estado", () => {
+  it("muestra la etiqueta del estado con el contraste del tema", () => {
     renderWithProviders(<EstadoBadge estado={EstadoReclamo.EN_PROCESO} />);
-    expect(screen.getByText("En proceso")).toBeInTheDocument();
+    const badge = screen.getByText("En proceso");
+    expect(badge.style.color).toBe("var(--status-progress-on)");
+    expect(badge.style.textShadow).toBe("var(--status-shadow)");
   });
 
   it("muestra la etiqueta de la prioridad", () => {

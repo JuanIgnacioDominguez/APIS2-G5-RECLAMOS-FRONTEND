@@ -22,23 +22,40 @@ function leerPreferencia(): Tema | null {
  * one the team uses, so we never follow the OS preference: dark mode is strictly
  * opt-in and only applies when the user chose it explicitly (stored value).
  */
-export function aplicarTemaInicial(): void {
-  const tema: Tema = leerPreferencia() ?? "light";
+function aplicarDom(tema: Tema): void {
   document.documentElement.classList.toggle("dark", tema === "dark");
+  document.documentElement.style.colorScheme = tema;
+}
+
+export function aplicarTemaInicial(): void {
+  aplicarDom(leerPreferencia() ?? "light");
 }
 
 export function temaActual(): Tema {
   return document.documentElement.classList.contains("dark") ? "dark" : "light";
 }
 
-/** Flip the theme, persist it, and return the new value. */
-export function alternarTema(): Tema {
-  const nuevo: Tema = temaActual() === "dark" ? "light" : "dark";
-  document.documentElement.classList.toggle("dark", nuevo === "dark");
+export function establecerTema(tema: Tema): Tema {
+  aplicarDom(tema);
   try {
-    localStorage.setItem(STORAGE_KEY, nuevo);
+    localStorage.setItem(STORAGE_KEY, tema);
   } catch {
     // storage unavailable: theme stays for this session only
   }
-  return nuevo;
+  return tema;
+}
+
+/** Flip the theme, persist it, and return the new value. */
+export function alternarTema(): Tema {
+  return establecerTema(temaActual() === "dark" ? "light" : "dark");
+}
+
+export function suscribirTema(onStoreChange: () => void): () => void {
+  const observer = new MutationObserver(onStoreChange);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  return () => observer.disconnect();
+}
+
+export function temaServidor(): Tema {
+  return "light";
 }

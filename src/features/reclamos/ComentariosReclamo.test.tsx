@@ -43,7 +43,7 @@ describe("ComentariosReclamo", () => {
     renderWithProviders(
       <ComentariosReclamo reclamoId="r1" comentarios={[]} onComentado={vi.fn()} />,
     );
-    expect(screen.getByText(/todavia no hay comentarios/i)).toBeInTheDocument();
+    expect(screen.getByText(/todavía no hay comentarios/i)).toBeInTheDocument();
   });
 
   it("envia un comentario y avisa al padre", async () => {

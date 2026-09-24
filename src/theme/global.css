@@ -3,21 +3,66 @@
 /* Leaflet popups picked up to match the app's card language. */
 .leaflet-popup-content-wrapper {
   border-radius: var(--radius-lg);
-  box-shadow: 0 8px 24px rgba(20, 36, 48, 0.09);
+  box-shadow: var(--popover-shadow);
 }
 .leaflet-popup-content {
   font-family: var(--font-sans);
   font-size: 0.875rem;
 }
 
+.dark .leaflet-container {
+  background: var(--muted);
+}
+
+.dark .leaflet-popup-content-wrapper {
+  border: 1px solid var(--border);
+  background: var(--popover);
+  color: var(--popover-foreground);
+}
+
+.dark .leaflet-popup-tip {
+  background: var(--popover);
+}
+
+.dark .leaflet-bar {
+  border-color: var(--border);
+  box-shadow: var(--popover-shadow);
+}
+
+.dark .leaflet-bar a {
+  border-bottom-color: var(--border);
+  background: var(--popover);
+  color: var(--foreground);
+}
+
+.dark .leaflet-bar a:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.dark .leaflet-control-attribution {
+  background: var(--popover);
+  color: var(--muted-foreground);
+}
+
+.dark .leaflet-control-attribution a {
+  color: var(--primary);
+}
+
+.dark .leaflet-control-scale-line {
+  border-color: var(--border);
+  background: var(--popover);
+  color: var(--foreground);
+}
+
 /*
- * Free OpenStreetMap tiles are correct but visually loud. A light grade -
- * desaturated, brightened, softer contrast, a touch cooler - turns the raw
- * basemap into a calm designed surface. Only the raster tiles are graded;
- * markers, popups and controls live in other panes and stay crisp.
+ * Contain Leaflet's own stacking. Leaflet gives its panes and controls high
+ * z-indexes (controls reach 1000); without a stacking context on the map, those
+ * bubble up to the page root and can paint over modals/dialogs (e.g. the search
+ * spotlight opened from the header). Isolating each map keeps them inside it.
  */
-.mapa-suave .leaflet-tile {
-  filter: saturate(0.8) brightness(1.05) contrast(0.92) hue-rotate(-4deg);
+.mapa-suave {
+  isolation: isolate;
 }
 
 /*
@@ -28,21 +73,6 @@
 .mapa-columna-fill {
   flex: 1 1 auto;
   min-height: 360px;
-}
-
-/*
- * Nuevo reclamo: on desktop (from `md`, where the form and the map sit side
- * by side) bounds the page to the visible viewport so the submit button is
- * always in view without scrolling. Values mirror AppLayout's header height
- * (64px) and padding prop ({ base: "md", sm: 40 }, applied top and bottom).
- * Below `md` the form stacks in one column and stays a normal, scrollable
- * page - clamping its height there would cramp the fields and the map.
- */
-@media (min-width: 62em) {
-  .pantalla-sin-scroll {
-    height: calc(100dvh - 64px - 80px);
-    min-height: 0;
-  }
 }
 
 /* Soft pulsing halo behind the picked-location pin (MapaSelector). */

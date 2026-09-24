@@ -1,28 +1,45 @@
 import { useMemo, useState } from "react";
-import { ArrowUpDown, Loader2, Newspaper, WifiOff } from "lucide-react";
+import {
+  Clock,
+  History,
+  LayoutGrid,
+  Loader2,
+  MapPin,
+  MapPinned,
+  Newspaper,
+  ThumbsUp,
+  WifiOff,
+  type LucideIcon,
+} from "lucide-react";
 
 import { listarReclamos } from "@/api/reclamos";
+import { useAuth } from "@/auth/AuthContext";
+import { Rol } from "@/auth/roles";
 import type { CategoriaReclamo, EstadoReclamo } from "@/domain/enums";
-import { opcionesCategoria, opcionesEstado } from "@/domain/labels";
+import { CATEGORIA_HEX, ESTADO_HEX, opcionesCategoria, opcionesEstado } from "@/domain/labels";
 import { useAsync } from "@/hooks/useAsync";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ICONO_CATEGORIA, ICONO_ESTADO } from "@/features/reclamos/iconos";
 import { ReclamoCard } from "@/features/reclamos/ReclamoCard";
 import { barriosDisponibles, filtrarFeed, type OrdenFeed } from "@/features/reclamos/feed";
 
 const TODAS = "todas";
 
-const OPCIONES_ORDEN: { value: OrdenFeed; label: string }[] = [
-  { value: "recientes", label: "Mas recientes" },
-  { value: "antiguos", label: "Mas antiguos" },
-  { value: "adhesiones", label: "Mas apoyados" },
+const OPCIONES_ORDEN: { value: OrdenFeed; label: string; icon: LucideIcon }[] = [
+  { value: "recientes", label: "Mas recientes", icon: Clock },
+  { value: "antiguos", label: "Mas antiguos", icon: History },
+  { value: "adhesiones", label: "Mas apoyados", icon: ThumbsUp },
 ];
 
 /**
@@ -32,6 +49,7 @@ const OPCIONES_ORDEN: { value: OrdenFeed; label: string }[] = [
  * links to the claim's detail.
  */
 export function FeedPublicoPage() {
+  const { usuario } = useAuth();
   const [categoria, setCategoria] = useState<CategoriaReclamo | null>(null);
   const [barrio, setBarrio] = useState<string | null>(null);
   const [estado, setEstado] = useState<EstadoReclamo | null>(null);
@@ -42,6 +60,18 @@ export function FeedPublicoPage() {
     [orden],
   );
   const items = useMemo(() => data?.items ?? [], [data]);
+
+  // Ids of the logged-in citizen's own claims, so the feed can flag which of
+  // the city's claims are theirs ("Tuyo") vs a neighbour's ("De un vecino").
+  const esCiudadano = usuario?.rol === Rol.CIUDADANO;
+  const { data: mios } = useAsync(
+    () =>
+      esCiudadano && usuario
+        ? listarReclamos({ ciudadano_id: usuario.id, size: 100 })
+        : Promise.resolve(null),
+    [esCiudadano, usuario?.id],
+  );
+  const misIds = useMemo(() => new Set((mios?.items ?? []).map((r) => r.id)), [mios]);
   const barrios = useMemo(() => barriosDisponibles(items), [items]);
   const visibles = useMemo(
     () => filtrarFeed(items, { categoria, barrio, estado, orden }),
@@ -51,7 +81,6 @@ export function FeedPublicoPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
-        <Newspaper className="size-7 shrink-0 text-primary" />
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Reclamos de la ciudad</h1>
           <p className="text-sm text-muted-foreground">
@@ -60,22 +89,40 @@ export function FeedPublicoPage() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-card p-4 shadow-xs ring-1 ring-foreground/10">
         <div className="flex flex-wrap items-center gap-2">
           <Select
             value={categoria ?? TODAS}
             onValueChange={(v) => setCategoria(v === TODAS ? null : (v as CategoriaReclamo))}
           >
-            <SelectTrigger className="w-[190px]" aria-label="Filtrar por categoria">
+            <SelectTrigger className="w-[200px]" aria-label="Filtrar por categoria">
               <SelectValue placeholder="Todas las categorias" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={TODAS}>Todas las categorias</SelectItem>
-              {opcionesCategoria().map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
+              <SelectGroup>
+                <SelectLabel>Categoria</SelectLabel>
+                <SelectItem value={TODAS}>
+                  <span className="flex items-center gap-2">
+                    <LayoutGrid className="size-4 text-muted-foreground" />
+                    Todas las categorias
+                  </span>
                 </SelectItem>
-              ))}
+                <SelectSeparator />
+                {opcionesCategoria().map((o) => {
+                  const Icono = ICONO_CATEGORIA[o.value as CategoriaReclamo];
+                  return (
+                    <SelectItem key={o.value} value={o.value}>
+                      <span className="flex items-center gap-2">
+                        <Icono
+                          className="size-4"
+                          style={{ color: CATEGORIA_HEX[o.value as CategoriaReclamo] }}
+                        />
+                        {o.label}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
+              </SelectGroup>
             </SelectContent>
           </Select>
 
@@ -84,12 +131,24 @@ export function FeedPublicoPage() {
               <SelectValue placeholder="Todos los barrios" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={TODAS}>Todos los barrios</SelectItem>
-              {barrios.map((b) => (
-                <SelectItem key={b} value={b}>
-                  {b}
+              <SelectGroup>
+                <SelectLabel>Barrio</SelectLabel>
+                <SelectItem value={TODAS}>
+                  <span className="flex items-center gap-2">
+                    <MapPinned className="size-4 text-muted-foreground" />
+                    Todos los barrios
+                  </span>
                 </SelectItem>
-              ))}
+                <SelectSeparator />
+                {barrios.map((b) => (
+                  <SelectItem key={b} value={b}>
+                    <span className="flex items-center gap-2">
+                      <MapPin className="size-4 text-muted-foreground" />
+                      {b}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
 
@@ -97,16 +156,35 @@ export function FeedPublicoPage() {
             value={estado ?? TODAS}
             onValueChange={(v) => setEstado(v === TODAS ? null : (v as EstadoReclamo))}
           >
-            <SelectTrigger className="w-[180px]" aria-label="Filtrar por estado">
+            <SelectTrigger className="w-[190px]" aria-label="Filtrar por estado">
               <SelectValue placeholder="Todos los estados" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={TODAS}>Todos los estados</SelectItem>
-              {opcionesEstado().map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
+              <SelectGroup>
+                <SelectLabel>Estado</SelectLabel>
+                <SelectItem value={TODAS}>
+                  <span className="flex items-center gap-2">
+                    <LayoutGrid className="size-4 text-muted-foreground" />
+                    Todos los estados
+                  </span>
                 </SelectItem>
-              ))}
+                <SelectSeparator />
+                {opcionesEstado().map((o) => {
+                  const Icono = ICONO_ESTADO[o.value as EstadoReclamo];
+                  return (
+                    <SelectItem key={o.value} value={o.value}>
+                      <span className="flex items-center gap-2">
+                        <span
+                          className="size-2 shrink-0 rounded-full"
+                          style={{ backgroundColor: ESTADO_HEX[o.value as EstadoReclamo] }}
+                        />
+                        <Icono className="size-4 text-muted-foreground" />
+                        {o.label}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
+              </SelectGroup>
             </SelectContent>
           </Select>
         </div>
@@ -116,15 +194,23 @@ export function FeedPublicoPage() {
           </Badge>
           <Select value={orden} onValueChange={(v) => setOrden(v as OrdenFeed)}>
             <SelectTrigger className="w-[170px]" aria-label="Ordenar por">
-              <ArrowUpDown className="size-3.5 text-muted-foreground" />
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {OPCIONES_ORDEN.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))}
+              <SelectGroup>
+                <SelectLabel>Ordenar por</SelectLabel>
+                {OPCIONES_ORDEN.map((o) => {
+                  const Icono = o.icon;
+                  return (
+                    <SelectItem key={o.value} value={o.value}>
+                      <span className="flex items-center gap-2">
+                        <Icono className="size-4 text-muted-foreground" />
+                        {o.label}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
+              </SelectGroup>
             </SelectContent>
           </Select>
         </div>
@@ -166,7 +252,8 @@ export function FeedPublicoPage() {
             <ReclamoCard
               key={reclamo.id}
               reclamo={reclamo}
-              origen={{ label: "Reclamos de la ciudad", to: "/feed" }}
+              autoria={esCiudadano ? (misIds.has(reclamo.id) ? "mio" : "ciudad") : undefined}
+              origen={esCiudadano ? { label: "Reclamos de la ciudad", to: "/feed" } : undefined}
             />
           ))}
         </div>

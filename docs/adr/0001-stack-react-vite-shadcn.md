@@ -26,7 +26,7 @@ detrás de login.
   (server components, límites cliente/servidor) que no necesitamos.
 - ❌ Más superficie para que 5 personas nuevas en el stack se traben.
 
-#### B. Vite + React + React Router *(elegida)*
+#### B. Vite + React + React Router _(elegida)_
 
 - ✅ Dev server instantáneo, build simple, sólo lo que usamos.
 - ✅ React Router alcanza de sobra para las ~8 rutas del módulo.
@@ -34,13 +34,13 @@ detrás de login.
 
 ### Librería de UI
 
-#### C. Mantine 7 *(elegida al inicio, luego reemplazada)*
+#### C. Mantine 7 _(elegida al inicio, luego reemplazada)_
 
 - ✅ Componentes completos con theming; arrancamos rápido en Sprint 0.
 - ❌ Look "de librería" difícil de alinear con el design system del equipo.
 - ❌ Menos control fino sobre estados, animaciones y modo oscuro.
 
-#### D. shadcn/ui (Radix + Tailwind CSS) *(elegida ahora)*
+#### D. shadcn/ui (Radix + Tailwind CSS) _(elegida ahora)_
 
 - ✅ Los componentes se copian al repo (`components/ui/`): son nuestros, se
   editan sin pelear con la librería.

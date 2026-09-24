@@ -24,10 +24,10 @@ export function PosiblesDuplicados({ reclamoId }: { reclamoId: string }) {
   if (similares.length === 0) return null;
 
   return (
-    <Card className="border-amber-500/30 sm:col-span-2 lg:col-span-4">
+    <Card className="border-warning/30 sm:col-span-2 lg:col-span-4">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <Copy className="size-4 text-amber-600" />
+          <Copy className="size-4 text-warning" />
           Posibles duplicados
         </CardTitle>
       </CardHeader>

@@ -1,11 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { EstadoReclamo } from "@/domain/enums";
+
 import * as client from "./client";
 import {
   adherir,
   bandeja,
   cambiarEstado,
   comentar,
+  contarResueltos,
   crearReclamo,
   historial,
   listarComentarios,
@@ -27,6 +30,20 @@ describe("endpoints de reclamos", () => {
     listarReclamos({ estado: "RECIBIDO", page: 2 } as never);
     expect(requestSpy).toHaveBeenCalledWith("/reclamos", {
       query: { estado: "RECIBIDO", page: 2 },
+    });
+  });
+
+  it("suma los totales de resueltos y cerrados", async () => {
+    requestSpy
+      .mockResolvedValueOnce({ total: 3 } as never)
+      .mockResolvedValueOnce({ total: 4 } as never);
+
+    await expect(contarResueltos()).resolves.toBe(7);
+    expect(requestSpy).toHaveBeenNthCalledWith(1, "/reclamos", {
+      query: { estado: EstadoReclamo.RESUELTO, page: 1, size: 1 },
+    });
+    expect(requestSpy).toHaveBeenNthCalledWith(2, "/reclamos", {
+      query: { estado: EstadoReclamo.CERRADO, page: 1, size: 1 },
     });
   });
 

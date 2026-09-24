@@ -6,8 +6,9 @@ import { Route, Routes } from "react-router-dom";
 import * as reclamosApi from "@/api/reclamos";
 import type { Page, ReclamoResumen } from "@/api/types";
 import { CategoriaReclamo, EstadoReclamo, PrioridadReclamo } from "@/domain/enums";
+import type { Usuario } from "@/auth/users";
 import { renderWithProviders } from "@/test/render";
-import { CIUDADANO } from "@/test/usuarios";
+import { CIUDADANO, OPERADOR } from "@/test/usuarios";
 import { AppLayout } from "./AppLayout";
 
 function reclamo(id: string, titulo: string): ReclamoResumen {
@@ -29,21 +30,28 @@ function page(items: ReclamoResumen[]): Page<ReclamoResumen> {
   return { items, total: items.length, page: 1, size: 6 };
 }
 
-function renderLayout(ruta = "/reclamos") {
+function renderLayout(ruta = "/reclamos", usuario: Usuario = CIUDADANO) {
   return renderWithProviders(
     <Routes>
       <Route element={<AppLayout />}>
+        <Route path="/dashboard" element={<div>contenido del dashboard</div>} />
         <Route path="/reclamos" element={<div>contenido de reclamos</div>} />
+        <Route path="/reclamos/nuevo" element={<div>formulario de reclamo</div>} />
         <Route path="/reclamos/:id" element={<div>detalle del reclamo</div>} />
+        <Route path="/mapa" element={<div>mapa de reclamos</div>} />
       </Route>
     </Routes>,
-    { route: ruta, usuario: CIUDADANO },
+    { route: ruta, usuario },
   );
+}
+
+function mainDeContenido(container: HTMLElement): HTMLElement {
+  return container.querySelector<HTMLElement>('[data-slot="sidebar-inset"] > main')!;
 }
 
 async function abrirBusqueda(): Promise<HTMLElement> {
   await userEvent.click(screen.getByRole("button", { name: /buscar reclamos/i }));
-  return screen.findByPlaceholderText(/buscar reclamos por titulo/i);
+  return screen.findByPlaceholderText(/buscar reclamos o ir a una pagina/i);
 }
 
 describe("AppLayout", () => {
@@ -61,10 +69,35 @@ describe("AppLayout", () => {
     expect(nav.queryByRole("link", { name: /movilidad/i })).not.toBeInTheDocument();
   });
 
+  it("muestra Dashboard en el menu del operador", () => {
+    vi.spyOn(reclamosApi, "bandeja").mockResolvedValue({ items: [], total: 0, page: 1, size: 20 });
+    const { container } = renderLayout("/dashboard", OPERADOR);
+    const nav = within(container.querySelector<HTMLElement>('[data-slot="sidebar-content"]')!);
+
+    expect(nav.getByRole("link", { name: /dashboard/i })).toBeInTheDocument();
+    expect(nav.getByRole("link", { name: /bandeja/i })).toBeInTheDocument();
+    expect(nav.queryByRole("link", { name: /panel/i })).not.toBeInTheDocument();
+  });
+
   it("renderiza el contenido de la ruta hija y el acceso a la busqueda", () => {
     renderLayout();
     expect(screen.getByText("contenido de reclamos")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /buscar reclamos/i })).toBeInTheDocument();
+  });
+
+  it("iguala el ancho y padding de las paginas, excepto el mapa", () => {
+    const pagina = renderLayout("/reclamos/nuevo");
+    const mainPagina = mainDeContenido(pagina.container);
+
+    expect(mainPagina).toHaveClass("p-4", "sm:p-6");
+    expect(mainPagina.firstElementChild).toHaveClass("mx-auto", "w-full", "max-w-7xl");
+    pagina.unmount();
+
+    const mapa = renderLayout("/mapa");
+    const mainMapa = mainDeContenido(mapa.container);
+
+    expect(mainMapa).toHaveClass("p-0");
+    expect(mainMapa.querySelector(".max-w-7xl")).not.toBeInTheDocument();
   });
 
   it("muestra el usuario autenticado y su rol", () => {

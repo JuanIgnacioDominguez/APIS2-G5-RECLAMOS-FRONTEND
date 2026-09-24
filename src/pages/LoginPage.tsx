@@ -3,6 +3,7 @@ import { AlertTriangle, Info, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
+import { ApiError } from "@/api/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +52,7 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
   const [cargando, setCargando] = useState(false);
   const [errorLogin, setErrorLogin] = useState<string | null>(null);
+  const [credencialesIncorrectas, setCredencialesIncorrectas] = useState(false);
   const [sesionVencida, setSesionVencida] = useState(false);
 
   // Show a notice when we landed here because a 401 expired the session.
@@ -68,12 +70,20 @@ export function LoginPage() {
   async function ingresar(usuarioVal: string, passwordVal: string) {
     setCargando(true);
     setErrorLogin(null);
+    setCredencialesIncorrectas(false);
     setSesionVencida(false);
     try {
       const u = await login(usuarioVal, passwordVal);
       navigate(homePorRol(u.rol));
     } catch (err) {
-      setErrorLogin(err instanceof Error ? err.message : "No se pudo iniciar sesion");
+      const mensaje = err instanceof Error ? err.message : "No se pudo iniciar sesion";
+      setErrorLogin(mensaje);
+      if (err instanceof ApiError && err.status === 401) {
+        setCredencialesIncorrectas(true);
+        toast.error("Datos incorrectos", {
+          description: "Verificá tu usuario y contraseña e intentá nuevamente.",
+        });
+      }
     } finally {
       setCargando(false);
     }
@@ -90,7 +100,7 @@ export function LoginPage() {
 
   return (
     <div className="flex min-h-screen">
-      <div className="flex-1 bg-white">
+      <div className="flex-1 bg-background">
         <div className="flex h-full items-center justify-center p-8">
           <div className="flex w-full max-w-[380px] flex-col gap-6">
             <div className="flex flex-col gap-1.5">
@@ -129,8 +139,12 @@ export function LoginPage() {
                     id="usuario"
                     placeholder="vecino1"
                     autoComplete="username"
+                    aria-invalid={credencialesIncorrectas}
                     value={usuario}
-                    onChange={(e) => setUsuario(e.target.value)}
+                    onChange={(e) => {
+                      setUsuario(e.target.value);
+                      setCredencialesIncorrectas(false);
+                    }}
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -142,8 +156,12 @@ export function LoginPage() {
                     type="password"
                     placeholder="Tu contrasena"
                     autoComplete="current-password"
+                    aria-invalid={credencialesIncorrectas}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setCredencialesIncorrectas(false);
+                    }}
                   />
                 </div>
                 <Button type="submit" disabled={cargando} className="mt-1 w-full">

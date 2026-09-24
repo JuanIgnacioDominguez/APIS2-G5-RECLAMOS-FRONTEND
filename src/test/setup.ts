@@ -3,12 +3,15 @@ import { createElement, type ReactNode } from "react";
 import { afterEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 
+import { limpiarCacheAsync } from "@/hooks/useAsync";
+
 // Leaflet needs a real DOM (element sizing, canvas) that jsdom lacks, so we
 // stub react-leaflet to plain containers. The map's logic is tested apart.
 vi.mock("react-leaflet", () => ({
   MapContainer: ({ children }: { children?: ReactNode }) =>
     createElement("div", { "data-testid": "mapa" }, children),
   TileLayer: () => null,
+  ZoomControl: () => null,
   CircleMarker: ({ children }: { children?: ReactNode }) => createElement("div", null, children),
   Popup: ({ children }: { children?: ReactNode }) => createElement("div", null, children),
   useMap: () => ({
@@ -56,4 +59,5 @@ window.HTMLElement.prototype.releasePointerCapture = vi.fn();
 afterEach(() => {
   cleanup();
   localStorage.clear();
+  limpiarCacheAsync();
 });

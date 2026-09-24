@@ -1,13 +1,16 @@
 import { useEffect } from "react";
-import { CircleMarker, MapContainer, Popup, TileLayer, useMap } from "react-leaflet";
+import { Link } from "react-router-dom";
+import { ArrowUpRight } from "lucide-react";
+import { CircleMarker, MapContainer, Popup, TileLayer, ZoomControl, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
-import { CATEGORIA_LABEL, COLOR_HEX, ESTADO_COLOR, ESTADO_LABEL } from "@/domain/labels";
+import { CATEGORIA_LABEL, ESTADO_HEX, ESTADO_LABEL } from "@/domain/labels";
+import { CategoriaIcono } from "@/features/reclamos/EstadoBadges";
 import { CENTRO_DEFAULT, type ReclamoUbicado } from "./coords";
+import { TILES } from "./tiles";
 
-/** Highlight color for the current user's own claims (gold ring). */
-const MIO_ANILLO = "#e6b566";
-const MIO_RELLENO = "#2563a6";
+/** Bright-green ring around the current user's own claims. */
+const MIO_ANILLO = "#22c55e";
 
 /**
  * Recomputes the map size after mount and frames the view. Without invalidateSize
@@ -19,20 +22,25 @@ const MIO_RELLENO = "#2563a6";
 function AjustarVista({ reclamos }: { reclamos: ReclamoUbicado[] }) {
   const map = useMap();
   useEffect(() => {
-    const t = setTimeout(() => {
-      map.invalidateSize();
+    const initialFrame = requestAnimationFrame(() => {
+      map.invalidateSize({ pan: false });
       if (reclamos.length > 0) {
         const puntos = reclamos.map((r) => [r.latitud, r.longitud] as [number, number]);
-        map.fitBounds(puntos, { padding: [48, 48], maxZoom: 15 });
+        map.fitBounds(puntos, { padding: [48, 48], maxZoom: 15, animate: false });
       }
-    }, 150);
-    // Re-invalidate whenever the container resizes (e.g. the sidebar collapses),
-    // otherwise Leaflet leaves a strip of tiles unloaded on the widened side.
-    const obs = new ResizeObserver(() => map.invalidateSize());
-    obs.observe(map.getContainer());
+    });
+
+    let resizeFrame = 0;
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(resizeFrame);
+      resizeFrame = requestAnimationFrame(() => map.invalidateSize({ pan: false }));
+    });
+    observer.observe(map.getContainer());
+
     return () => {
-      clearTimeout(t);
-      obs.disconnect();
+      cancelAnimationFrame(initialFrame);
+      cancelAnimationFrame(resizeFrame);
+      observer.disconnect();
     };
   }, [map, reclamos]);
   return null;
@@ -47,9 +55,13 @@ function AjustarVista({ reclamos }: { reclamos: ReclamoUbicado[] }) {
 export function MapaReclamos({
   reclamos,
   misIds,
+  fill = false,
 }: {
   reclamos: ReclamoUbicado[];
   misIds?: Set<string>;
+  /** Fill the parent (height 100%, no rounded corners) instead of the default
+   * boxed 540px map. Used by the full-bleed map page. */
+  fill?: boolean;
 }) {
   return (
     <MapContainer
@@ -57,14 +69,22 @@ export function MapaReclamos({
       center={CENTRO_DEFAULT}
       zoom={13}
       scrollWheelZoom
-      style={{ height: 540, width: "100%", borderRadius: "0.75rem" }}
+      zoomControl={false}
+      preferCanvas
+      style={
+        fill
+          ? { height: "100%", width: "100%" }
+          : { height: 540, width: "100%", borderRadius: "0.75rem" }
+      }
     >
       <AjustarVista reclamos={reclamos} />
+      <ZoomControl position="topright" />
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        subdomains="abc"
-        maxZoom={19}
+        attribution={TILES.attribution}
+        url={TILES.url}
+        subdomains={TILES.subdomains}
+        maxZoom={TILES.maxZoom}
+        keepBuffer={1}
       />
       {reclamos.map((r) => {
         const mio = misIds?.has(r.id) ?? false;
@@ -72,24 +92,47 @@ export function MapaReclamos({
           <CircleMarker
             key={r.id}
             center={[r.latitud, r.longitud]}
-            radius={mio ? 11 : 8}
+            radius={mio ? 12 : 9}
             pathOptions={{
               color: mio ? MIO_ANILLO : "#ffffff",
-              weight: mio ? 3.5 : 2,
-              fillColor: mio ? MIO_RELLENO : (COLOR_HEX[ESTADO_COLOR[r.estado]] ?? "#2563a6"),
+              weight: mio ? 3 : 2.5,
+              fillColor: ESTADO_HEX[r.estado] ?? "#2563a6",
               fillOpacity: 1,
             }}
           >
             <Popup>
-              {mio && (
-                <>
-                  <strong style={{ color: MIO_RELLENO }}>Tu reclamo</strong>
-                  <br />
-                </>
-              )}
-              <strong>{r.titulo}</strong>
-              <br />
-              {CATEGORIA_LABEL[r.categoria]} · {ESTADO_LABEL[r.estado]}
+              <div className="flex min-w-[12rem] flex-col gap-1.5">
+                {mio && (
+                  <span
+                    className="text-[11px] font-semibold uppercase tracking-wide"
+                    style={{ color: MIO_ANILLO }}
+                  >
+                    Tu reclamo
+                  </span>
+                )}
+                <strong className="text-sm leading-snug">{r.titulo}</strong>
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                  <span className="inline-flex items-center gap-1">
+                    <CategoriaIcono categoria={r.categoria} className="size-3.5" />
+                    {CATEGORIA_LABEL[r.categoria]}
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <span
+                      className="size-2 rounded-full"
+                      style={{ backgroundColor: ESTADO_HEX[r.estado] ?? "#2563a6" }}
+                    />
+                    {ESTADO_LABEL[r.estado]}
+                  </span>
+                </div>
+                <Link
+                  to={`/reclamos/${r.id}`}
+                  state={{ origen: { label: "Mapa de reclamos", to: "/mapa" } }}
+                  className="mt-0.5 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                >
+                  Ver detalle
+                  <ArrowUpRight className="size-3.5" />
+                </Link>
+              </div>
             </Popup>
           </CircleMarker>
         );

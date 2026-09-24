@@ -11,8 +11,8 @@ describe("navegacion del modulo de reclamos", () => {
   it("el menu cambia por rol", () => {
     expect(rutas(Rol.CIUDADANO)).toEqual(["/reclamos", "/feed", "/mapa"]);
     // Staff no ven "/feed": ya ven todos los reclamos en "Todos los reclamos".
-    expect(rutas(Rol.OPERADOR)).toEqual(["/backoffice", "/reclamos", "/mapa"]);
-    expect(rutas(Rol.ADMIN)).toEqual(["/backoffice", "/reclamos", "/panel", "/mapa"]);
+    expect(rutas(Rol.OPERADOR)).toEqual(["/dashboard", "/backoffice", "/reclamos", "/mapa"]);
+    expect(rutas(Rol.ADMIN)).toEqual(["/dashboard", "/backoffice", "/reclamos", "/panel", "/mapa"]);
   });
 
   it("solo la Bandeja pide contador en vivo", () => {
@@ -45,6 +45,7 @@ describe("navegacion del modulo de reclamos", () => {
       { label: "#abcd1234" },
     ]);
     expect(migasPara("/feed", false)).toEqual([{ label: "Reclamos de la ciudad" }]);
+    expect(migasPara("/dashboard", true)).toEqual([{ label: "Dashboard" }]);
     expect(migasPara("/backoffice", true)).toEqual([{ label: "Bandeja de reclamos" }]);
     expect(migasPara("/panel", true)).toEqual([{ label: "Panel de metricas" }]);
     expect(migasPara("/mapa", false)).toEqual([{ label: "Mapa de reclamos" }]);
