@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useDebouncedValue } from "@mantine/hooks";
 
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { listarReclamos } from "@/api/reclamos";
 import type { ReclamoResumen } from "@/api/types";
 
@@ -13,7 +13,7 @@ const LIMITE_RESULTADOS = 6;
  * Queries under the minimum length never hit the network.
  */
 export function useBusquedaReclamos(texto: string) {
-  const [textoD] = useDebouncedValue(texto.trim(), 300);
+  const textoD = useDebouncedValue(texto.trim(), 300);
   const [resultados, setResultados] = useState<ReclamoResumen[]>([]);
   const [buscando, setBuscando] = useState(false);
   const activa = textoD.length >= LARGO_MINIMO;

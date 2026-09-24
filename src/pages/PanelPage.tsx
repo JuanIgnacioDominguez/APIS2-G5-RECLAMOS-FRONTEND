@@ -1,19 +1,9 @@
-import {
-  Card,
-  Center,
-  Grid,
-  Group,
-  Loader,
-  Progress,
-  Stack,
-  Text,
-  ThemeIcon,
-  Title,
-} from "@mantine/core";
-import { IconChartBar, IconClockHour4, IconInbox } from "@tabler/icons-react";
+import { Clock, Inbox, Loader2 } from "lucide-react";
 
 import { EstadoError } from "@/components/EstadoError";
 import { PageHeader } from "@/components/PageHeader";
+import { KpiCard } from "@/components/KpiCard";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { estadisticas } from "@/api/reclamos";
 import type { ConteoPorClave } from "@/api/types";
@@ -22,24 +12,27 @@ import { useAsync } from "@/hooks/useAsync";
 function Distribucion({ titulo, datos }: { titulo: string; datos: ConteoPorClave[] }) {
   const total = datos.reduce((acc, d) => acc + d.cantidad, 0) || 1;
   return (
-    <Card withBorder radius="md" padding="lg">
-      <Title order={5} mb="md">
-        {titulo}
-      </Title>
-      <Stack gap="sm">
-        {datos.length === 0 && <Text c="dimmed">Sin datos.</Text>}
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">{titulo}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {datos.length === 0 && <p className="text-sm text-muted-foreground">Sin datos.</p>}
         {datos.map((d) => (
-          <div key={d.clave}>
-            <Group justify="space-between" mb={4}>
-              <Text size="sm">{d.clave}</Text>
-              <Text size="sm" fw={600}>
-                {d.cantidad}
-              </Text>
-            </Group>
-            <Progress value={(d.cantidad / total) * 100} color="azulUrbano" size="sm" />
+          <div key={d.clave} className="space-y-1">
+            <div className="flex items-center justify-between text-sm">
+              <span>{d.clave}</span>
+              <span className="font-semibold tabular-nums">{d.cantidad}</span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-primary transition-all"
+                style={{ width: `${(d.cantidad / total) * 100}%` }}
+              />
+            </div>
           </div>
         ))}
-      </Stack>
+      </CardContent>
     </Card>
   );
 }
@@ -53,9 +46,9 @@ export function PanelPage() {
 
   if (loading) {
     return (
-      <Center py="xl">
-        <Loader color="azulUrbano" />
-      </Center>
+      <div className="flex justify-center py-16">
+        <Loader2 className="size-6 animate-spin text-primary" />
+      </div>
     );
   }
 
@@ -66,61 +59,24 @@ export function PanelPage() {
   const horas = data.tiempo_resolucion_horas_promedio;
 
   return (
-    <Stack gap="lg">
-      <PageHeader
-        icono={IconChartBar}
-        titulo="Panel de metricas"
-        descripcion="Resumen del modulo de reclamos."
-      />
+    <div className="flex flex-col gap-6">
+      <PageHeader titulo="Panel de metricas" descripcion="Resumen del modulo de reclamos." />
 
-      <Grid>
-        <Grid.Col span={{ base: 12, sm: 6 }}>
-          <Card withBorder radius="md" padding="lg">
-            <Group justify="space-between" align="flex-start">
-              <div>
-                <Text size="xs" c="dimmed" tt="uppercase" fw={700} lts={0.3}>
-                  Total de reclamos
-                </Text>
-                <Text fz={34} fw={700} mt={4}>
-                  {data.total}
-                </Text>
-              </div>
-              <ThemeIcon size={46} radius="md" variant="light" color="azulUrbano">
-                <IconInbox size={24} />
-              </ThemeIcon>
-            </Group>
-          </Card>
-        </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6 }}>
-          <Card withBorder radius="md" padding="lg">
-            <Group justify="space-between" align="flex-start">
-              <div>
-                <Text size="xs" c="dimmed" tt="uppercase" fw={700} lts={0.3}>
-                  Tiempo de resolucion promedio
-                </Text>
-                <Text fz={34} fw={700} mt={4}>
-                  {horas === null ? "-" : `${horas.toFixed(1)} h`}
-                </Text>
-              </div>
-              <ThemeIcon size={46} radius="md" variant="light" color="verdeUrbano">
-                <IconClockHour4 size={24} />
-              </ThemeIcon>
-            </Group>
-          </Card>
-        </Grid.Col>
-      </Grid>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <KpiCard label="Total de reclamos" value={data.total} icon={Inbox} tono="azul" />
+        <KpiCard
+          label="Tiempo de resolucion promedio"
+          value={horas === null ? "-" : `${horas.toFixed(1)} h`}
+          icon={Clock}
+          tono="verde"
+        />
+      </div>
 
-      <Grid>
-        <Grid.Col span={{ base: 12, md: 4 }}>
-          <Distribucion titulo="Por estado" datos={data.por_estado} />
-        </Grid.Col>
-        <Grid.Col span={{ base: 12, md: 4 }}>
-          <Distribucion titulo="Por categoria" datos={data.por_categoria} />
-        </Grid.Col>
-        <Grid.Col span={{ base: 12, md: 4 }}>
-          <Distribucion titulo="Por prioridad" datos={data.por_prioridad} />
-        </Grid.Col>
-      </Grid>
-    </Stack>
+      <div className="grid gap-4 md:grid-cols-3">
+        <Distribucion titulo="Por estado" datos={data.por_estado} />
+        <Distribucion titulo="Por categoria" datos={data.por_categoria} />
+        <Distribucion titulo="Por prioridad" datos={data.por_prioridad} />
+      </div>
+    </div>
   );
 }

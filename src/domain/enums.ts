@@ -61,6 +61,11 @@ export const ESTADOS_FINALES: ReadonlySet<EstadoReclamo> = new Set([
   EstadoReclamo.RECHAZADO,
 ]);
 
+export const ESTADOS_RESUELTOS: ReadonlySet<EstadoReclamo> = new Set([
+  EstadoReclamo.RESUELTO,
+  EstadoReclamo.CERRADO,
+]);
+
 /** All values of each enum, handy for building filters and selects. */
 export const ESTADOS = Object.values(EstadoReclamo);
 export const PRIORIDADES = Object.values(PrioridadReclamo);

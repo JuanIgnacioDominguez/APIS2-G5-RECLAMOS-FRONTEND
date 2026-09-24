@@ -1,9 +1,10 @@
+import { useEffect } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import * as authApi from "@/api/auth";
-import { getAuthToken, setAuthToken } from "@/api/client";
+import { getAuthToken, request, setAuthToken } from "@/api/client";
 import { renderWithProviders } from "@/test/render";
 import { useAuth } from "./AuthContext";
 
@@ -78,5 +79,38 @@ describe("AuthContext", () => {
     renderWithProviders(<Harness />);
     expect(screen.getByTestId("user")).toHaveTextContent("Guardado");
     expect(getAuthToken()).toBe("jwt-guardado");
+  });
+
+  it("el primer pedido de un hijo tras recargar ya lleva el token", async () => {
+    // Reproduces the F5 bug: a child fires its request in its own effect, which
+    // runs before the provider's effect. The token must already be seeded.
+    localStorage.setItem(
+      "citypass.auth.sesion",
+      JSON.stringify({
+        usuario: { id: "x", nombre: "Guardado", email: "g@x.com", rol: "ciudadano" },
+        token: "jwt-guardado",
+      }),
+    );
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    function Hijo() {
+      useEffect(() => {
+        void request("/reclamos").catch(() => {});
+      }, []);
+      return null;
+    }
+
+    renderWithProviders(<Hijo />);
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const headers = (fetchMock.mock.calls[0][1] as RequestInit).headers as Record<string, string>;
+    expect(headers.Authorization).toBe("Bearer jwt-guardado");
+    vi.unstubAllGlobals();
   });
 });

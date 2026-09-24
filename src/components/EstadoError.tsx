@@ -1,5 +1,6 @@
-import { Button, Center, Stack, Text, ThemeIcon } from "@mantine/core";
-import { IconRefresh, IconWifiOff } from "@tabler/icons-react";
+import { RefreshCw, WifiOff } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
 
 /**
  * Friendly error state with an explanation and a retry action, used wherever a
@@ -15,29 +16,20 @@ export function EstadoError({
   onReintentar?: () => void;
 }) {
   return (
-    <Center py={48}>
-      <Stack align="center" gap="sm" maw={380}>
-        <ThemeIcon size={56} radius="xl" variant="light" color="rojoEmergencia">
-          <IconWifiOff size={28} />
-        </ThemeIcon>
-        <Text fw={600} fz="lg" ta="center">
-          {titulo}
-        </Text>
-        <Text c="dimmed" size="sm" ta="center">
+    <div className="flex justify-center py-12">
+      <div className="flex max-w-sm flex-col items-center gap-3 text-center">
+        <WifiOff className="size-10 text-destructive/80" strokeWidth={1.5} />
+        <p className="text-lg font-semibold">{titulo}</p>
+        <p className="text-sm text-muted-foreground">
           {mensaje ?? "Revisa tu conexion o que el servicio este disponible e intenta de nuevo."}
-        </Text>
+        </p>
         {onReintentar && (
-          <Button
-            variant="light"
-            color="azulUrbano"
-            leftSection={<IconRefresh size={16} />}
-            onClick={onReintentar}
-            mt="xs"
-          >
+          <Button variant="outline" onClick={onReintentar} className="mt-1 gap-2">
+            <RefreshCw className="size-4" />
             Reintentar
           </Button>
         )}
-      </Stack>
-    </Center>
+      </div>
+    </div>
   );
 }

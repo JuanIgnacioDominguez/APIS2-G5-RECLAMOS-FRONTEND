@@ -3,12 +3,15 @@ import { createElement, type ReactNode } from "react";
 import { afterEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 
+import { limpiarCacheAsync } from "@/hooks/useAsync";
+
 // Leaflet needs a real DOM (element sizing, canvas) that jsdom lacks, so we
 // stub react-leaflet to plain containers. The map's logic is tested apart.
 vi.mock("react-leaflet", () => ({
   MapContainer: ({ children }: { children?: ReactNode }) =>
     createElement("div", { "data-testid": "mapa" }, children),
   TileLayer: () => null,
+  ZoomControl: () => null,
   CircleMarker: ({ children }: { children?: ReactNode }) => createElement("div", null, children),
   Popup: ({ children }: { children?: ReactNode }) => createElement("div", null, children),
   useMap: () => ({
@@ -48,7 +51,13 @@ window.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver;
 // Silence scrollIntoView calls from Mantine Select in jsdom.
 window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
+// Radix UI (shadcn Select/Dropdown) uses Pointer Capture APIs that jsdom lacks.
+window.HTMLElement.prototype.hasPointerCapture = vi.fn(() => false);
+window.HTMLElement.prototype.setPointerCapture = vi.fn();
+window.HTMLElement.prototype.releasePointerCapture = vi.fn();
+
 afterEach(() => {
   cleanup();
   localStorage.clear();
+  limpiarCacheAsync();
 });

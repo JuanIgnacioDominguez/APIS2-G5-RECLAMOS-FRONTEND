@@ -1,12 +1,10 @@
-import { Group, Text } from "@mantine/core";
-
 interface LogoProps {
   /** Height of the pin mark in px. */
   size?: number;
   /** Show the "CityPass+" wordmark next to the mark. */
   withWordmark?: boolean;
-  /** Color of the wordmark text (the mark keeps its brand colors). */
-  wordmarkColor?: string;
+  /** Extra classes for the wordmark text (the mark keeps its brand colors). */
+  wordmarkClassName?: string;
 }
 
 /**
@@ -38,16 +36,18 @@ export function LogoMark({ size = 32 }: { size?: number }) {
   );
 }
 
-export function Logo({ size = 32, withWordmark = true, wordmarkColor }: LogoProps) {
+export function Logo({ size = 32, withWordmark = true, wordmarkClassName }: LogoProps) {
   return (
-    <Group gap={8} wrap="nowrap">
+    <div className="flex items-center gap-2">
       <LogoMark size={size} />
       {withWordmark && (
-        <Text fw={700} fz={size * 0.62} c={wordmarkColor} style={{ letterSpacing: "-0.02em" }}>
-          CityPass
-          <span style={{ color: "var(--mantine-color-ambar-5)" }}>+</span>
-        </Text>
+        <span
+          className={`font-bold tracking-tight ${wordmarkClassName ?? ""}`}
+          style={{ fontSize: size * 0.62 }}
+        >
+          CityPass<span className="text-[#e6b566]">+</span>
+        </span>
       )}
-    </Group>
+    </div>
   );
 }
