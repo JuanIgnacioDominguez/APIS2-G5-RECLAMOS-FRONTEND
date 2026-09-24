@@ -244,7 +244,10 @@ function VistaGestionReclamo({ reclamo, refrescando, onRecargar }: VistaGestionP
 
   return (
     <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-5">
-      <section className="flex flex-col gap-3 pb-1 xl:flex-row xl:items-start xl:justify-between">
+      <section
+        data-tour="detalle-header"
+        className="flex flex-col gap-3 pb-1 xl:flex-row xl:items-start xl:justify-between"
+      >
         <div className="min-w-0 space-y-3">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <h1 className="text-2xl font-bold tracking-[-0.02em] text-balance sm:text-[1.7rem]">
@@ -291,7 +294,7 @@ function VistaGestionReclamo({ reclamo, refrescando, onRecargar }: VistaGestionP
           description and comments spanning both below; the right column (col 3)
           runs full height with location, details and traceability. */}
       <div className="grid items-start gap-4 lg:grid-cols-3">
-        <Card className="rounded-2xl ring-1 ring-border">
+        <Card data-tour="detalle-gestion" className="rounded-2xl ring-1 ring-border">
           <CardContent className="pt-6">
             <GestionarEstado
               reclamoId={reclamo.id}
@@ -305,7 +308,7 @@ function VistaGestionReclamo({ reclamo, refrescando, onRecargar }: VistaGestionP
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl ring-1 ring-border">
+        <Card data-tour="detalle-clasificacion" className="rounded-2xl ring-1 ring-border">
           <CardContent className="pt-6">
             <ClasificarReclamo
               reclamoId={reclamo.id}
@@ -319,7 +322,7 @@ function VistaGestionReclamo({ reclamo, refrescando, onRecargar }: VistaGestionP
 
         <aside className="flex min-w-0 flex-col gap-4 lg:col-start-3 lg:row-span-2">
           {(tieneUbicacion || reclamo.direccion) && (
-            <Card className="rounded-2xl ring-1 ring-border">
+            <Card data-tour="detalle-ubicacion" className="rounded-2xl ring-1 ring-border">
               <CardHeader className="flex-row items-center justify-between gap-3">
                 <SeccionTitulo icon={MapPin}>Ubicación</SeccionTitulo>
                 {mapaUrl && (
@@ -351,7 +354,7 @@ function VistaGestionReclamo({ reclamo, refrescando, onRecargar }: VistaGestionP
             </Card>
           )}
 
-          <Card className="rounded-2xl ring-1 ring-border">
+          <Card data-tour="detalle-detalles" className="rounded-2xl ring-1 ring-border">
             <CardHeader>
               <SeccionTitulo icon={ListChecks}>Detalles</SeccionTitulo>
             </CardHeader>
@@ -372,7 +375,7 @@ function VistaGestionReclamo({ reclamo, refrescando, onRecargar }: VistaGestionP
             </CardContent>
           </Card>
 
-          <Card className="rounded-2xl ring-1 ring-border">
+          <Card data-tour="detalle-trazabilidad" className="rounded-2xl ring-1 ring-border">
             <CardHeader>
               <SeccionTitulo icon={History}>Trazabilidad</SeccionTitulo>
             </CardHeader>
@@ -385,7 +388,7 @@ function VistaGestionReclamo({ reclamo, refrescando, onRecargar }: VistaGestionP
         <div className="flex min-w-0 flex-col gap-4 lg:col-span-2 lg:col-start-1">
           <PosiblesDuplicados reclamoId={reclamo.id} />
 
-          <Card className="rounded-2xl ring-1 ring-border">
+          <Card data-tour="detalle-informacion" className="rounded-2xl ring-1 ring-border">
             <CardHeader>
               <SeccionTitulo icon={FileText}>Información del reclamo</SeccionTitulo>
             </CardHeader>
@@ -409,11 +412,13 @@ function VistaGestionReclamo({ reclamo, refrescando, onRecargar }: VistaGestionP
             </CardContent>
           </Card>
 
-          <ComentariosReclamo
-            reclamoId={reclamo.id}
-            comentarios={reclamo.comentarios}
-            onComentado={onRecargar}
-          />
+          <div data-tour="detalle-comentarios">
+            <ComentariosReclamo
+              reclamoId={reclamo.id}
+              comentarios={reclamo.comentarios}
+              onComentado={onRecargar}
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -479,7 +484,7 @@ export function ReclamoDetallePage() {
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-      <Card className="py-5">
+      <Card data-tour="detalle-header" className="py-5">
         <CardContent className="flex flex-wrap items-start justify-between gap-x-6 gap-y-5 px-5 sm:px-6">
           <div className="min-w-0 space-y-2.5">
             <Button
@@ -592,7 +597,7 @@ export function ReclamoDetallePage() {
 
       <div className="grid items-start gap-6 lg:grid-cols-3">
         <div className="flex min-w-0 flex-col gap-6 lg:col-span-2">
-          <Card>
+          <Card data-tour="detalle-adhesion">
             <CardContent className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <Users className="size-5 text-primary" />
@@ -618,16 +623,18 @@ export function ReclamoDetallePage() {
             </CardContent>
           </Card>
 
-          <ComentariosReclamo
-            reclamoId={reclamo.id}
-            comentarios={reclamo.comentarios}
-            onComentado={reload}
-          />
+          <div data-tour="detalle-comentarios">
+            <ComentariosReclamo
+              reclamoId={reclamo.id}
+              comentarios={reclamo.comentarios}
+              onComentado={reload}
+            />
+          </div>
         </div>
 
         <aside className="flex flex-col gap-6 lg:sticky lg:top-20 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto lg:overflow-x-hidden lg:pr-1 lg:pb-2">
           {(tieneUbicacion || reclamo.direccion) && (
-            <Card className="overflow-hidden">
+            <Card data-tour="detalle-ubicacion" className="overflow-hidden">
               <CardHeader>
                 <SeccionTitulo icon={MapPin}>Ubicación</SeccionTitulo>
               </CardHeader>
@@ -676,7 +683,7 @@ export function ReclamoDetallePage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card data-tour="detalle-trazabilidad">
             <CardHeader>
               <SeccionTitulo icon={History}>Trazabilidad</SeccionTitulo>
             </CardHeader>

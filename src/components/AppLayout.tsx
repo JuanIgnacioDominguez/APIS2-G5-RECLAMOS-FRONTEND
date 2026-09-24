@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { bandeja } from "@/api/reclamos";
+import { AyudaFlotante } from "@/features/ayuda/AyudaFlotante";
 import { LogoMark } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { migasPara, NAV_CUENTA, navModulo, type Miga, type NavItem } from "@/config/navigation";
@@ -470,6 +471,7 @@ export function AppLayout() {
             </div>
           )}
         </main>
+        <AyudaFlotante />
       </SidebarInset>
     </SidebarProvider>
   );

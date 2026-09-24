@@ -80,7 +80,7 @@ export function FeedPublicoPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-3">
+      <div data-tour="feed-header" className="flex items-center gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Reclamos de la ciudad</h1>
           <p className="text-sm text-muted-foreground">
@@ -89,7 +89,10 @@ export function FeedPublicoPage() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-card p-4 shadow-xs ring-1 ring-foreground/10">
+      <div
+        data-tour="feed-filtros"
+        className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-card p-4 shadow-xs ring-1 ring-foreground/10"
+      >
         <div className="flex flex-wrap items-center gap-2">
           <Select
             value={categoria ?? TODAS}
@@ -247,7 +250,10 @@ export function FeedPublicoPage() {
       )}
 
       {!loading && !error && visibles.length > 0 && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div
+          data-tour="feed-lista"
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+        >
           {visibles.map((reclamo) => (
             <ReclamoCard
               key={reclamo.id}

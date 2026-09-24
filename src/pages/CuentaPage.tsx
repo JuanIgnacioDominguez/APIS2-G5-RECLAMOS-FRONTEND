@@ -122,7 +122,7 @@ export function CuentaPage() {
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
       <PageHeader titulo="Mi cuenta" descripcion="Tus datos dentro del modulo de Reclamos." />
       <div className="grid gap-6 lg:grid-cols-5">
-        <Card className="shadow-xs lg:col-span-3">
+        <Card data-tour="cuenta-datos" className="shadow-xs lg:col-span-3">
           <CardContent className="flex flex-col gap-6">
             <div className="flex items-center gap-4">
               <Avatar className="size-16 shadow-md">

@@ -170,7 +170,7 @@ export function AyudaPage() {
       />
 
       {/* Quick start, tailored to the role. */}
-      <Card>
+      <Card data-tour="ayuda-secciones">
         <CardHeader>
           <CardTitle className="text-base">
             {staff ? "Como gestionar un reclamo" : "Como cargar un reclamo"}

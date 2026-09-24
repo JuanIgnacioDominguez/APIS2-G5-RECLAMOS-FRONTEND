@@ -244,7 +244,7 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
   return (
     <form onSubmit={handleSubmit} className="flex min-w-0 flex-col gap-4">
       <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(17rem,0.9fr)] lg:gap-5">
-        <div className="flex min-w-0 flex-col gap-4">
+        <div data-tour="nuevo-paso1" className="flex min-w-0 flex-col gap-4">
           <Card className="rounded-2xl ring-1 ring-border">
             <CardHeader className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <SeccionTitulo icon={FileText}>Información del reclamo</SeccionTitulo>
@@ -305,7 +305,7 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
                 </Button>
               </CardAction>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="flex min-h-0 flex-1 flex-col gap-3">
               {errorUbicacion && (
                 <p
                   role="alert"
@@ -500,18 +500,18 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
           </Card>
         </div>
 
-        <aside className="flex min-w-0 flex-col gap-4">
-          <Card className="flex flex-col rounded-2xl ring-1 ring-border">
+        <aside data-tour="nuevo-paso2" className="flex min-w-0 flex-col gap-4 lg:h-full">
+          <Card className="flex min-h-0 flex-1 flex-col rounded-2xl ring-1 ring-border">
             <CardHeader>
               <SeccionTitulo icon={MapPin}>Mapa del reclamo</SeccionTitulo>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="flex min-h-0 flex-1 flex-col gap-3">
               <MapaSelector
                 lat={values.latitud}
                 lng={values.longitud}
                 onPick={fijarUbicacion}
                 altura={360}
-                className="mapa-columna-fill lg:!h-[380px] lg:!min-h-[320px]"
+                className="mapa-columna-fill lg:!min-h-[240px]"
               />
               <div className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
                 {values.latitud !== null && values.longitud !== null
@@ -539,6 +539,7 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
           <Button
             type="submit"
             size="lg"
+            data-tour="nuevo-enviar"
             disabled={loading}
             className="h-10 w-full gap-2 px-5 sm:w-auto"
           >

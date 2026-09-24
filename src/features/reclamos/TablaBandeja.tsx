@@ -238,7 +238,7 @@ export function TablaBandeja({ filas, loading, error, onRefresh }: TablaBandejaP
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:max-w-sm">
+        <div data-tour="bandeja-buscar" className="relative w-full sm:max-w-sm">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={busqueda}

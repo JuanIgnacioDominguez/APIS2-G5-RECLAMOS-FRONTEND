@@ -9,7 +9,7 @@ export function NotificacionesPage() {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
       <PageHeader titulo="Notificaciones" descripcion="Avisos sobre el avance de tus reclamos." />
-      <Card>
+      <Card data-tour="notif-lista">
         <EstadoVacio
           icono={Bell}
           titulo="Sin novedades"

@@ -128,7 +128,7 @@ export function ReclamosPage() {
   return (
     <MotionConfig reducedMotion="user">
       <div className="flex flex-col gap-6">
-        <div className="flex flex-wrap items-end justify-between gap-4">
+        <div data-tour="reclamos-header" className="flex flex-wrap items-end justify-between gap-4">
           <div className="flex items-center gap-3">
             <div>
               <h1 className="font-heading text-2xl font-semibold tracking-tight">
@@ -143,6 +143,7 @@ export function ReclamosPage() {
           </div>
           <Button
             size="lg"
+            data-tour="reclamos-nuevo"
             onClick={() => navigate("/reclamos/nuevo")}
             className="h-10 gap-2 rounded-lg px-5 shadow-sm transition-shadow hover:shadow-md"
           >
@@ -151,7 +152,7 @@ export function ReclamosPage() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div data-tour="reclamos-kpis" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <KpiCard label="Total" value={counts.todos} icon={Inbox} tono="azul" />
           <KpiCard label="Abiertos" value={counts.abiertos} icon={FolderOpen} tono="azul" />
           <KpiCard label="En proceso" value={counts.en_proceso} icon={Timer} tono="ambar" />
@@ -159,8 +160,10 @@ export function ReclamosPage() {
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-card p-4 shadow-xs ring-1 ring-foreground/10">
-          <TabsFiltro value={tab} onChange={setTab} counts={counts} />
-          <div className="flex flex-wrap items-center gap-2">
+          <div data-tour="reclamos-tabs">
+            <TabsFiltro value={tab} onChange={setTab} counts={counts} />
+          </div>
+          <div data-tour="reclamos-filtros" className="flex flex-wrap items-center gap-2">
             <div className="relative w-[220px]">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -263,7 +266,11 @@ export function ReclamosPage() {
         )}
 
         {!loading && !error && visibles.length > 0 && (
-          <motion.div layout className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <motion.div
+            layout
+            data-tour="reclamos-lista"
+            className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          >
             <AnimatePresence mode="popLayout" initial={false}>
               {visibles.map((reclamo) => (
                 <motion.div

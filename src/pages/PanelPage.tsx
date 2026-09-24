@@ -62,7 +62,7 @@ export function PanelPage() {
     <div className="flex flex-col gap-6">
       <PageHeader titulo="Panel de metricas" descripcion="Resumen del modulo de reclamos." />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div data-tour="panel-kpis" className="grid gap-4 sm:grid-cols-2">
         <KpiCard label="Total de reclamos" value={data.total} icon={Inbox} tono="azul" />
         <KpiCard
           label="Tiempo de resolucion promedio"
@@ -72,7 +72,7 @@ export function PanelPage() {
         />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div data-tour="panel-distribuciones" className="grid gap-4 md:grid-cols-3">
         <Distribucion titulo="Por estado" datos={data.por_estado} />
         <Distribucion titulo="Por categoria" datos={data.por_categoria} />
         <Distribucion titulo="Por prioridad" datos={data.por_prioridad} />

@@ -22,6 +22,7 @@
     "cmdk": "^1.1.1",
     "cn": "^0.3.0",
     "dayjs": "^1.11.13",
+    "driver.js": "^1.8.0",
     "framer-motion": "^11.18.2",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.47.0",

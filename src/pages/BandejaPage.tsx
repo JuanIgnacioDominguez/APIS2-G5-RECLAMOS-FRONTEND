@@ -27,7 +27,7 @@ export function BandejaPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div data-tour="bandeja-header" className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex items-center gap-3">
           <div>
             <h1 className="font-heading text-2xl font-semibold tracking-tight">
@@ -44,7 +44,10 @@ export function BandejaPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      <div
+        data-tour="bandeja-kpis"
+        className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5"
+      >
         <KpiCard label="Entrantes" value={kpis.entrantes} icon={Inbox} tono="azul" />
         <KpiCard
           label="Recibidos"
@@ -64,7 +67,9 @@ export function BandejaPage() {
         />
       </div>
 
-      <TablaBandeja filas={filas} loading={loading} error={error} onRefresh={refrescar} />
+      <div data-tour="bandeja-tabla">
+        <TablaBandeja filas={filas} loading={loading} error={error} onRefresh={refrescar} />
+      </div>
     </div>
   );
 }

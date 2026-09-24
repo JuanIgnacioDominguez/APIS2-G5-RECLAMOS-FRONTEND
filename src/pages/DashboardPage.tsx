@@ -632,6 +632,7 @@ export function DashboardPage() {
 
       <section
         aria-label="Indicadores principales"
+        data-tour="dashboard-kpis"
         className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
       >
         {indicadores.map((indicador) => (
@@ -644,7 +645,7 @@ export function DashboardPage() {
         <PanelCategorias resumen={resumen} datosGlobales={datosGlobales} />
       </div>
 
-      <div className="grid gap-3 sm:gap-4 xl:grid-cols-12">
+      <div data-tour="dashboard-heatmap" className="grid gap-3 sm:gap-4 xl:grid-cols-12">
         <PanelMapa
           data={recientes.data}
           loading={recientes.loading}
@@ -656,12 +657,14 @@ export function DashboardPage() {
         </div>
       </div>
 
-      <PanelUltimosReclamos
-        data={recientes.data}
-        loading={recientes.loading}
-        error={recientes.error}
-        onReintentar={recientes.reload}
-      />
+      <div data-tour="dashboard-recientes">
+        <PanelUltimosReclamos
+          data={recientes.data}
+          loading={recientes.loading}
+          error={recientes.error}
+          onReintentar={recientes.reload}
+        />
+      </div>
     </div>
   );
 }

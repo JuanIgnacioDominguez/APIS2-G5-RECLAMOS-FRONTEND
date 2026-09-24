@@ -85,7 +85,9 @@ export function MapaPublicoPage() {
       data-slot="mapa-publico"
       className="relative isolate h-[calc(100dvh-4rem)] overflow-hidden"
     >
-      <MapaReclamos reclamos={puntos} misIds={esCiudadano ? misIds : undefined} fill />
+      <div data-tour="mapa-canvas" className="absolute inset-0">
+        <MapaReclamos reclamos={puntos} misIds={esCiudadano ? misIds : undefined} fill />
+      </div>
 
       {/* Floating panel: transparent to pointer events except on the card, so
           the map stays fully draggable around it. The card keeps its width in
@@ -128,7 +130,7 @@ export function MapaPublicoPage() {
             aria-hidden={!panelAbierto}
           >
             <div className="min-h-0 overflow-hidden">
-              <div className="flex flex-col gap-3 p-3">
+              <div data-tour="mapa-filtros" className="flex flex-col gap-3 p-3">
                 <div className="flex flex-col gap-1.5">
                   <span className="text-xs font-medium text-muted-foreground">Categoria</span>
                   <Select
@@ -183,7 +185,10 @@ export function MapaPublicoPage() {
                   </Select>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-border/60 pt-2.5">
+                <div
+                  data-tour="mapa-leyenda"
+                  className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-border/60 pt-2.5"
+                >
                   {esCiudadano && (
                     <div className="flex items-center gap-1.5">
                       <span
