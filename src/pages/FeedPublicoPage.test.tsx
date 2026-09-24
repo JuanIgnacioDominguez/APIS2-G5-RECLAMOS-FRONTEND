@@ -8,7 +8,25 @@ import type { Page, ReclamoListado } from "@/api/types";
 import { CategoriaReclamo, EstadoReclamo, PrioridadReclamo } from "@/domain/enums";
 import { renderWithProviders } from "@/test/render";
 import { CIUDADANO, OPERADOR } from "@/test/usuarios";
+import type { Usuario } from "@/auth/users";
 import { FeedPublicoPage } from "./FeedPublicoPage";
+
+// Reads the navigation origin passed to the detail route, to assert what the
+// feed hands down when a claim is opened.
+function DetalleOrigen() {
+  const { state } = useLocation();
+  return <div>origen: {(state as { origen?: { label: string } } | null)?.origen?.label}</div>;
+}
+
+function renderFeedConDetalle(usuario: Usuario) {
+  return renderWithProviders(
+    <Routes>
+      <Route path="/" element={<FeedPublicoPage />} />
+      <Route path="/reclamos/:id" element={<DetalleOrigen />} />
+    </Routes>,
+    { usuario },
+  );
+}
 
 function reclamo(id: string, titulo: string, barrio: string): ReclamoListado {
   return {
@@ -61,18 +79,7 @@ describe("FeedPublicoPage", () => {
       page([reclamo("1", "Bache en Palermo", "Palermo")]),
     );
 
-    function Detalle() {
-      const { state } = useLocation();
-      return <div>origen: {(state as { origen?: { label: string } } | null)?.origen?.label}</div>;
-    }
-
-    renderWithProviders(
-      <Routes>
-        <Route path="/" element={<FeedPublicoPage />} />
-        <Route path="/reclamos/:id" element={<Detalle />} />
-      </Routes>,
-      { usuario: CIUDADANO },
-    );
+    renderFeedConDetalle(CIUDADANO);
 
     await userEvent.click(await screen.findByText("Bache en Palermo"));
 
@@ -84,18 +91,7 @@ describe("FeedPublicoPage", () => {
       page([reclamo("1", "Bache en Palermo", "Palermo")]),
     );
 
-    function Detalle() {
-      const { state } = useLocation();
-      return <div>origen: {(state as { origen?: { label: string } } | null)?.origen?.label}</div>;
-    }
-
-    renderWithProviders(
-      <Routes>
-        <Route path="/" element={<FeedPublicoPage />} />
-        <Route path="/reclamos/:id" element={<Detalle />} />
-      </Routes>,
-      { usuario: OPERADOR },
-    );
+    renderFeedConDetalle(OPERADOR);
 
     await userEvent.click(await screen.findByText("Bache en Palermo"));
 
