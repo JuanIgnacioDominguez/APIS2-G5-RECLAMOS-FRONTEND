@@ -1,5 +1,4 @@
-import { Stack, Text, Title } from "@mantine/core";
-import { IconMapPin } from "@tabler/icons-react";
+import { MapPin } from "lucide-react";
 
 import { CitySkyline } from "@/components/CitySkyline";
 import "./LoginAside.css";
@@ -10,28 +9,28 @@ import "./LoginAside.css";
  */
 export function LoginAside() {
   return (
-    <Stack className="loginAside" h="100%" justify="space-between" p="xl" aria-hidden="true">
+    <div className="loginAside flex h-full flex-col justify-between p-8" aria-hidden="true">
       <div className="loginAside__glow loginAside__glow--a" />
       <div className="loginAside__glow loginAside__glow--b" />
 
-      <IconMapPin className="loginAside__pin loginAside__pin--1" size={28} />
-      <IconMapPin className="loginAside__pin loginAside__pin--2" size={36} />
-      <IconMapPin className="loginAside__pin loginAside__pin--3" size={24} />
+      <MapPin className="loginAside__pin loginAside__pin--1" size={28} />
+      <MapPin className="loginAside__pin loginAside__pin--2" size={36} />
+      <MapPin className="loginAside__pin loginAside__pin--3" size={24} />
 
       <div />
 
-      <Stack gap="xs" style={{ position: "relative", zIndex: 1 }}>
-        <Title order={2} c="white" style={{ maxWidth: 360 }}>
+      <div className="relative z-10 flex flex-col gap-2">
+        <h2 className="max-w-[360px] text-2xl font-semibold text-white">
           Todos los reclamos de tu ciudad, en un solo lugar.
-        </Title>
-        <Text c="gray.4" style={{ maxWidth: 340 }}>
+        </h2>
+        <p className="max-w-[340px] text-gray-300">
           Crea, segui y gestiona tus reclamos vecinales de forma agil y transparente.
-        </Text>
-      </Stack>
+        </p>
+      </div>
 
-      <div style={{ position: "relative", zIndex: 1, opacity: 0.9 }}>
+      <div className="relative z-10 opacity-90">
         <CitySkyline />
       </div>
-    </Stack>
+    </div>
   );
 }

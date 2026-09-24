@@ -31,7 +31,7 @@ import {
 const ESPERA = { timeout: 4000 };
 
 function inputDireccion(): HTMLInputElement {
-  return screen.getByRole("textbox", { name: "Direccion" });
+  return screen.getByRole("textbox", { name: "Dirección" });
 }
 function inputBarrio(): HTMLInputElement {
   return screen.getByRole("textbox", { name: "Barrio" });
@@ -82,6 +82,17 @@ describe("ReclamoForm - geocodificacion", () => {
     expect(inputBarrio().value).toBe("Monserrat");
   });
 
+  it("informa cuando el navegador niega el permiso de ubicacion", async () => {
+    stubGeolocation((_ok, error) => {
+      error?.({ code: 1 } as GeolocationPositionError);
+    });
+
+    renderWithProviders(<ReclamoForm onSubmit={vi.fn()} />);
+    await userEvent.click(screen.getByRole("button", { name: /usar mi ubicación/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/permití el acceso/i);
+  });
+
   it("busca la direccion escrita y mueve el punto (forward)", async () => {
     vi.mocked(buscarDireccion).mockResolvedValue({
       latitud: -34.6,
@@ -92,7 +103,7 @@ describe("ReclamoForm - geocodificacion", () => {
 
     renderWithProviders(<ReclamoForm onSubmit={vi.fn()} />);
     await userEvent.type(inputDireccion(), "Corrientes 3200");
-    await userEvent.click(screen.getByLabelText(/buscar direccion en el mapa/i));
+    await userEvent.click(screen.getByLabelText(/buscar dirección en el mapa/i));
 
     await waitFor(() => expect(inputDireccion().value).toBe("Avenida Corrientes 3200"), ESPERA);
     expect(inputBarrio().value).toBe("Balvanera");
@@ -111,7 +122,7 @@ describe("ReclamoForm - geocodificacion", () => {
     );
 
     renderWithProviders(<ReclamoForm onSubmit={vi.fn()} />);
-    await userEvent.click(screen.getByRole("button", { name: /usar mi ubicacion/i }));
+    await userEvent.click(screen.getByRole("button", { name: /usar mi ubicación/i }));
 
     await waitFor(() => expect(inputDireccion().value).toBe("Calle Falsa 123"), ESPERA);
   });

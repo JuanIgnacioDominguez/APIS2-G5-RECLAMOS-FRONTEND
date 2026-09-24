@@ -1,143 +1,70 @@
-import { ActionIcon, Badge, Card, Center, Group, Loader, Stack, Table, Text } from "@mantine/core";
-import { IconChevronRight, IconInbox, IconSparkles, IconUsers } from "@tabler/icons-react";
-import { Link, useNavigate } from "react-router-dom";
+import { useMemo } from "react";
+import { CheckCircle2, ClipboardList, Eye, Inbox, RefreshCw, Sparkles } from "lucide-react";
 
-import { bandeja } from "@/api/reclamos";
-import { OrigenClasificacion } from "@/domain/enums";
-import { ORIGEN_LABEL } from "@/domain/labels";
-import { haceCuanto, idCorto } from "@/lib/format";
+import { bandeja, contarResueltos } from "@/api/reclamos";
 import { useAsync } from "@/hooks/useAsync";
-import { EstadoError } from "@/components/EstadoError";
-import { EstadoVacio } from "@/components/EstadoVacio";
-import { PageHeader } from "@/components/PageHeader";
-import { CategoriaBadge, EstadoBadge, PrioridadBadge } from "@/features/reclamos/Badges";
+import { KpiCard } from "@/components/KpiCard";
+import { Button } from "@/components/ui/button";
+import { TablaBandeja } from "@/features/reclamos/TablaBandeja";
+import { calcularKpisBandeja } from "@/features/reclamos/bandejaTable";
 
 /**
- * Backoffice inbox for operators and admins (US-13). Reads the dedicated
- * `/reclamos/bandeja` endpoint: incoming claims (recibido / en revision) newest
- * first, with the AI-suggested category, priority and support count.
+ * Backoffice inbox for operators and admins (US-13). Reads `/reclamos/bandeja`
+ * (incoming claims, newest first) and tops it with queue KPIs plus the global
+ * resolved-and-closed total, so staff see the shape of the work at a glance.
  */
 export function BandejaPage() {
-  const navigate = useNavigate();
   const { data, loading, error, reload } = useAsync(() => bandeja(), []);
-  const filas = data?.items ?? [];
+  const resueltos = useAsync(() => contarResueltos(), []);
+
+  const filas = useMemo(() => data?.items ?? [], [data]);
+  const kpis = useMemo(() => calcularKpisBandeja(filas, data?.total), [data?.total, filas]);
+  const actualizando = loading || resueltos.loading;
+  const refrescar = () => {
+    reload();
+    resueltos.reload();
+  };
 
   return (
-    <Stack gap="lg">
-      <PageHeader
-        icono={IconInbox}
-        titulo="Bandeja de reclamos"
-        descripcion="Reclamos entrantes pendientes de clasificar, mas recientes primero."
-        accion={
-          !loading &&
-          !error && (
-            <Badge size="lg" variant="light" color="azulUrbano" radius="sm">
-              {filas.length} {filas.length === 1 ? "reclamo" : "reclamos"}
-            </Badge>
-          )
-        }
-      />
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="font-heading text-2xl font-semibold tracking-tight">
+              Bandeja de reclamos
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Reclamos entrantes pendientes de clasificar, mas recientes primero.
+            </p>
+          </div>
+        </div>
+        <Button variant="outline" onClick={refrescar} disabled={actualizando}>
+          <RefreshCw className={actualizando ? "animate-spin" : undefined} />
+          Actualizar
+        </Button>
+      </div>
 
-      {loading && (
-        <Center py={64}>
-          <Loader color="azulUrbano" />
-        </Center>
-      )}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        <KpiCard label="Entrantes" value={kpis.entrantes} icon={Inbox} tono="azul" />
+        <KpiCard
+          label="Recibidos"
+          value={kpis.recibidos}
+          hint="sin clasificar"
+          icon={ClipboardList}
+          tono="ambar"
+        />
+        <KpiCard label="En revision" value={kpis.enRevision} icon={Eye} tono="azul" />
+        <KpiCard label="Resueltos" value={resueltos.data ?? "–"} icon={CheckCircle2} tono="verde" />
+        <KpiCard
+          label="Clasificados por IA"
+          value={kpis.clasificadosIa}
+          hint={`${kpis.adhesiones} adhesiones en total`}
+          icon={Sparkles}
+          tono="verde"
+        />
+      </div>
 
-      {error && <EstadoError mensaje={error} onReintentar={reload} />}
-
-      {!loading && !error && filas.length === 0 && (
-        <Card withBorder radius="md" padding="xl">
-          <EstadoVacio
-            icono={IconInbox}
-            titulo="Bandeja al dia"
-            mensaje="No hay reclamos entrantes pendientes de clasificar en este momento."
-          />
-        </Card>
-      )}
-
-      {!loading && !error && filas.length > 0 && (
-        <Card withBorder radius="md" padding={0}>
-          <Table.ScrollContainer minWidth={720}>
-            <Table highlightOnHover verticalSpacing="md">
-              <Table.Thead bg="gray.0">
-                <Table.Tr>
-                  <Table.Th>Reclamo</Table.Th>
-                  <Table.Th>Categoria</Table.Th>
-                  <Table.Th>Prioridad</Table.Th>
-                  <Table.Th>Estado</Table.Th>
-                  <Table.Th>Adhesiones</Table.Th>
-                  <Table.Th>Ingreso</Table.Th>
-                  <Table.Th />
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {filas.map((r) => (
-                  <Table.Tr
-                    key={r.id}
-                    className="row-interactive"
-                    onClick={() => navigate(`/reclamos/${r.id}`)}
-                  >
-                    <Table.Td>
-                      <Text fw={600} lineClamp={1}>
-                        {r.titulo}
-                      </Text>
-                      <Text size="xs" c="dimmed" ff="monospace">
-                        {idCorto(r.id)}
-                      </Text>
-                    </Table.Td>
-                    <Table.Td>
-                      <Group gap={6} wrap="nowrap">
-                        <CategoriaBadge categoria={r.categoria} />
-                        {r.origen_clasificacion === OrigenClasificacion.MODELO && (
-                          <Badge
-                            size="xs"
-                            variant="light"
-                            color="azulUrbano"
-                            leftSection={<IconSparkles size={11} />}
-                            radius="sm"
-                          >
-                            {ORIGEN_LABEL[OrigenClasificacion.MODELO]}
-                          </Badge>
-                        )}
-                      </Group>
-                    </Table.Td>
-                    <Table.Td>
-                      <PrioridadBadge prioridad={r.prioridad} />
-                    </Table.Td>
-                    <Table.Td>
-                      <EstadoBadge estado={r.estado} />
-                    </Table.Td>
-                    <Table.Td>
-                      <Group gap={4}>
-                        <IconUsers size={14} />
-                        <Text size="sm">{r.adhesiones_count}</Text>
-                      </Group>
-                    </Table.Td>
-                    <Table.Td>
-                      <Text size="sm" c="dimmed">
-                        {haceCuanto(r.created_at)}
-                      </Text>
-                    </Table.Td>
-                    <Table.Td>
-                      <ActionIcon
-                        component={Link}
-                        to={`/reclamos/${r.id}`}
-                        variant="subtle"
-                        color="azulUrbano"
-                        aria-label={`Ver reclamo ${r.titulo}`}
-                        onClick={(event) => event.stopPropagation()}
-                      >
-                        <IconChevronRight size={16} />
-                      </ActionIcon>
-                    </Table.Td>
-                  </Table.Tr>
-                ))}
-              </Table.Tbody>
-            </Table>
-          </Table.ScrollContainer>
-        </Card>
-      )}
-    </Stack>
+      <TablaBandeja filas={filas} loading={loading} error={error} onRefresh={refrescar} />
+    </div>
   );
 }

@@ -5,6 +5,8 @@
  * as the message so the UI can show something meaningful instead of "500".
  */
 
+import { CODIGO_RED, mensajeDeError } from "@/lib/erroresApi";
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1";
 
 export class ApiError extends Error {
@@ -28,6 +30,17 @@ export function setAuthToken(token: string | null): void {
 
 export function getAuthToken(): string | null {
   return authToken;
+}
+
+/**
+ * Called when an authenticated request is rejected with 401 (typically an
+ * expired JWT). The auth layer registers this to drop the session so the guard
+ * sends the user back to login instead of leaving them "logged in" but broken.
+ */
+let onUnauthorized: (() => void) | null = null;
+
+export function setUnauthorizedHandler(handler: (() => void) | null): void {
+  onUnauthorized = handler;
 }
 
 interface RequestOptions {
@@ -59,7 +72,10 @@ async function parseError(response: Response): Promise<ApiError> {
   } catch {
     // body was not JSON; keep the status-based message
   }
-  return new ApiError(response.status, message, code);
+  // Prefer a stable, user-facing message keyed off the code/status over the raw
+  // backend text. Falls back to the raw message when there is no known mapping.
+  const amigable = mensajeDeError({ status: response.status, code });
+  return new ApiError(response.status, amigable ?? message, code);
 }
 
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
@@ -68,14 +84,30 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   if (body !== undefined) headers["Content-Type"] = "application/json";
   if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
 
-  const response = await fetch(buildUrl(path, query), {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-    signal,
-  });
+  const teniaToken = authToken !== null;
+  let response: Response;
+  try {
+    response = await fetch(buildUrl(path, query), {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+      signal,
+    });
+  } catch (err) {
+    // fetch only rejects on network failure (offline, DNS, CORS) — never on an
+    // HTTP status. Surface it as a typed error so the UI shows a "no connection"
+    // state with retry instead of a raw TypeError. Aborts are re-thrown as-is.
+    if (err instanceof DOMException && err.name === "AbortError") throw err;
+    throw new ApiError(0, mensajeDeError({ code: CODIGO_RED })!, CODIGO_RED);
+  }
 
-  if (!response.ok) throw await parseError(response);
+  if (!response.ok) {
+    // An authenticated request that comes back 401 means the session expired or
+    // was revoked: drop it so the guard redirects to login. A 401 on the login
+    // call itself (no token yet) is just wrong credentials and is left alone.
+    if (response.status === 401 && teniaToken) onUnauthorized?.();
+    throw await parseError(response);
+  }
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
 }

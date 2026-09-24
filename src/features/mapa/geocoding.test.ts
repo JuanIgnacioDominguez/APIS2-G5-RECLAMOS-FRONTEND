@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { buscarDireccion, direccionDesdePunto, sugerirDirecciones } from "./geocoding";
+import {
+  buscarDireccion,
+  direccionDesdePunto,
+  limpiarCacheDirecciones,
+  sugerirDirecciones,
+} from "./geocoding";
 
 interface HitFalso {
   lat: string;
@@ -24,6 +29,8 @@ function ultimaUrl(fetchMock: ReturnType<typeof vi.fn>): URL {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  // The suggestion cache is module-level; clear it so cases do not share state.
+  limpiarCacheDirecciones();
 });
 
 describe("sugerirDirecciones", () => {

@@ -1,62 +1,107 @@
-import { useMemo, useState, type ReactNode } from "react";
-import {
-  Badge,
-  Button,
-  Card,
-  Center,
-  Grid,
-  Group,
-  Loader,
-  Select,
-  SimpleGrid,
-  Stack,
-  Tabs,
-  Text,
-  TextInput,
-  ThemeIcon,
-} from "@mantine/core";
-import { IconChecks, IconInbox, IconPlus, IconProgress, IconSearch } from "@tabler/icons-react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { AnimatePresence, MotionConfig, motion } from "framer-motion";
+import {
+  CheckCircle2,
+  Clock,
+  FolderOpen,
+  History,
+  Inbox,
+  LayoutGrid,
+  Loader2,
+  Plus,
+  Search,
+  ThumbsUp,
+  Timer,
+  WifiOff,
+  type LucideIcon,
+} from "lucide-react";
 
 import { listarReclamos } from "@/api/reclamos";
 import { useAuth } from "@/auth/AuthContext";
 import { esStaff } from "@/auth/roles";
 import type { CategoriaReclamo } from "@/domain/enums";
-import { opcionesCategoria } from "@/domain/labels";
+import { CATEGORIA_HEX, opcionesCategoria } from "@/domain/labels";
 import { useAsync } from "@/hooks/useAsync";
-import { EstadoError } from "@/components/EstadoError";
-import { EstadoVacio } from "@/components/EstadoVacio";
-import { PageHeader } from "@/components/PageHeader";
+import { cn } from "cn";
+import { KpiCard } from "@/components/KpiCard";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ICONO_CATEGORIA } from "@/features/reclamos/iconos";
 import { ReclamoCard } from "@/features/reclamos/ReclamoCard";
 import { TABS, contarPorTab, filtrarReclamos, type TabReclamos } from "@/features/reclamos/filters";
+import type { OrdenFeed } from "@/features/reclamos/feed";
 
-function StatTile({
-  label,
+const TODAS = "todas";
+
+const OPCIONES_ORDEN: { value: OrdenFeed; label: string; icon: LucideIcon }[] = [
+  { value: "recientes", label: "Mas recientes", icon: Clock },
+  { value: "antiguos", label: "Mas antiguos", icon: History },
+  { value: "adhesiones", label: "Mas apoyados", icon: ThumbsUp },
+];
+
+/** Segmented status filter with a sliding highlight that follows the active tab. */
+function TabsFiltro({
   value,
-  color,
-  icon,
+  onChange,
+  counts,
 }: {
-  label: string;
-  value: number;
-  color: string;
-  icon: ReactNode;
+  value: TabReclamos;
+  onChange: (tab: TabReclamos) => void;
+  counts: Record<TabReclamos, number>;
 }) {
   return (
-    <Card withBorder radius="md" padding="md">
-      <Group justify="space-between" wrap="nowrap" align="flex-start">
-        <div>
-          <Text size="xs" c="dimmed" tt="uppercase" fw={700} lts={0.3}>
-            {label}
-          </Text>
-          <Text fz={30} fw={700} lh={1.1} mt={4}>
-            {value}
-          </Text>
-        </div>
-        <ThemeIcon size={40} radius="md" variant="light" color={color}>
-          {icon}
-        </ThemeIcon>
-      </Group>
-    </Card>
+    <div
+      role="tablist"
+      aria-label="Filtrar por estado"
+      className="inline-flex items-center gap-1 rounded-lg bg-muted p-1"
+    >
+      {TABS.map((t) => {
+        const activo = t.value === value;
+        return (
+          <button
+            key={t.value}
+            role="tab"
+            type="button"
+            aria-selected={activo}
+            onClick={() => onChange(t.value)}
+            className={cn(
+              "relative z-0 inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-ring/60",
+              activo ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {activo && (
+              <motion.span
+                layoutId="tab-activo"
+                className="absolute inset-0 -z-10 rounded-md bg-primary shadow-sm"
+                transition={{ type: "spring", stiffness: 320, damping: 30, mass: 0.9 }}
+              />
+            )}
+            {t.label}
+            <span
+              className={cn(
+                "min-w-5 rounded-full px-1.5 py-0.5 text-center text-xs tabular-nums transition-colors duration-200",
+                activo
+                  ? "bg-primary-foreground/20 text-primary-foreground"
+                  : "bg-foreground/8 text-muted-foreground",
+              )}
+            >
+              {counts[t.value]}
+            </span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -67,8 +112,12 @@ export function ReclamosPage() {
   const [tab, setTab] = useState<TabReclamos>("todos");
   const [texto, setTexto] = useState("");
   const [categoria, setCategoria] = useState<CategoriaReclamo | null>(null);
+  const [orden, setOrden] = useState<OrdenFeed>("recientes");
 
-  const { data, loading, error, reload } = useAsync(() => listarReclamos(), []);
+  const { data, loading, error, reload } = useAsync(
+    () => listarReclamos(staff ? { orden } : { ciudadano_id: usuario?.id, orden }),
+    [staff, usuario?.id, orden],
+  );
   const items = useMemo(() => data?.items ?? [], [data]);
   const counts = useMemo(() => contarPorTab(items), [items]);
   const visibles = useMemo(
@@ -77,132 +126,168 @@ export function ReclamosPage() {
   );
 
   return (
-    <Stack gap="lg">
-      <PageHeader
-        icono={IconInbox}
-        titulo={staff ? "Todos los reclamos" : "Mis reclamos"}
-        descripcion={
-          staff
-            ? "Todos los reclamos de la ciudad, mas alla de la bandeja de entrada."
-            : "Crea, segui y gestiona tus reclamos en la ciudad."
-        }
-        accion={
+    <MotionConfig reducedMotion="user">
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div>
+              <h1 className="font-heading text-2xl font-semibold tracking-tight">
+                {staff ? "Todos los reclamos" : "Mis reclamos"}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {staff
+                  ? "Todos los reclamos de la ciudad, mas alla de la bandeja de entrada."
+                  : "Crea, segui y gestiona tus reclamos en la ciudad."}
+              </p>
+            </div>
+          </div>
           <Button
-            leftSection={<IconPlus size={16} />}
-            color="azulUrbano"
+            size="lg"
             onClick={() => navigate("/reclamos/nuevo")}
+            className="h-10 gap-2 rounded-lg px-5 shadow-sm transition-shadow hover:shadow-md"
           >
+            <Plus className="size-4" />
             {staff ? "Cargar reclamo" : "Nuevo reclamo"}
           </Button>
-        }
-      />
+        </div>
 
-      <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="md">
-        <StatTile
-          label="Total"
-          value={counts.todos}
-          color="azulUrbano"
-          icon={<IconInbox size={22} />}
-        />
-        <StatTile
-          label="Abiertos"
-          value={counts.abiertos}
-          color="azulUrbano"
-          icon={<IconInbox size={22} />}
-        />
-        <StatTile
-          label="En proceso"
-          value={counts.en_proceso}
-          color="ambar"
-          icon={<IconProgress size={22} />}
-        />
-        <StatTile
-          label="Resueltos"
-          value={counts.resueltos}
-          color="verdeUrbano"
-          icon={<IconChecks size={22} />}
-        />
-      </SimpleGrid>
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <KpiCard label="Total" value={counts.todos} icon={Inbox} tono="azul" />
+          <KpiCard label="Abiertos" value={counts.abiertos} icon={FolderOpen} tono="azul" />
+          <KpiCard label="En proceso" value={counts.en_proceso} icon={Timer} tono="ambar" />
+          <KpiCard label="Resueltos" value={counts.resueltos} icon={CheckCircle2} tono="verde" />
+        </div>
 
-      <Card withBorder radius="md" padding="md">
-        <Stack gap="md">
-          <Group justify="space-between" wrap="wrap">
-            <Tabs
-              value={tab}
-              onChange={(v) => setTab((v ?? "todos") as TabReclamos)}
-              variant="pills"
-            >
-              <Tabs.List>
-                {TABS.map((t) => (
-                  <Tabs.Tab
-                    key={t.value}
-                    value={t.value}
-                    rightSection={
-                      <Badge size="xs" variant="light" circle>
-                        {counts[t.value]}
-                      </Badge>
-                    }
-                  >
-                    {t.label}
-                  </Tabs.Tab>
-                ))}
-              </Tabs.List>
-            </Tabs>
-            <Group gap="sm">
-              <Select
-                w={190}
-                placeholder="Todas las categorias"
-                clearable
-                data={opcionesCategoria()}
-                value={categoria}
-                onChange={(v) => setCategoria(v as CategoriaReclamo | null)}
-                aria-label="Filtrar por categoria"
-              />
-              <TextInput
-                w={220}
-                placeholder="Buscar por titulo"
-                leftSection={<IconSearch size={16} />}
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-card p-4 shadow-xs ring-1 ring-foreground/10">
+          <TabsFiltro value={tab} onChange={setTab} counts={counts} />
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative w-[220px]">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
                 value={texto}
-                onChange={(e) => setTexto(e.currentTarget.value)}
+                onChange={(e) => setTexto(e.target.value)}
+                placeholder="Buscar por titulo"
+                className="pl-9"
               />
-            </Group>
-          </Group>
-
-          {loading && (
-            <Center py="xl">
-              <Loader color="azulUrbano" />
-            </Center>
-          )}
-
-          {error && <EstadoError mensaje={error} onReintentar={reload} />}
-
-          {!loading && !error && visibles.length === 0 && (
-            <EstadoVacio
-              icono={IconInbox}
-              titulo="Todavia no hay reclamos"
-              mensaje="Cuando cargues un reclamo o ajustes los filtros, vas a verlos aca."
+            </div>
+            <Select
+              value={categoria ?? TODAS}
+              onValueChange={(v) => setCategoria(v === TODAS ? null : (v as CategoriaReclamo))}
             >
-              <Button
-                variant="light"
-                color="azulUrbano"
-                leftSection={<IconPlus size={16} />}
-                onClick={() => navigate("/reclamos/nuevo")}
-                mt="xs"
-              >
-                Crear el primero
-              </Button>
-            </EstadoVacio>
-          )}
+              <SelectTrigger className="w-[190px]" aria-label="Filtrar por categoria">
+                <SelectValue placeholder="Todas las categorias" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Categoria</SelectLabel>
+                  <SelectItem value={TODAS}>
+                    <span className="flex items-center gap-2">
+                      <LayoutGrid className="size-4 text-muted-foreground" />
+                      Todas las categorias
+                    </span>
+                  </SelectItem>
+                  <SelectSeparator />
+                  {opcionesCategoria().map((o) => {
+                    const Icono = ICONO_CATEGORIA[o.value as CategoriaReclamo];
+                    return (
+                      <SelectItem key={o.value} value={o.value}>
+                        <span className="flex items-center gap-2">
+                          <Icono
+                            className="size-4"
+                            style={{ color: CATEGORIA_HEX[o.value as CategoriaReclamo] }}
+                          />
+                          {o.label}
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <Select value={orden} onValueChange={(v) => setOrden(v as OrdenFeed)}>
+              <SelectTrigger className="w-[170px]" aria-label="Ordenar por">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Ordenar por</SelectLabel>
+                  {OPCIONES_ORDEN.map((o) => {
+                    const Icono = o.icon;
+                    return (
+                      <SelectItem key={o.value} value={o.value}>
+                        <span className="flex items-center gap-2">
+                          <Icono className="size-4 text-muted-foreground" />
+                          {o.label}
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
-          <Grid>
-            {visibles.map((reclamo) => (
-              <Grid.Col key={reclamo.id} span={{ base: 12, sm: 6, lg: 4 }}>
-                <ReclamoCard reclamo={reclamo} />
-              </Grid.Col>
-            ))}
-          </Grid>
-        </Stack>
-      </Card>
-    </Stack>
+        {loading && (
+          <div className="flex items-center justify-center gap-2 py-12 text-muted-foreground">
+            <Loader2 className="size-5 animate-spin" />
+            Cargando reclamos...
+          </div>
+        )}
+
+        {error && (
+          <div className="flex flex-col items-center gap-3 py-12 text-center">
+            <WifiOff className="size-9 text-destructive/80" strokeWidth={1.5} />
+            <div>
+              <p className="font-medium">No se pudo cargar</p>
+              <p className="text-sm text-muted-foreground">{error}</p>
+            </div>
+            <Button variant="outline" onClick={reload}>
+              Reintentar
+            </Button>
+          </div>
+        )}
+
+        {!loading && !error && visibles.length === 0 && (
+          <div className="flex flex-col items-center gap-2 py-12 text-center">
+            <Inbox className="size-9 text-primary/70" strokeWidth={1.5} />
+            <p className="font-medium">Todavia no hay reclamos</p>
+            <p className="text-sm text-muted-foreground">
+              Cuando cargues un reclamo o ajustes los filtros, vas a verlos aca.
+            </p>
+            <Button variant="outline" className="mt-1" onClick={() => navigate("/reclamos/nuevo")}>
+              <Plus />
+              Crear el primero
+            </Button>
+          </div>
+        )}
+
+        {!loading && !error && visibles.length > 0 && (
+          <motion.div layout className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <AnimatePresence mode="popLayout" initial={false}>
+              {visibles.map((reclamo) => (
+                <motion.div
+                  key={reclamo.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.96, y: 8 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.96 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                >
+                  <ReclamoCard
+                    reclamo={reclamo}
+                    autoria={staff ? "ciudad" : "mio"}
+                    origen={{
+                      label: staff ? "Todos los reclamos" : "Mis reclamos",
+                      to: "/reclamos",
+                    }}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        )}
+      </div>
+    </MotionConfig>
   );
 }

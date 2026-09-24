@@ -54,9 +54,33 @@ describe("filtrarFeed", () => {
     }),
   ];
 
-  it("ordena por fecha de creacion, mas nuevo primero", () => {
+  it("ordena por fecha de creacion, mas nuevo primero por defecto", () => {
     const res = filtrarFeed(items, { categoria: null, barrio: null, estado: null });
     expect(res.map((r) => r.id)).toEqual(["nuevo", "viejo"]);
+  });
+
+  it("ordena por mas antiguos cuando se pide", () => {
+    const res = filtrarFeed(items, {
+      categoria: null,
+      barrio: null,
+      estado: null,
+      orden: "antiguos",
+    });
+    expect(res.map((r) => r.id)).toEqual(["viejo", "nuevo"]);
+  });
+
+  it("ordena por adhesiones cuando se pide", () => {
+    const conAdhesiones = [
+      reclamo({ id: "pocas", adhesiones_count: 1, created_at: "2026-09-05T10:00:00Z" }),
+      reclamo({ id: "muchas", adhesiones_count: 9, created_at: "2026-09-01T10:00:00Z" }),
+    ];
+    const res = filtrarFeed(conAdhesiones, {
+      categoria: null,
+      barrio: null,
+      estado: null,
+      orden: "adhesiones",
+    });
+    expect(res.map((r) => r.id)).toEqual(["muchas", "pocas"]);
   });
 
   it("filtra por barrio", () => {

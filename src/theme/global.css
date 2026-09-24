@@ -1,126 +1,68 @@
 /* Smooth, subtle interactions shared across the app. */
 
-:root {
-  --app-ground: var(--mantine-color-gray-0);
-}
-
-/* Cards that are whole clickable surfaces: a restrained lift, brand-tinted. */
-.card-interactive {
-  transition:
-    transform 160ms ease,
-    box-shadow 160ms ease,
-    border-color 160ms ease;
-}
-.card-interactive:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--mantine-shadow-md);
-  border-color: var(--mantine-color-azulUrbano-3);
-}
-.card-interactive:active {
-  transform: translateY(0);
-}
-
-/* Clickable table rows get a clear affordance on hover. */
-.row-interactive {
-  transition: background-color 120ms ease;
-  cursor: pointer;
-}
-.row-interactive:hover > td {
-  background-color: var(--mantine-color-azulUrbano-0);
-}
-
-/*
- * Tactile press on every button and action icon: a 1px physical push. Mantine
- * ships the hover color already; this adds the missing "down" feel site-wide.
- */
-.mantine-Button-root,
-.mantine-ActionIcon-root {
-  transition:
-    transform 120ms ease,
-    box-shadow 120ms ease,
-    background-color 120ms ease,
-    border-color 120ms ease;
-}
-.mantine-Button-root:active:not([data-disabled]):not(:disabled),
-.mantine-ActionIcon-root:active:not([data-disabled]):not(:disabled) {
-  transform: translateY(1px);
-}
-
-/*
- * Sidebar nav links live on a dark navy background, so Mantine's default light
- * hover reads as a jarring white flash. Use a subtle translucent-white overlay
- * instead, and never override the active (filled) item's brand background.
- */
-.sidebar-link {
-  transition: background-color 150ms ease;
-}
-.sidebar-link:not([data-active]):hover {
-  background-color: rgba(255, 255, 255, 0.08);
-}
-.sidebar-link:not([data-active]):hover :where(.mantine-NavLink-label) {
-  color: var(--mantine-color-white);
-}
-
-/*
- * Header in three columns (breadcrumb / search / account) with the search
- * truly centered on the header, regardless of how wide the other two are.
- */
-.app-header-grid {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: var(--mantine-spacing-md);
-}
-
-/*
- * Sidebar collapse toggle: a small tab that belongs to the navbar and sticks
- * out of its edge, halfway down, instead of living in the header.
- */
-.navbar-flap {
-  position: absolute;
-  top: 50%;
-  right: -14px;
-  transform: translateY(-50%);
-  z-index: 201;
-  border: 2px solid var(--mantine-color-body);
-  box-shadow: var(--mantine-shadow-sm);
-  transition:
-    transform 120ms ease,
-    box-shadow 120ms ease;
-}
-.navbar-flap:hover {
-  box-shadow: var(--mantine-shadow-md);
-}
-.navbar-flap:active {
-  transform: translateY(-50%) scale(0.94);
-}
-
-/* Header account trigger: needs a hover affordance, it opens a menu. */
-.account-trigger {
-  transition: background-color 120ms ease;
-}
-.account-trigger:hover {
-  background-color: var(--mantine-color-gray-1);
-}
-
 /* Leaflet popups picked up to match the app's card language. */
 .leaflet-popup-content-wrapper {
-  border-radius: var(--mantine-radius-md);
-  box-shadow: var(--mantine-shadow-md);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--popover-shadow);
 }
 .leaflet-popup-content {
-  font-family: var(--mantine-font-family);
-  font-size: var(--mantine-font-size-sm);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+}
+
+.dark .leaflet-container {
+  background: var(--muted);
+}
+
+.dark .leaflet-popup-content-wrapper {
+  border: 1px solid var(--border);
+  background: var(--popover);
+  color: var(--popover-foreground);
+}
+
+.dark .leaflet-popup-tip {
+  background: var(--popover);
+}
+
+.dark .leaflet-bar {
+  border-color: var(--border);
+  box-shadow: var(--popover-shadow);
+}
+
+.dark .leaflet-bar a {
+  border-bottom-color: var(--border);
+  background: var(--popover);
+  color: var(--foreground);
+}
+
+.dark .leaflet-bar a:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.dark .leaflet-control-attribution {
+  background: var(--popover);
+  color: var(--muted-foreground);
+}
+
+.dark .leaflet-control-attribution a {
+  color: var(--primary);
+}
+
+.dark .leaflet-control-scale-line {
+  border-color: var(--border);
+  background: var(--popover);
+  color: var(--foreground);
 }
 
 /*
- * Free OpenStreetMap tiles are correct but visually loud. A light grade -
- * desaturated, brightened, softer contrast, a touch cooler - turns the raw
- * basemap into a calm designed surface. Only the raster tiles are graded;
- * markers, popups and controls live in other panes and stay crisp.
+ * Contain Leaflet's own stacking. Leaflet gives its panes and controls high
+ * z-indexes (controls reach 1000); without a stacking context on the map, those
+ * bubble up to the page root and can paint over modals/dialogs (e.g. the search
+ * spotlight opened from the header). Isolating each map keeps them inside it.
  */
-.mapa-suave .leaflet-tile {
-  filter: saturate(0.8) brightness(1.05) contrast(0.92) hue-rotate(-4deg);
+.mapa-suave {
+  isolation: isolate;
 }
 
 /*
@@ -131,21 +73,6 @@
 .mapa-columna-fill {
   flex: 1 1 auto;
   min-height: 360px;
-}
-
-/*
- * Nuevo reclamo: on desktop (from `md`, where the form and the map sit side
- * by side) bounds the page to the visible viewport so the submit button is
- * always in view without scrolling. Values mirror AppLayout's header height
- * (64px) and padding prop ({ base: "md", sm: 40 }, applied top and bottom).
- * Below `md` the form stacks in one column and stays a normal, scrollable
- * page - clamping its height there would cramp the fields and the map.
- */
-@media (min-width: 62em) {
-  .pantalla-sin-scroll {
-    height: calc(100dvh - 64px - 80px);
-    min-height: 0;
-  }
 }
 
 /* Soft pulsing halo behind the picked-location pin (MapaSelector). */
@@ -166,19 +93,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card-interactive,
-  .row-interactive,
-  .sidebar-link,
-  .account-trigger,
-  .mantine-Button-root,
-  .mantine-ActionIcon-root {
-    transition: none;
-  }
-  .card-interactive:hover,
-  .mantine-Button-root:active,
-  .mantine-ActionIcon-root:active {
-    transform: none;
-  }
   .mapa-marcador-halo {
     animation: none;
     opacity: 0.35;

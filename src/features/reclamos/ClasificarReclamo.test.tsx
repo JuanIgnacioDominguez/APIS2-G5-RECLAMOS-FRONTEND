@@ -20,7 +20,7 @@ describe("ClasificarReclamo", () => {
         onActualizado={vi.fn()}
       />,
     );
-    expect(screen.getByRole("button", { name: /guardar clasificacion/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /guardar clasificación/i })).toBeDisabled();
   });
 
   it("guarda la nueva categoria y avisa al padre", async () => {
@@ -35,9 +35,9 @@ describe("ClasificarReclamo", () => {
       />,
     );
 
-    await userEvent.click(screen.getByRole("textbox", { name: /categoria/i }));
-    await userEvent.click(await screen.findByText("Alumbrado"));
-    await userEvent.click(screen.getByRole("button", { name: /guardar clasificacion/i }));
+    await userEvent.click(screen.getByRole("combobox", { name: /categoría/i }));
+    await userEvent.click(await screen.findByRole("option", { name: "Alumbrado" }));
+    await userEvent.click(screen.getByRole("button", { name: /guardar clasificación/i }));
 
     await waitFor(() => expect(onActualizado).toHaveBeenCalled());
     expect(reclas).toHaveBeenCalledWith(

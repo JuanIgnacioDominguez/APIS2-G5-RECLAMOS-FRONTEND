@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes } from "react-router-dom";
+import * as sonner from "sonner";
 
 import * as authApi from "@/api/auth";
 import { ApiError } from "@/api/client";
@@ -32,7 +33,9 @@ describe("LoginPage", () => {
   beforeEach(() => vi.restoreAllMocks());
 
   it("muestra el formulario, Google y los accesos rapidos por rol", () => {
-    renderLogin();
+    const { container } = renderLogin();
+    expect(container.querySelector(".bg-background")).toBeInTheDocument();
+    expect(container.querySelector(".bg-white")).not.toBeInTheDocument();
     expect(screen.getByLabelText(/usuario/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/contrasena/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /continuar con google/i })).toBeInTheDocument();
@@ -51,17 +54,25 @@ describe("LoginPage", () => {
     expect(authApi.loginDev).toHaveBeenCalledWith("vecino1", "vecino1");
   });
 
-  it("muestra un error cuando el backend rechaza las credenciales", async () => {
+  it("marca las credenciales incorrectas y muestra un toast", async () => {
     vi.spyOn(authApi, "loginDev").mockRejectedValue(
       new ApiError(401, "Usuario o contrasena incorrectos"),
     );
+    const toastError = vi.spyOn(sonner.toast, "error");
     renderLogin();
 
-    await userEvent.type(screen.getByLabelText(/usuario/i), "vecino1");
-    await userEvent.type(screen.getByLabelText(/contrasena/i), "mala");
+    const usuarioInput = screen.getByLabelText(/usuario/i);
+    const passwordInput = screen.getByLabelText(/contrasena/i);
+    await userEvent.type(usuarioInput, "vecino1");
+    await userEvent.type(passwordInput, "mala");
     await userEvent.click(screen.getByRole("button", { name: /^ingresar$/i }));
 
     expect(await screen.findByText(/incorrectos/i)).toBeInTheDocument();
+    expect(usuarioInput).toHaveAttribute("aria-invalid", "true");
+    expect(passwordInput).toHaveAttribute("aria-invalid", "true");
+    expect(toastError).toHaveBeenCalledWith("Datos incorrectos", {
+      description: "Verificá tu usuario y contraseña e intentá nuevamente.",
+    });
     expect(screen.queryByText("listado de reclamos")).not.toBeInTheDocument();
   });
 

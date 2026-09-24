@@ -1,79 +1,68 @@
 import { useState } from "react";
-import {
-  Badge,
-  Box,
-  Button,
-  Card,
-  Group,
-  Stack,
-  Text,
-  Textarea,
-  ThemeIcon,
-  Title,
-} from "@mantine/core";
-import { IconShieldCheck } from "@tabler/icons-react";
-import { notifications } from "@mantine/notifications";
+import { Loader2, MessageSquare, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
 
 import { comentar } from "@/api/reclamos";
 import type { ComentarioOut } from "@/api/types";
+import { useAuth } from "@/auth/AuthContext";
 import { haceCuanto } from "@/lib/format";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 
-/** Renders one comment; official replies (US-12) get a highlighted card. */
+function iniciales(nombre: string | null | undefined): string {
+  const partes = (nombre ?? "").trim().split(/\s+/).filter(Boolean);
+  if (partes.length === 0) return "?";
+  return partes
+    .slice(0, 2)
+    .map((parte) => parte[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
 function Comentario({ comentario }: { comentario: ComentarioOut }) {
-  const cabecera = (
-    <Group gap="xs" mb={2}>
-      <Text size="sm" fw={600}>
-        {comentario.autor_nombre ?? comentario.autor_id}
-      </Text>
-      <Text size="xs" c="dimmed">
-        {haceCuanto(comentario.created_at)}
-      </Text>
-    </Group>
-  );
-
   if (comentario.es_oficial) {
     return (
-      <Box
+      <div
         data-testid="comentario-oficial"
-        p="sm"
-        style={{
-          borderRadius: "var(--mantine-radius-md)",
-          border: "1px solid var(--mantine-color-verdeUrbano-3)",
-          backgroundColor: "var(--mantine-color-verdeUrbano-0)",
-        }}
+        className="rounded-xl border border-official/35 bg-official/8 p-4"
       >
-        <Group gap="xs" mb={4}>
-          <ThemeIcon size="sm" radius="xl" variant="light" color="verdeUrbano">
-            <IconShieldCheck size={13} />
-          </ThemeIcon>
-          <Text size="sm" fw={600}>
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <span className="grid size-7 place-items-center rounded-full bg-official text-xs font-semibold text-on-official">
+            {iniciales(comentario.autor_nombre ?? comentario.autor_id)}
+          </span>
+          <ShieldCheck className="size-4 text-official" />
+          <span className="text-sm font-semibold">
             {comentario.autor_nombre ?? comentario.autor_id}
-          </Text>
-          <Badge size="xs" color="verdeUrbano" variant="filled" radius="sm">
+          </span>
+          <Badge className="border-transparent bg-official text-on-official">
             Respuesta oficial
           </Badge>
-          <Text size="xs" c="dimmed">
-            {haceCuanto(comentario.created_at)}
-          </Text>
-        </Group>
-        <Text size="sm">{comentario.texto}</Text>
-      </Box>
+          <span className="text-xs text-muted-foreground">{haceCuanto(comentario.created_at)}</span>
+        </div>
+        <p className="text-sm leading-relaxed">{comentario.texto}</p>
+      </div>
     );
   }
 
   return (
-    <div>
-      {cabecera}
-      <Text size="sm">{comentario.texto}</Text>
+    <div className="flex gap-3">
+      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
+        {iniciales(comentario.autor_nombre ?? comentario.autor_id)}
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="mb-1 flex flex-wrap items-center gap-2">
+          <span className="text-sm font-semibold">
+            {comentario.autor_nombre ?? comentario.autor_id}
+          </span>
+          <span className="text-xs text-muted-foreground">{haceCuanto(comentario.created_at)}</span>
+        </div>
+        <p className="text-sm leading-relaxed">{comentario.texto}</p>
+      </div>
     </div>
   );
 }
 
-/**
- * Comment thread of a claim (US-16). Anyone authenticated can add a comment; the
- * backend marks staff comments as "oficial". After posting, the parent reloads
- * the detail so the new comment and any state change show up.
- */
 export function ComentariosReclamo({
   reclamoId,
   comentarios,
@@ -83,6 +72,7 @@ export function ComentariosReclamo({
   comentarios: ComentarioOut[];
   onComentado: () => void;
 }) {
+  const { usuario } = useAuth();
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
 
@@ -93,12 +83,11 @@ export function ComentariosReclamo({
     try {
       await comentar(reclamoId, limpio);
       setTexto("");
+      toast.success("Comentario publicado");
       onComentado();
     } catch (err) {
-      notifications.show({
-        color: "rojoEmergencia",
-        title: "No se pudo comentar",
-        message: err instanceof Error ? err.message : "Error inesperado",
+      toast.error("No se pudo comentar", {
+        description: err instanceof Error ? err.message : "Error inesperado",
       });
     } finally {
       setEnviando(false);
@@ -106,44 +95,53 @@ export function ComentariosReclamo({
   }
 
   return (
-    <Card withBorder radius="md" padding="lg">
-      <Title order={5} mb="md">
-        Comentarios
-      </Title>
-
-      <Stack gap="md">
-        {comentarios.length === 0 && (
-          <Text c="dimmed" size="sm">
-            Todavia no hay comentarios.
-          </Text>
+    <Card className="rounded-2xl ring-1 ring-border">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base font-semibold">
+          <MessageSquare className="size-[18px] text-primary" />
+          Comentarios
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {comentarios.length === 0 ? (
+          <div className="flex items-center justify-center gap-2 py-1 text-sm text-muted-foreground">
+            <MessageSquare className="size-4" />
+            Todavía no hay comentarios.
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {comentarios.map((comentario) => (
+              <Comentario key={comentario.id} comentario={comentario} />
+            ))}
+          </div>
         )}
 
-        {comentarios.map((c) => (
-          <Comentario key={c.id} comentario={c} />
-        ))}
-
-        <Stack gap="xs">
+        <div className="flex items-center gap-3">
+          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+            {iniciales(usuario?.nombre)}
+          </span>
           <Textarea
-            placeholder="Escribi un comentario"
-            autosize
-            minRows={2}
+            placeholder="Escribí un comentario..."
+            rows={1}
             value={texto}
-            onChange={(e) => setTexto(e.currentTarget.value)}
+            onChange={(event) => setTexto(event.target.value)}
+            onKeyDown={(event) => {
+              if ((event.metaKey || event.ctrlKey) && event.key === "Enter") void enviar();
+            }}
             aria-label="Nuevo comentario"
+            className="min-h-10 resize-none"
           />
-          <Group justify="flex-end">
-            <Button
-              size="sm"
-              color="azulUrbano"
-              loading={enviando}
-              disabled={!texto.trim()}
-              onClick={enviar}
-            >
-              Comentar
-            </Button>
-          </Group>
-        </Stack>
-      </Stack>
+          <Button
+            type="button"
+            disabled={!texto.trim() || enviando}
+            onClick={enviar}
+            className="min-w-24"
+          >
+            {enviando && <Loader2 className="animate-spin" />}
+            Comentar
+          </Button>
+        </div>
+      </CardContent>
     </Card>
   );
 }

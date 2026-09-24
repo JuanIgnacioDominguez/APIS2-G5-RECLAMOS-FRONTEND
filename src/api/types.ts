@@ -45,6 +45,33 @@ export interface ReclamoResumen {
   created_at: string;
 }
 
+/** Payload to look for open claims about the same problem before creating one. */
+export interface BusquedaSimilares {
+  titulo: string;
+  descripcion: string;
+  categoria?: CategoriaReclamo | null;
+  latitud?: number | null;
+  longitud?: number | null;
+  barrio?: string | null;
+}
+
+/**
+ * A claim the backend considers a likely duplicate, ranked by text similarity
+ * and proximity. Extends the list projection with the "why it matches" fields.
+ */
+export interface ReclamoSimilar extends ReclamoResumen {
+  /** 0..1 text similarity; already sorted, useful to label "muy parecido". */
+  similitud: number;
+  /** Distance in metres, or null if either claim has no coordinates. */
+  distancia_metros: number | null;
+  /** Human words that overlap, to explain the match ("Coinciden: luz, apagado"). */
+  terminos_en_comun: string[];
+  /** The claim was created by the same user asking. */
+  es_propio: boolean;
+  /** The user already adhered to this claim. */
+  ya_adherido: boolean;
+}
+
 export interface ReclamoOut extends ReclamoResumen {
   ciudadano_id: string;
   descripcion: string;
@@ -137,6 +164,8 @@ export interface FiltroReclamos {
   barrio?: string;
   texto?: string;
   orden?: string;
+  /** Restrict to a single citizen's claims (used to flag "mine" on the map). */
+  ciudadano_id?: string;
   page?: number;
   size?: number;
 }

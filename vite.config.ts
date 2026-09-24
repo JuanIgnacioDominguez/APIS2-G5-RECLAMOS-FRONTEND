@@ -1,10 +1,11 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 import { fileURLToPath, URL } from "node:url";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
@@ -15,6 +16,9 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
     css: true,
+    // Headroom over vitest's 5s default: the form tests type long strings and a
+    // loaded CI runner can drift past 5s. Real waits are bounded by findBy timeouts.
+    testTimeout: 15000,
     coverage: {
       // v8 provider mirrors the backend's pytest-cov: a hard gate at 60%,
       // the threshold required by the course rubric.
@@ -28,6 +32,9 @@ export default defineConfig({
         "src/test/**",
         "src/**/index.ts",
         "src/theme/**",
+        // Vendored shadcn/ui primitives: added by the CLI, not our logic to test.
+        "src/components/ui/**",
+        "src/lib/utils.ts",
         // Declaration-only: interfaces/types compile to nothing at runtime,
         // so there is no executable code to cover.
         "src/api/types.ts",

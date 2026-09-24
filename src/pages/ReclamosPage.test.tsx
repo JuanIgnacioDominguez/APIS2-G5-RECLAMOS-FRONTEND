@@ -6,6 +6,7 @@ import * as reclamosApi from "@/api/reclamos";
 import type { Page, ReclamoResumen } from "@/api/types";
 import { CategoriaReclamo, EstadoReclamo, PrioridadReclamo } from "@/domain/enums";
 import { renderWithProviders } from "@/test/render";
+import { CIUDADANO, OPERADOR } from "@/test/usuarios";
 import { ReclamosPage } from "./ReclamosPage";
 
 function reclamo(id: string, titulo: string): ReclamoResumen {
@@ -72,5 +73,23 @@ describe("ReclamosPage", () => {
     renderWithProviders(<ReclamosPage />);
 
     expect(await screen.findByText(/no hay reclamos/i)).toBeInTheDocument();
+  });
+
+  it("un ciudadano solo pide sus propios reclamos", async () => {
+    const spy = vi.spyOn(reclamosApi, "listarReclamos").mockResolvedValue(page([]));
+
+    renderWithProviders(<ReclamosPage />, { usuario: CIUDADANO });
+
+    await waitFor(() =>
+      expect(spy).toHaveBeenCalledWith({ ciudadano_id: CIUDADANO.id, orden: "recientes" }),
+    );
+  });
+
+  it("el staff pide todos los reclamos, sin filtrar por ciudadano", async () => {
+    const spy = vi.spyOn(reclamosApi, "listarReclamos").mockResolvedValue(page([]));
+
+    renderWithProviders(<ReclamosPage />, { usuario: OPERADOR });
+
+    await waitFor(() => expect(spy).toHaveBeenCalledWith({ orden: "recientes" }));
   });
 });

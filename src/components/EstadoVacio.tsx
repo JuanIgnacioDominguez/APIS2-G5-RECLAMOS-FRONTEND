@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
-import { Center, Stack, Text, ThemeIcon } from "@mantine/core";
-import type { Icon } from "@tabler/icons-react";
+import type { LucideIcon } from "lucide-react";
 
 /**
  * Composed empty state: a soft brand-tinted icon, a title and a hint, plus an
@@ -13,27 +12,19 @@ export function EstadoVacio({
   mensaje,
   children,
 }: {
-  icono: Icon;
+  icono: LucideIcon;
   titulo: string;
   mensaje?: string;
   children?: ReactNode;
 }) {
   return (
-    <Center py={48}>
-      <Stack align="center" gap="sm" maw={400}>
-        <ThemeIcon size={56} radius="xl" variant="light" color="azulUrbano">
-          <Icono size={28} stroke={1.6} />
-        </ThemeIcon>
-        <Text fw={600} fz="lg" ta="center">
-          {titulo}
-        </Text>
-        {mensaje && (
-          <Text c="dimmed" size="sm" ta="center">
-            {mensaje}
-          </Text>
-        )}
+    <div className="flex justify-center py-12">
+      <div className="flex max-w-md flex-col items-center gap-3 text-center">
+        <Icono className="size-10 text-primary/70" strokeWidth={1.5} />
+        <p className="text-lg font-semibold">{titulo}</p>
+        {mensaje && <p className="text-sm text-muted-foreground">{mensaje}</p>}
         {children}
-      </Stack>
-    </Center>
+      </div>
+    </div>
   );
 }

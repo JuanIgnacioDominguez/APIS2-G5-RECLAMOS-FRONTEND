@@ -1,39 +1,32 @@
-import { Button, Center, Group, Stack, Text, Title } from "@mantine/core";
-import { IconArrowLeft, IconHome2 } from "@tabler/icons-react";
+import { ArrowLeft, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
+import { Button } from "@/components/ui/button";
 
 /** 404 page for unknown routes. */
 export function NotFoundPage() {
   const navigate = useNavigate();
   return (
-    <Center mih="60vh">
-      <Stack align="center" gap="xs" maw={420}>
-        <Text fw={800} fz={96} lh={1} c="azulUrbano.2" style={{ letterSpacing: "-0.04em" }}>
+    <div className="flex min-h-[60vh] items-center justify-center">
+      <div className="flex max-w-[420px] flex-col items-center gap-2 text-center">
+        <span className="text-8xl leading-none font-extrabold tracking-tight text-primary">
           404
-        </Text>
-        <Title order={3} ta="center">
-          No encontramos esta pagina
-        </Title>
-        <Text c="dimmed" ta="center">
+        </span>
+        <h3 className="text-xl font-semibold">No encontramos esta pagina</h3>
+        <p className="text-muted-foreground">
           La direccion no existe o el reclamo que buscabas ya no esta disponible.
-        </Text>
-        <Group mt="md">
-          <Button
-            variant="default"
-            leftSection={<IconArrowLeft size={16} />}
-            onClick={() => navigate(-1)}
-          >
+        </p>
+        <div className="mt-4 flex gap-3">
+          <Button variant="outline" onClick={() => navigate(-1)}>
+            <ArrowLeft className="size-4" />
             Volver
           </Button>
-          <Button
-            color="azulUrbano"
-            leftSection={<IconHome2 size={16} />}
-            onClick={() => navigate("/")}
-          >
+          <Button onClick={() => navigate("/")}>
+            <Home className="size-4" />
             Ir al inicio
           </Button>
-        </Group>
-      </Stack>
-    </Center>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -1,0 +1,280 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: "Geist Variable", sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-item-hover: var(--sidebar-item-hover);
+  --color-sidebar-item-active: var(--sidebar-item-active);
+  --color-sidebar-item-active-ring: var(--sidebar-item-active-ring);
+  --color-sidebar-item-active-icon: var(--sidebar-item-active-icon);
+  --color-sidebar-item-active-foreground: var(--sidebar-item-active-foreground);
+  --color-sidebar-badge-bg: var(--sidebar-badge-bg);
+  --color-sidebar-badge-fg: var(--sidebar-badge-fg);
+  --color-overlay: var(--overlay);
+  --color-official: var(--official);
+  --color-on-official: var(--on-official);
+  --color-ai: var(--ai);
+  --color-warning: var(--warning);
+  --color-warning-surface: var(--warning-surface);
+  --color-success: var(--success);
+  --color-success-surface: var(--success-surface);
+  --color-ownership-own: var(--ownership-own);
+  --color-ownership-other: var(--ownership-other);
+  --color-ownership-community: var(--ownership-community);
+  --shadow-popover: var(--popover-shadow);
+  --shadow-toast: var(--toast-shadow);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  color-scheme: light;
+  /* CityPass+ palette (Azul Urbano brand) mapped onto shadcn tokens. */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.16 0.02 250);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.16 0.02 250);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.16 0.02 250);
+  --primary: #2563a6;
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0.01 250);
+  --secondary-foreground: #194778;
+  --muted: oklch(0.97 0.005 250);
+  --muted-foreground: oklch(0.5 0.02 250);
+  --accent: #eef4fb;
+  --accent-foreground: #194778;
+  --destructive: #c83e4d;
+  --border: oklch(0.92 0.008 250);
+  --input: oklch(0.92 0.008 250);
+  --ring: #2563a6;
+  --chart-1: #2563a6;
+  --chart-2: #4f8a72;
+  --chart-3: #d99838;
+  --chart-4: #c83e4d;
+  --chart-5: #142430;
+  --radius: 0.65rem;
+  --sidebar: #142430;
+  --sidebar-foreground: #d6dbe1;
+  --sidebar-primary: #2563a6;
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: rgba(255, 255, 255, 0.08);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #4f89d1;
+  --sidebar-item-hover: rgb(255 255 255 / 7%);
+  --sidebar-item-active: rgb(59 130 196 / 20%);
+  --sidebar-item-active-ring: rgb(106 168 224 / 30%);
+  --sidebar-item-active-icon: #7fb8ee;
+  --sidebar-item-active-foreground: #ffffff;
+  --sidebar-badge-bg: #ef4444;
+  --sidebar-badge-fg: #ffffff;
+  --overlay: rgb(0 0 0 / 10%);
+  --popover-shadow: 0 8px 24px rgb(20 36 48 / 9%);
+  --toast-shadow: 0 10px 15px -3px rgb(0 0 0 / 10%), 0 4px 6px -4px rgb(0 0 0 / 10%);
+  --official: #3f765f;
+  --on-official: #ffffff;
+  --ai: #2563a6;
+  --warning: #b45309;
+  --warning-surface: #fff7ed;
+  --success: #15803d;
+  --success-surface: #f0fdf4;
+  --ownership-own: #15803d;
+  --ownership-other: #475569;
+  --ownership-community: #142430;
+  --status-received-on: #ffffff;
+  --status-received-text: #2563eb;
+  --status-review-on: #ffffff;
+  --status-review-text: #8a6500;
+  --status-assigned-on: #ffffff;
+  --status-assigned-text: #0e7490;
+  --status-progress-on: #ffffff;
+  --status-progress-text: #c2410c;
+  --status-resolved-on: #ffffff;
+  --status-resolved-text: #15803d;
+  --status-rejected-on: #ffffff;
+  --status-rejected-text: #b91c1c;
+  --status-closed-on: #ffffff;
+  --status-closed-text: #475569;
+  --status-shadow: 0 1px 1px rgb(0 0 0 / 20%);
+  --priority-low: #15803d;
+  --priority-medium: #2563eb;
+  --priority-high: #dc2626;
+  --priority-critical: #991b1b;
+  --category-alumbrado: #f59e0b;
+  --category-baches: #ea580c;
+  --category-residuos: #65a30d;
+  --category-arbolado: #16a34a;
+  --category-agua: #0891b2;
+  --category-transito: #2563eb;
+  --category-ruidos: #7c3aed;
+  --category-espacios: #0d9488;
+  --category-seguridad: #e11d48;
+  --category-otros: #64748b;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: oklch(0.17 0.02 250);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.21 0.02 250);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.21 0.02 250);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: #6497d6;
+  --primary-foreground: oklch(0.2 0.02 250);
+  --secondary: oklch(0.27 0.02 250);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.27 0.02 250);
+  --muted-foreground: oklch(0.72 0.02 250);
+  --accent: oklch(0.29 0.03 250);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: #e5717d;
+  --border: oklch(1 0 0 / 20%);
+  --input: oklch(1 0 0 / 36%);
+  --ring: #8fc1ff;
+  --chart-1: #6497d6;
+  --chart-2: #6bb190;
+  --chart-3: #e6b566;
+  --chart-4: #e5717d;
+  --chart-5: #7d8da1;
+  --sidebar: oklch(0.14 0.02 250);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: #6497d6;
+  --sidebar-primary-foreground: oklch(0.2 0.02 250);
+  --sidebar-accent: oklch(0.27 0.02 250);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 16%);
+  --sidebar-ring: #8fc1ff;
+  --sidebar-item-hover: rgb(255 255 255 / 7%);
+  --sidebar-item-active: rgb(59 130 196 / 24%);
+  --sidebar-item-active-ring: rgb(143 193 255 / 38%);
+  --sidebar-item-active-icon: #8fc1ff;
+  --sidebar-item-active-foreground: #ffffff;
+  --sidebar-badge-bg: #e5717d;
+  --sidebar-badge-fg: #071018;
+  --overlay: oklch(0 0 0 / 62%);
+  --popover-shadow: 0 12px 32px oklch(0 0 0 / 50%);
+  --toast-shadow: 0 12px 30px oklch(0 0 0 / 45%);
+  --official: #6bb190;
+  --on-official: #071018;
+  --ai: #7db7ff;
+  --warning: #e6b566;
+  --warning-surface: oklch(0.27 0.04 75);
+  --success: #5ccf8a;
+  --success-surface: oklch(0.25 0.04 155);
+  --ownership-own: #5ccf8a;
+  --ownership-other: #a8b5c4;
+  --ownership-community: #7db7ff;
+  --status-received-on: #ffffff;
+  --status-received-text: #7db7ff;
+  --status-review-on: #071018;
+  --status-review-text: #e6b566;
+  --status-assigned-on: #071018;
+  --status-assigned-text: #38bdf8;
+  --status-progress-on: #071018;
+  --status-progress-text: #fb923c;
+  --status-resolved-on: #071018;
+  --status-resolved-text: #4ade80;
+  --status-rejected-on: #ffffff;
+  --status-rejected-text: #fb7185;
+  --status-closed-on: #ffffff;
+  --status-closed-text: #a8b5c4;
+  --status-shadow: none;
+  --priority-low: #5ccf8a;
+  --priority-medium: #7db7ff;
+  --priority-high: #f0b95b;
+  --priority-critical: #ff7f8c;
+  --category-alumbrado: #f6b94a;
+  --category-baches: #fb8b5c;
+  --category-residuos: #a3d65b;
+  --category-arbolado: #5ccf8a;
+  --category-agua: #38bdf8;
+  --category-transito: #7db7ff;
+  --category-ruidos: #b69af8;
+  --category-espacios: #4fd1c5;
+  --category-seguridad: #fb7185;
+  --category-otros: #a8b5c4;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* Thin, always-visible scrollbar for select dropdowns, so a long option
+   list (e.g. every category) reads as scrollable at a glance. Radix scrolls
+   the inner viewport and hides its scrollbar with injected styles, so this
+   targets the viewport with higher specificity to win that cascade. */
+[data-slot="select-content"] [data-radix-select-viewport] {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--muted-foreground) 45%, transparent) transparent;
+}
+[data-slot="select-content"] [data-radix-select-viewport]::-webkit-scrollbar {
+  display: block;
+  width: 8px;
+}
+[data-slot="select-content"] [data-radix-select-viewport]::-webkit-scrollbar-track {
+  background: transparent;
+}
+[data-slot="select-content"] [data-radix-select-viewport]::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  background-color: color-mix(in oklab, var(--muted-foreground) 40%, transparent);
+}
+[data-slot="select-content"] [data-radix-select-viewport]::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in oklab, var(--muted-foreground) 60%, transparent);
+}
