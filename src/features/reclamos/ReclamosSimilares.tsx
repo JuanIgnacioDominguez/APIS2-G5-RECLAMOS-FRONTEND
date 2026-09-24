@@ -14,14 +14,12 @@ import {
 } from "@/components/ui/dialog";
 import { EstadoBadge } from "./EstadoBadges";
 
-/** "a 50 m" from the distance in metres, or null when there are no coordinates. */
 function textoDistancia(metros: number | null): string | null {
   if (metros === null) return null;
   if (metros < 1000) return `a ${metros} m`;
   return `a ${(metros / 1000).toFixed(1)} km`;
 }
 
-/** A single suggested-duplicate card, with the action that fits its state. */
 function TarjetaSimilar({
   reclamo,
   onSumarme,
@@ -90,11 +88,6 @@ function TarjetaSimilar({
   );
 }
 
-/**
- * "Is it one of these?" modal shown before creating a claim, when the backend
- * found open claims that likely describe the same problem (anti-duplicados).
- * The citizen can adhere to an existing one, or insist and create theirs anyway.
- */
 export function ReclamosSimilaresDialog({
   open,
   onOpenChange,

@@ -4,13 +4,13 @@ import userEvent from "@testing-library/user-event";
 import { Route, Routes, useLocation } from "react-router-dom";
 
 import * as reclamosApi from "@/api/reclamos";
-import type { Page, ReclamoResumen } from "@/api/types";
+import type { Page, ReclamoListado } from "@/api/types";
 import { CategoriaReclamo, EstadoReclamo, PrioridadReclamo } from "@/domain/enums";
 import { renderWithProviders } from "@/test/render";
 import { CIUDADANO, OPERADOR } from "@/test/usuarios";
 import { FeedPublicoPage } from "./FeedPublicoPage";
 
-function reclamo(id: string, titulo: string, barrio: string): ReclamoResumen {
+function reclamo(id: string, titulo: string, barrio: string): ReclamoListado {
   return {
     id,
     titulo,
@@ -22,10 +22,11 @@ function reclamo(id: string, titulo: string, barrio: string): ReclamoResumen {
     longitud: null,
     adhesiones_count: 0,
     created_at: new Date().toISOString(),
+    es_propio: false,
   };
 }
 
-function page(items: ReclamoResumen[]): Page<ReclamoResumen> {
+function page(items: ReclamoListado[]): Page<ReclamoListado> {
   return { items, total: items.length, page: 1, size: 100 };
 }
 

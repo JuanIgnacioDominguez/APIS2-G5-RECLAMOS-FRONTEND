@@ -1,9 +1,8 @@
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowLeft,
   Building2,
-  CalendarDays,
   Clock,
   Download,
   ExternalLink,
@@ -15,9 +14,7 @@ import {
   Radio,
   RefreshCw,
   Smartphone,
-  Sparkles,
   Users,
-  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
@@ -25,30 +22,23 @@ import { useNavigate, useParams } from "react-router-dom";
 import { cn } from "cn";
 import type { HistorialOut, ReclamoDetalle } from "@/api/types";
 import { useAdherirMutation, useObtenerReclamoQuery } from "@/store/citypassApi";
-import { CanalOrigen, OrigenClasificacion } from "@/domain/enums";
+import { CanalOrigen } from "@/domain/enums";
 import { ESTADO_HEX, ESTADO_LABEL, ESTADO_TEXT_COLOR } from "@/domain/labels";
-import { formatConfianza, formatFecha, haceCuanto, idCorto } from "@/lib/format";
+import { formatFecha, haceCuanto, idCorto } from "@/lib/format";
 import { EstadoError } from "@/components/EstadoError";
 import { useAuth } from "@/auth/AuthContext";
 import { esStaff } from "@/auth/roles";
-import {
-  CategoriaBadge,
-  CategoriaLinea,
-  EstadoBadge,
-  PrioridadBadge,
-  PrioridadLinea,
-} from "@/features/reclamos/EstadoBadges";
+import { CategoriaBadge, EstadoBadge, PrioridadBadge } from "@/features/reclamos/EstadoBadges";
 import { GestionarEstado } from "@/features/reclamos/GestionarEstado";
 import { ClasificarReclamo } from "@/features/reclamos/ClasificarReclamo";
 import { ComentariosReclamo } from "@/features/reclamos/ComentariosReclamo";
+import { ReclamoResumenCard } from "@/features/reclamos/ReclamoResumenCard";
 import { PosiblesDuplicados } from "@/features/reclamos/PosiblesDuplicados";
 import { MapaUbicacion } from "@/features/mapa/MapaUbicacion";
 import { ICONO_ESTADO } from "@/features/reclamos/iconos";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const CANAL_LABEL: Record<CanalOrigen, string> = {
   APP: "App",
@@ -232,9 +222,10 @@ interface VistaGestionProps {
   reclamo: ReclamoDetalle;
   refrescando: boolean;
   onRecargar: () => void;
+  onVolver: () => void;
 }
 
-function VistaGestionReclamo({ reclamo, refrescando, onRecargar }: VistaGestionProps) {
+function VistaGestionReclamo({ reclamo, refrescando, onRecargar, onVolver }: VistaGestionProps) {
   const tieneUbicacion = reclamo.latitud !== null && reclamo.longitud !== null;
   const mapaUrl =
     reclamo.latitud !== null && reclamo.longitud !== null
@@ -272,7 +263,17 @@ function VistaGestionReclamo({ reclamo, refrescando, onRecargar }: VistaGestionP
             <p className="text-base font-medium text-pretty text-foreground/80">{reclamo.titulo}</p>
           )}
         </div>
-        <div className="flex shrink-0 items-center gap-2 xl:justify-end">
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 xl:justify-end">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onVolver}
+            className="gap-2 text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="size-4" />
+            Volver
+          </Button>
           <p className="text-xs text-muted-foreground">
             Creado el {formatFechaCreacion(reclamo.created_at)}
           </p>
@@ -301,7 +302,6 @@ function VistaGestionReclamo({ reclamo, refrescando, onRecargar }: VistaGestionP
               categoria={reclamo.categoria}
               asignadoActual={reclamo.asignado_a}
               areaActual={reclamo.area_responsable}
-              onActualizado={onRecargar}
               embebido
             />
           </CardContent>
@@ -313,7 +313,6 @@ function VistaGestionReclamo({ reclamo, refrescando, onRecargar }: VistaGestionP
               reclamoId={reclamo.id}
               categoriaActual={reclamo.categoria}
               prioridadActual={reclamo.prioridad}
-              onActualizado={onRecargar}
               embebido
             />
           </CardContent>
@@ -412,13 +411,209 @@ function VistaGestionReclamo({ reclamo, refrescando, onRecargar }: VistaGestionP
           </Card>
 
           <div data-tour="detalle-comentarios">
-            <ComentariosReclamo
-              reclamoId={reclamo.id}
-              comentarios={reclamo.comentarios}
-              onComentado={onRecargar}
-            />
+            <ComentariosReclamo reclamoId={reclamo.id} comentarios={reclamo.comentarios} />
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+interface VistaCiudadanoProps {
+  reclamo: ReclamoDetalle;
+  totalAdhesiones: number;
+  esPropio: boolean;
+  puedeAdherir: boolean;
+  adhiriendo: boolean;
+  refrescando: boolean;
+  onAdherir: () => void;
+  onRecargar: () => void;
+  onVolver: () => void;
+}
+
+function VistaCiudadanoReclamo({
+  reclamo,
+  totalAdhesiones,
+  esPropio,
+  puedeAdherir,
+  adhiriendo,
+  refrescando,
+  onAdherir,
+  onRecargar,
+  onVolver,
+}: VistaCiudadanoProps) {
+  const tieneUbicacion = reclamo.latitud !== null && reclamo.longitud !== null;
+  const mapaUrl =
+    reclamo.latitud !== null && reclamo.longitud !== null
+      ? `https://www.openstreetmap.org/?mlat=${reclamo.latitud}&mlon=${reclamo.longitud}#map=17/${reclamo.latitud}/${reclamo.longitud}`
+      : null;
+
+  return (
+    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-5">
+      <section
+        data-tour="detalle-header"
+        className="flex flex-col gap-3 pb-1 xl:flex-row xl:items-start xl:justify-between"
+      >
+        <div className="flex min-w-0 flex-col gap-3">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onVolver}
+            className="w-fit gap-2 text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="size-4" />
+            Volver
+          </Button>
+          <div className="min-w-0 space-y-3">
+            <h1 className="text-2xl font-bold tracking-[-0.02em] text-balance sm:text-[1.7rem]">
+              Reclamo {idCorto(reclamo.id)}
+            </h1>
+            {reclamo.titulo && (
+              <p className="text-base font-medium text-pretty text-foreground/80">
+                {reclamo.titulo}
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 xl:justify-end">
+          <p className="text-xs text-muted-foreground">
+            Creado el {formatFechaCreacion(reclamo.created_at)}
+          </p>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            onClick={onRecargar}
+            disabled={refrescando}
+            aria-label="Actualizar reclamo"
+          >
+            <RefreshCw className={cn(refrescando && "animate-spin")} />
+          </Button>
+        </div>
+      </section>
+
+      <div className="grid items-start gap-4 lg:grid-cols-3">
+        <div className="flex min-w-0 flex-col gap-4 lg:col-span-2">
+          <div data-tour="detalle-resumen">
+            <ReclamoResumenCard reclamo={reclamo} esPropio={esPropio} />
+          </div>
+
+          <Card data-tour="detalle-adhesion" className="rounded-2xl ring-1 ring-border">
+            <CardContent className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="grid size-9 place-items-center rounded-lg bg-primary/10 text-primary">
+                  <Users className="size-4" />
+                </span>
+                <div>
+                  <p className="font-semibold">Participación</p>
+                  <p className="text-sm text-muted-foreground">
+                    {totalAdhesiones}{" "}
+                    {totalAdhesiones === 1 ? "vecino se sumó" : "vecinos se sumaron"}
+                  </p>
+                </div>
+              </div>
+              {esPropio ? (
+                <span className="text-sm text-muted-foreground">Es tu reclamo</span>
+              ) : (
+                puedeAdherir && (
+                  <Button onClick={onAdherir} disabled={adhiriendo} className="gap-2">
+                    {adhiriendo ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Users className="size-4" />
+                    )}
+                    A mí también me pasa
+                  </Button>
+                )
+              )}
+            </CardContent>
+          </Card>
+
+          <Card data-tour="detalle-informacion" className="rounded-2xl ring-1 ring-border">
+            <CardHeader>
+              <SeccionTitulo icon={FileText}>Descripción</SeccionTitulo>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="max-w-3xl text-sm leading-6 text-pretty text-foreground/80">
+                {reclamo.descripcion || "El reclamo no incluye una descripción adicional."}
+              </p>
+              {reclamo.resolucion && (
+                <div className="rounded-xl border border-success/30 bg-success-surface p-4">
+                  <p className="mb-1 text-sm font-semibold text-success">Resolución</p>
+                  <p className="text-sm leading-relaxed text-foreground/80">{reclamo.resolucion}</p>
+                </div>
+              )}
+              {reclamo.fotos.length > 0 && (
+                <div className="space-y-2">
+                  {reclamo.fotos.map((foto, indice) => (
+                    <FotoAdjunta key={`${foto}-${indice}`} foto={foto} />
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <div data-tour="detalle-comentarios">
+            <ComentariosReclamo reclamoId={reclamo.id} comentarios={reclamo.comentarios} />
+          </div>
+        </div>
+
+        <aside className="flex min-w-0 flex-col gap-4">
+          <Card data-tour="detalle-trazabilidad" className="rounded-2xl ring-1 ring-border">
+            <CardHeader>
+              <SeccionTitulo icon={History}>Seguimiento</SeccionTitulo>
+            </CardHeader>
+            <CardContent>
+              <HistorialTimeline historial={reclamo.historial} />
+            </CardContent>
+          </Card>
+
+          {(tieneUbicacion || reclamo.direccion) && (
+            <Card data-tour="detalle-ubicacion" className="rounded-2xl ring-1 ring-border">
+              <CardHeader className="flex-row items-center justify-between gap-3">
+                <SeccionTitulo icon={MapPin}>Ubicación</SeccionTitulo>
+                {mapaUrl && (
+                  <CardAction>
+                    <Button asChild variant="outline" size="sm" className="text-primary">
+                      <a href={mapaUrl} target="_blank" rel="noreferrer">
+                        Ver en mapa
+                        <ExternalLink />
+                      </a>
+                    </Button>
+                  </CardAction>
+                )}
+              </CardHeader>
+              <CardContent>
+                {tieneUbicacion && (
+                  <MapaUbicacion
+                    latitud={reclamo.latitud!}
+                    longitud={reclamo.longitud!}
+                    alto={180}
+                  />
+                )}
+                {reclamo.direccion && !tieneUbicacion && (
+                  <p className="flex items-start gap-2 text-sm leading-relaxed text-muted-foreground">
+                    <MapPin className="mt-0.5 size-4 shrink-0 text-primary" />
+                    {reclamo.direccion}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          <Card data-tour="detalle-detalles" className="rounded-2xl ring-1 ring-border">
+            <CardHeader>
+              <SeccionTitulo icon={ListChecks}>Detalles</SeccionTitulo>
+            </CardHeader>
+            <CardContent className="divide-y px-5 pb-3">
+              <DatoFila etiqueta="Barrio" valor={reclamo.barrio ?? "Sin barrio"} />
+              <DatoFila etiqueta="Canal" valor={CANAL_LABEL[reclamo.canal]} icono={Radio} />
+              <DatoFila etiqueta="Adhesiones" valor={totalAdhesiones} icono={Users} />
+              <DatoFila etiqueta="Última actualización" valor={haceCuanto(reclamo.updated_at)} />
+            </CardContent>
+          </Card>
+        </aside>
       </div>
     </div>
   );
@@ -439,15 +634,13 @@ export function ReclamoDetallePage() {
     refetch,
   } = useObtenerReclamoQuery(id, { skip: !id });
   const [adherirMutation, { isLoading: adhiriendo }] = useAdherirMutation();
-  const [adhesiones, setAdhesiones] = useState<number | null>(null);
   const staff = usuario ? esStaff(usuario.rol) : false;
   const mensajeError =
     error && "message" in error && typeof error.message === "string" ? error.message : null;
 
   async function handleAdherir() {
     try {
-      const res = await adherirMutation(id).unwrap();
-      setAdhesiones(res.adhesiones_count);
+      await adherirMutation(id).unwrap();
       toast.success("Adhesión registrada", {
         description: "Gracias por sumarte a este reclamo.",
       });
@@ -476,225 +669,31 @@ export function ReclamoDetallePage() {
   }
 
   if (staff) {
-    return <VistaGestionReclamo reclamo={reclamo} refrescando={isFetching} onRecargar={refetch} />;
+    return (
+      <VistaGestionReclamo
+        reclamo={reclamo}
+        refrescando={isFetching}
+        onRecargar={refetch}
+        onVolver={() => navigate(-1)}
+      />
+    );
   }
 
-  const totalAdhesiones = adhesiones ?? reclamo.adhesiones_count;
+  const totalAdhesiones = reclamo.adhesiones_count;
   const esPropio = usuario?.id === reclamo.ciudadano_id;
   const puedeAdherir = !esPropio;
-  const tieneUbicacion = reclamo.latitud !== null && reclamo.longitud !== null;
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-      <Card data-tour="detalle-header" className="py-5">
-        <CardContent className="flex flex-wrap items-start justify-between gap-x-6 gap-y-5 px-5 sm:px-6">
-          <div className="min-w-0 space-y-2.5">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(-1)}
-              className="-ml-2 h-7 gap-1.5 px-2 text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="size-4" />
-              Volver
-            </Button>
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-muted-foreground">
-              <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-foreground">
-                {idCorto(reclamo.id)}
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <CalendarDays className="size-3.5 shrink-0" />
-                {formatFecha(reclamo.created_at)}
-              </span>
-              <span aria-hidden className="text-foreground/30">
-                ·
-              </span>
-              <span>{haceCuanto(reclamo.created_at)}</span>
-              {isFetching && (
-                <span className="inline-flex items-center gap-1 text-primary">
-                  <span aria-hidden className="text-foreground/30">
-                    ·
-                  </span>
-                  <Loader2 className="size-3 animate-spin" />
-                  Actualizando
-                </span>
-              )}
-            </div>
-            <h1 className="text-2xl font-semibold tracking-tight text-balance sm:text-[1.7rem]">
-              {reclamo.titulo}
-            </h1>
-            {reclamo.descripcion.trim() && (
-              <p className="max-w-2xl text-sm leading-relaxed whitespace-pre-line text-muted-foreground">
-                {reclamo.descripcion}
-              </p>
-            )}
-          </div>
-
-          <div className="flex shrink-0 flex-col items-end justify-between gap-4 self-stretch">
-            <EstadoBadge estado={reclamo.estado} className="h-auto px-3 py-1 text-sm" />
-            <div className="flex flex-col items-end gap-2">
-              <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-1 text-sm font-medium text-foreground/80">
-                <CategoriaLinea categoria={reclamo.categoria} />
-                <span aria-hidden className="text-foreground/30">
-                  |
-                </span>
-                <PrioridadLinea prioridad={reclamo.prioridad} />
-              </div>
-              <div className="flex flex-wrap items-center justify-end gap-1.5">
-                {reclamo.origen_clasificacion !== OrigenClasificacion.CIUDADANO &&
-                  reclamo.confianza_clasificacion !== null && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Badge
-                          variant="outline"
-                          className="gap-1 border-transparent font-medium"
-                          style={{
-                            backgroundColor: "color-mix(in oklab, var(--ai) 12%, transparent)",
-                            color: "var(--ai)",
-                          }}
-                        >
-                          <Sparkles className="size-3" />
-                          {formatConfianza(reclamo.confianza_clasificacion)} de confianza
-                        </Badge>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {reclamo.origen_clasificacion === OrigenClasificacion.MODELO
-                          ? "Categoría y prioridad sugeridas por el clasificador automático."
-                          : "Categoría y/o prioridad corregidas por un operador."}
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
-                <Badge
-                  variant="outline"
-                  className="border-transparent font-medium"
-                  style={{
-                    backgroundColor: `color-mix(in oklab, ${esPropio ? "var(--ownership-own)" : "var(--ownership-community)"} 12%, transparent)`,
-                    color: esPropio ? "var(--ownership-own)" : "var(--ownership-community)",
-                  }}
-                >
-                  {esPropio ? "Mi reclamo" : "Reclamo de la ciudad"}
-                </Badge>
-                {reclamo.canal === CanalOrigen.EVENTO && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Badge
-                        variant="outline"
-                        className="gap-1 border-dashed text-muted-foreground"
-                      >
-                        <Zap className="size-3" />
-                        Generado automáticamente
-                      </Badge>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      Este reclamo lo abrió el sistema a partir de un evento de otro módulo
-                      (Residuos o Emergencias), no un vecino.
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid items-start gap-6 lg:grid-cols-3">
-        <div className="flex min-w-0 flex-col gap-6 lg:col-span-2">
-          <Card data-tour="detalle-adhesion">
-            <CardContent className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <Users className="size-5 text-primary" />
-                <span className="font-medium">
-                  {totalAdhesiones}{" "}
-                  {totalAdhesiones === 1 ? "vecino adherido" : "vecinos adheridos"}
-                </span>
-              </div>
-              {esPropio ? (
-                <span className="text-sm text-muted-foreground">Es tu reclamo</span>
-              ) : (
-                puedeAdherir && (
-                  <Button onClick={handleAdherir} disabled={adhiriendo} className="gap-2">
-                    {adhiriendo ? (
-                      <Loader2 className="size-4 animate-spin" />
-                    ) : (
-                      <Users className="size-4" />
-                    )}
-                    A mí también me pasa
-                  </Button>
-                )
-              )}
-            </CardContent>
-          </Card>
-
-          <div data-tour="detalle-comentarios">
-            <ComentariosReclamo
-              reclamoId={reclamo.id}
-              comentarios={reclamo.comentarios}
-              onComentado={refetch}
-            />
-          </div>
-        </div>
-
-        <aside className="flex flex-col gap-6 lg:sticky lg:top-20 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto lg:overflow-x-hidden lg:pr-1 lg:pb-2">
-          {(tieneUbicacion || reclamo.direccion) && (
-            <Card data-tour="detalle-ubicacion" className="overflow-hidden">
-              <CardHeader>
-                <SeccionTitulo icon={MapPin}>Ubicación</SeccionTitulo>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-3">
-                {tieneUbicacion && (
-                  <MapaUbicacion
-                    latitud={reclamo.latitud!}
-                    longitud={reclamo.longitud!}
-                    alto={170}
-                  />
-                )}
-                {reclamo.direccion && (
-                  <div className="flex items-start gap-1.5 text-sm text-muted-foreground">
-                    <MapPin className="mt-0.5 size-4 shrink-0" />
-                    <span>
-                      {reclamo.direccion}
-                      {reclamo.barrio ? `, ${reclamo.barrio}` : ""}
-                    </span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          <Card>
-            <CardHeader>
-              <SeccionTitulo icon={ListChecks}>Detalles</SeccionTitulo>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <DatoFila etiqueta="Barrio" valor={reclamo.barrio ?? "-"} />
-              {reclamo.asignado_a && <DatoFila etiqueta="Asignado a" valor={reclamo.asignado_a} />}
-              {reclamo.area_responsable && (
-                <DatoFila etiqueta="Área responsable" valor={reclamo.area_responsable} />
-              )}
-              <Separator className="my-1" />
-              <div className="flex items-center justify-between gap-6">
-                <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Radio className="size-3.5" />
-                  Canal
-                </span>
-                <span className="text-right text-sm font-medium capitalize">
-                  {reclamo.canal.toLowerCase()}
-                </span>
-              </div>
-              <DatoFila etiqueta="Última actualización" valor={haceCuanto(reclamo.updated_at)} />
-            </CardContent>
-          </Card>
-
-          <Card data-tour="detalle-trazabilidad">
-            <CardHeader>
-              <SeccionTitulo icon={History}>Trazabilidad</SeccionTitulo>
-            </CardHeader>
-            <CardContent>
-              <HistorialTimeline historial={reclamo.historial} />
-            </CardContent>
-          </Card>
-        </aside>
-      </div>
-    </div>
+    <VistaCiudadanoReclamo
+      reclamo={reclamo}
+      totalAdhesiones={totalAdhesiones}
+      esPropio={esPropio}
+      puedeAdherir={puedeAdherir}
+      adhiriendo={adhiriendo}
+      refrescando={isFetching}
+      onAdherir={handleAdherir}
+      onRecargar={refetch}
+      onVolver={() => navigate(-1)}
+    />
   );
 }

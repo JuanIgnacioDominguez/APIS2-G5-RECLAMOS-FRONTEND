@@ -5,12 +5,6 @@ import { sugerirClasificacion } from "@/api/reclamos";
 import type { SugerenciaClasificacion } from "@/api/types";
 import { validarDescripcion, validarTitulo } from "./validation";
 
-/**
- * Ask the classifier for a category/priority suggestion while the citizen types
- * (US-20). Debounced, and only fires once the title and description are long
- * enough to pass the same bounds the form validates. Errors are swallowed: a
- * missing suggestion must never block the manual flow.
- */
 export function useSugerenciaClasificacion(titulo: string, descripcion: string) {
   const tituloD = useDebouncedValue(titulo, 500);
   const descD = useDebouncedValue(descripcion, 500);

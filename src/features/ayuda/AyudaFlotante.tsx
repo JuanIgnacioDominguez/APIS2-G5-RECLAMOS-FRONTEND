@@ -14,14 +14,10 @@ import { pasosParaRuta, type PasoTour } from "./tours";
 const TITULO_POPOVER = (t: string) =>
   `<span style="font-weight:600;color:var(--foreground)">${t}</span>`;
 
-/** Turn our internal steps into driver.js steps, dropping ones whose anchor is
- * not in the DOM. Centred (selector: null) steps stay. */
 function aDriveSteps(pasos: PasoTour[]): DriveStep[] {
   const validos = pasos.filter((p) => p.selector === null || document.querySelector(p.selector));
   return validos.map<DriveStep>((paso) => ({
     element: paso.selector ?? undefined,
-    // Skip silently if the anchor disappears between building the tour and
-    // reaching the step (route changes, async content, feature flags).
     skipMissingElement: true,
     popover: {
       title: TITULO_POPOVER(paso.titulo),
@@ -32,12 +28,6 @@ function aDriveSteps(pasos: PasoTour[]): DriveStep[] {
   }));
 }
 
-/**
- * Floating help button, pinned bottom-right. On click, launches a guided tour
- * (driver.js) explaining every section of the current screen. Hides itself when
- * the user turns the feature off in Configuración, or when the current route
- * has no tour defined.
- */
 export function AyudaFlotante() {
   const { pathname } = useLocation();
   const { usuario } = useAuth();
@@ -79,8 +69,6 @@ export function AyudaFlotante() {
     driverObj.drive();
   }, [pasos]);
 
-  // Close the tour if the route changes while it is open, to avoid orphan
-  // highlights over content that no longer exists.
   useEffect(() => {
     setDriverActivo(false);
   }, [pathname]);

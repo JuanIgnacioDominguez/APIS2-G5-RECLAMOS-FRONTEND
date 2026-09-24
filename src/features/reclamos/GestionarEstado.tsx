@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import { ArrowRight, Building2, Loader2, Settings2, User, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 
-import { cambiarEstado } from "@/api/reclamos";
+import { useCambiarEstadoMutation } from "@/store/citypassApi";
 import { useAuth } from "@/auth/AuthContext";
 import type { CategoriaReclamo } from "@/domain/enums";
 import { EstadoReclamo } from "@/domain/enums";
@@ -26,17 +26,6 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-/**
- * Staff-only control to advance a claim through its state machine (US-16/17).
- * Only valid transitions are offered, so the backend never rejects the change.
- * Moving to "Asignado" also lets staff set who and which area is now
- * responsible (`CambioEstado.asignado_a`/`area_responsable`), a backend field
- * the UI previously never sent.
- */
-/**
- * Frame around the control: a full card on its own, or a plain titled section
- * when embedded next to another panel (`embebido`).
- */
 function Marco({ embebido, children }: { embebido: boolean; children: ReactNode }) {
   if (embebido) {
     return (
@@ -81,8 +70,7 @@ export function GestionarEstado({
   categoria?: CategoriaReclamo;
   asignadoActual?: string | null;
   areaActual?: string | null;
-  onActualizado: () => void;
-  /** Render without the card chrome, as a section inside a shared panel. */
+  onActualizado?: () => void;
   embebido?: boolean;
 }) {
   const { usuario } = useAuth();
@@ -91,7 +79,7 @@ export function GestionarEstado({
   const [motivo, setMotivo] = useState("");
   const [asignadoA, setAsignadoA] = useState(asignadoActual ?? "");
   const [areaResponsable, setAreaResponsable] = useState(areaActual ?? "");
-  const [guardando, setGuardando] = useState(false);
+  const [cambiarEstado, { isLoading: guardando }] = useCambiarEstadoMutation();
 
   if (esFinal(estadoActual) || opciones.length === 0) {
     return (
@@ -106,30 +94,36 @@ export function GestionarEstado({
   const esResolucion = nuevo === EstadoReclamo.RESUELTO;
   const esAsignacion = nuevo === EstadoReclamo.ASIGNADO;
   const areaSugerida = categoria ? AREA_SUGERIDA[categoria] : undefined;
+  const faltaAsignado = esAsignacion && !asignadoA.trim();
+  const faltaArea = esAsignacion && !areaResponsable.trim();
+  const asignacionIncompleta = faltaAsignado || faltaArea;
 
   async function aplicar() {
-    if (!nuevo) return;
-    setGuardando(true);
+    if (!nuevo || asignacionIncompleta) return;
     try {
-      await cambiarEstado(reclamoId, {
-        estado: nuevo as EstadoReclamo,
-        motivo: motivo.trim() || null,
-        resolucion: esResolucion ? motivo.trim() || null : null,
-        asignado_a: esAsignacion ? asignadoA.trim() || null : null,
-        area_responsable: esAsignacion ? areaResponsable.trim() || null : null,
-      });
+      await cambiarEstado({
+        id: reclamoId,
+        cambio: {
+          estado: nuevo as EstadoReclamo,
+          motivo: motivo.trim() || null,
+          resolucion: esResolucion ? motivo.trim() || null : null,
+          asignado_a: esAsignacion ? asignadoA.trim() || null : null,
+          area_responsable: esAsignacion ? areaResponsable.trim() || null : null,
+        },
+      }).unwrap();
       toast.success("Estado actualizado", {
         description: `El reclamo paso a ${ESTADO_LABEL[nuevo as EstadoReclamo]}.`,
       });
       setNuevo(null);
       setMotivo("");
-      onActualizado();
+      onActualizado?.();
     } catch (err) {
       toast.error("No se pudo cambiar el estado", {
-        description: err instanceof Error ? err.message : "Error inesperado",
+        description:
+          err && typeof err === "object" && "message" in err
+            ? String(err.message)
+            : "Error inesperado",
       });
-    } finally {
-      setGuardando(false);
     }
   }
 
@@ -201,13 +195,17 @@ export function GestionarEstado({
       {esAsignacion && (
         <>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="gestionar-asignado">Asignar a</Label>
+            <Label htmlFor="gestionar-asignado">
+              Asignar a <span className="text-destructive">*</span>
+            </Label>
             <div className="flex gap-2">
               <Input
                 id="gestionar-asignado"
                 value={asignadoA}
                 onChange={(e) => setAsignadoA(e.target.value)}
                 placeholder="Nombre del agente o cuadrilla"
+                required
+                aria-invalid={faltaAsignado}
               />
               {usuario && (
                 <Button
@@ -222,15 +220,23 @@ export function GestionarEstado({
                 </Button>
               )}
             </div>
+            {faltaAsignado && (
+              <p className="text-xs text-destructive">Ingresá una persona o cuadrilla.</p>
+            )}
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="gestionar-area">Área responsable</Label>
+            <Label htmlFor="gestionar-area">
+              Área responsable <span className="text-destructive">*</span>
+            </Label>
             <Input
               id="gestionar-area"
               value={areaResponsable}
               onChange={(e) => setAreaResponsable(e.target.value)}
               placeholder={areaSugerida ?? "Área municipal"}
+              required
+              aria-invalid={faltaArea}
             />
+            {faltaArea && <p className="text-xs text-destructive">Ingresá un área responsable.</p>}
           </div>
         </>
       )}
@@ -248,7 +254,7 @@ export function GestionarEstado({
         />
       </div>
       <Button
-        disabled={!nuevo || guardando}
+        disabled={!nuevo || guardando || asignacionIncompleta}
         onClick={aplicar}
         className={embebido ? "mt-auto w-full" : undefined}
       >

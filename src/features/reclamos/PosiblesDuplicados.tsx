@@ -11,12 +11,6 @@ function textoDistancia(metros: number | null): string | null {
   return `a ${(metros / 1000).toFixed(1)} km`;
 }
 
-/**
- * "Posibles duplicados" of a claim, for staff on the detail page. Fetches the
- * backend's similar-claims list and, only when it finds any, shows a compact
- * card of links so the operator can spot repeats without combing the inbox.
- * Renders nothing while loading, on error, or when there is nothing alike.
- */
 export function PosiblesDuplicados({ reclamoId }: { reclamoId: string }) {
   const { data } = useSimilaresDeQuery(reclamoId);
   const similares = data ?? [];

@@ -1,9 +1,3 @@
-/**
- * Light/dark theme handling for the shadcn tokens. The choice lives in
- * localStorage and is applied as the `dark` class on <html>, which is what the
- * `.dark` block in index.css keys off. No provider needed.
- */
-
 export type Tema = "light" | "dark";
 
 const STORAGE_KEY = "citypass.tema";
@@ -17,11 +11,6 @@ function leerPreferencia(): Tema | null {
   }
 }
 
-/**
- * Apply the theme before the app renders. Light is the agreed default and the
- * one the team uses, so we never follow the OS preference: dark mode is strictly
- * opt-in and only applies when the user chose it explicitly (stored value).
- */
 function aplicarDom(tema: Tema): void {
   document.documentElement.classList.toggle("dark", tema === "dark");
   document.documentElement.style.colorScheme = tema;
@@ -40,12 +29,11 @@ export function establecerTema(tema: Tema): Tema {
   try {
     localStorage.setItem(STORAGE_KEY, tema);
   } catch {
-    // storage unavailable: theme stays for this session only
+    // ignore
   }
   return tema;
 }
 
-/** Flip the theme, persist it, and return the new value. */
 export function alternarTema(): Tema {
   return establecerTema(temaActual() === "dark" ? "light" : "dark");
 }

@@ -1,5 +1,3 @@
-/** Typed endpoints of the Reclamos module. Mirrors `app/api/v1/reclamos.py`. */
-
 import { ESTADOS_RESUELTOS } from "@/domain/enums";
 
 import { request } from "./client";
@@ -14,15 +12,15 @@ import type {
   ReclamoBandeja,
   ReclamoCrear,
   ReclamoDetalle,
+  ReclamoListado,
   ReclamoOut,
-  ReclamoResumen,
   ReclamoSimilar,
   ReclasificacionPedido,
   SugerenciaClasificacion,
 } from "./types";
 
-export function listarReclamos(filtro: FiltroReclamos = {}): Promise<Page<ReclamoResumen>> {
-  return request<Page<ReclamoResumen>>("/reclamos", { query: { ...filtro } });
+export function listarReclamos(filtro: FiltroReclamos = {}): Promise<Page<ReclamoListado>> {
+  return request<Page<ReclamoListado>>("/reclamos", { query: { ...filtro } });
 }
 
 export async function contarResueltos(): Promise<number> {
@@ -40,16 +38,10 @@ export function crearReclamo(datos: ReclamoCrear): Promise<ReclamoOut> {
   return request<ReclamoOut>("/reclamos", { method: "POST", body: datos });
 }
 
-/**
- * Open claims that likely describe the same problem as `datos`, before creating
- * a new one (US anti-duplicados). Empty list when nothing looks alike. Stores
- * nothing, so it is safe to call as many times as needed.
- */
 export function buscarSimilares(datos: BusquedaSimilares): Promise<ReclamoSimilar[]> {
   return request<ReclamoSimilar[]>("/reclamos/similares", { method: "POST", body: datos });
 }
 
-/** Possible duplicates of an existing claim (shown to staff on the detail). */
 export function similaresDe(id: string): Promise<ReclamoSimilar[]> {
   return request<ReclamoSimilar[]>(`/reclamos/${id}/similares`);
 }
@@ -58,12 +50,10 @@ export function cambiarEstado(id: string, cambio: CambioEstado): Promise<Reclamo
   return request<ReclamoOut>(`/reclamos/${id}/estado`, { method: "PATCH", body: cambio });
 }
 
-/** Backoffice inbox: incoming claims to triage (operador/admin). */
 export function bandeja(page = 1, size = 20): Promise<Page<ReclamoBandeja>> {
   return request<Page<ReclamoBandeja>>("/reclamos/bandeja", { query: { page, size } });
 }
 
-/** Correct a claim's category/priority without changing its state (operador/admin). */
 export function reclasificar(id: string, cambio: ReclasificacionPedido): Promise<ReclamoOut> {
   return request<ReclamoOut>(`/reclamos/${id}/clasificacion`, { method: "PATCH", body: cambio });
 }

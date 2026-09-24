@@ -1,26 +1,11 @@
-/**
- * Guided-tour steps per screen, keyed to `data-tour` anchors we drop into the
- * pages. Pure module (no React, no driver.js), so it can be unit-tested.
- *
- * Each step's `descripcion` is a small paragraph — the point of the tour is to
- * explain what the section does, not just name it. Steps whose anchor is not on
- * screen (e.g. optional widgets, role-only bits) are dropped by the runner.
- */
-
 import { Rol } from "@/auth/roles";
 
 export interface PasoTour {
-  /** CSS selector for the element to highlight. `null` centres the popover. */
   selector: string | null;
   titulo: string;
   descripcion: string;
-  /** driver.js side; defaults are fine in most places. */
   lado?: "top" | "right" | "bottom" | "left";
 }
-
-// ---------------------------------------------------------------------------
-// Common building blocks reused across screens.
-// ---------------------------------------------------------------------------
 
 const BIENVENIDA = (titulo: string): PasoTour => ({
   selector: null,
@@ -92,11 +77,6 @@ const CIERRE_GENERICO: PasoTour = {
     "Ya conocés lo importante de esta pantalla. Si te queda alguna duda, en cualquier momento podés volver a abrir el recorrido con el botón flotante de ayuda o consultar el Centro de ayuda.",
 };
 
-// ---------------------------------------------------------------------------
-// Screen-specific tours.
-// ---------------------------------------------------------------------------
-
-/** Reclamos: citizen ("Mis reclamos") vs staff ("Todos los reclamos"). */
 function pasosReclamos(staff: boolean): PasoTour[] {
   return [
     BIENVENIDA(staff ? "Todos los reclamos" : "Mis reclamos"),
@@ -154,7 +134,6 @@ function pasosReclamos(staff: boolean): PasoTour[] {
   ];
 }
 
-/** Backoffice inbox (staff). */
 function pasosBandeja(): PasoTour[] {
   return [
     BIENVENIDA("Bandeja de reclamos"),
@@ -195,7 +174,6 @@ function pasosBandeja(): PasoTour[] {
   ];
 }
 
-/** Metrics dashboard (staff). */
 function pasosDashboard(): PasoTour[] {
   return [
     BIENVENIDA("Dashboard de métricas"),
@@ -228,7 +206,6 @@ function pasosDashboard(): PasoTour[] {
   ];
 }
 
-/** New claim form. */
 function pasosNuevoReclamo(): PasoTour[] {
   return [
     BIENVENIDA("Cargar un reclamo"),
@@ -279,7 +256,6 @@ function pasosNuevoReclamo(): PasoTour[] {
   ];
 }
 
-/** Claim detail: differs staff vs citizen. */
 function pasosDetalle(staff: boolean): PasoTour[] {
   if (staff) {
     return [
@@ -344,7 +320,6 @@ function pasosDetalle(staff: boolean): PasoTour[] {
       CIERRE_GENERICO,
     ];
   }
-  // Citizen view.
   return [
     BIENVENIDA("Detalle del reclamo"),
     {
@@ -353,6 +328,13 @@ function pasosDetalle(staff: boolean): PasoTour[] {
       descripcion:
         "Estás viendo el reclamo con su título, estado actual, categoría y prioridad. El color del estado te dice si está avanzando (azul), en revisión (ámbar) o resuelto (verde).",
       lado: "bottom",
+    },
+    {
+      selector: '[data-tour="detalle-resumen"]',
+      titulo: "Clasificación",
+      descripcion:
+        "Acá encontrás el estado actual, la categoría y la prioridad del reclamo. También podés ver quién lo reportó y cuántos vecinos lo apoyan.",
+      lado: "top",
     },
     {
       selector: '[data-tour="detalle-adhesion"]',
@@ -539,10 +521,6 @@ function pasosAyuda(): PasoTour[] {
   ];
 }
 
-/**
- * Steps for the current route + role. `null` means "no tour available here"
- * so the floating button can hide itself instead of opening an empty popover.
- */
 export function pasosParaRuta(pathname: string, rol: Rol | null): PasoTour[] | null {
   const staff = rol === Rol.OPERADOR || rol === Rol.ADMIN;
 

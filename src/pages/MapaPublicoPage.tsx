@@ -27,7 +27,6 @@ import { reclamosUbicados } from "@/features/mapa/coords";
 
 const TODAS = "todas";
 
-/** Every state, in lifecycle order, for the full legend. */
 const ESTADOS_LEYENDA: EstadoReclamo[] = [
   EstadoReclamo.RECIBIDO,
   EstadoReclamo.EN_REVISION,
@@ -38,31 +37,28 @@ const ESTADOS_LEYENDA: EstadoReclamo[] = [
   EstadoReclamo.CERRADO,
 ];
 
-/**
- * Public map of geolocated claims (US-11), filterable by category and state.
- * The map fills the whole tab; the title, filters, count and legend live in a
- * floating panel that can be collapsed to see the map unobstructed.
- * Shows no personal data of the citizen who created each claim.
- */
 export function MapaPublicoPage() {
   const { usuario } = useAuth();
   const [categoria, setCategoria] = useState<CategoriaReclamo | null>(null);
   const [estado, setEstado] = useState<EstadoReclamo | null>(null);
   const [panelAbierto, setPanelAbierto] = useState(true);
 
-  // RTK Query: previously-loaded map data appears instantly on tab switches and
-  // is revalidated in the background — no more blank map every time.
-  const { data, isLoading, error, refetch } = useListarReclamosQuery({ size: 100 });
+  const { data, isLoading, error, refetch } = useListarReclamosQuery({
+    size: 100,
+    orden: "recientes",
+    usuario_cache: usuario?.id,
+  });
   const mensajeError =
     error && "message" in error && typeof error.message === "string" ? error.message : null;
 
-  // Ids of the current citizen's own claims, so the map can highlight them.
   const esCiudadano = usuario?.rol === Rol.CIUDADANO;
-  const { data: mios } = useListarReclamosQuery(
-    esCiudadano && usuario ? { ciudadano_id: usuario.id, size: 100 } : undefined,
-    { skip: !esCiudadano || !usuario },
+  const misIds = useMemo(
+    () =>
+      new Set(
+        (data?.items ?? []).filter((reclamo) => reclamo.es_propio).map((reclamo) => reclamo.id),
+      ),
+    [data],
   );
-  const misIds = useMemo(() => new Set((mios?.items ?? []).map((r) => r.id)), [mios]);
 
   const puntos = useMemo(() => {
     const ubicados = reclamosUbicados(data?.items ?? []);
@@ -82,9 +78,6 @@ export function MapaPublicoPage() {
         <MapaReclamos reclamos={puntos} misIds={esCiudadano ? misIds : undefined} fill />
       </div>
 
-      {/* Floating panel: transparent to pointer events except on the card, so
-          the map stays fully draggable around it. The card keeps its width in
-          both states; only its body collapses (animated) when hidden. */}
       <div className="pointer-events-none absolute inset-0 z-[1000] p-3 sm:p-4">
         <div className="pointer-events-auto ml-2 w-[min(20rem,calc(100%-1.5rem))] overflow-hidden rounded-xl border border-border/70 bg-background/95 shadow-xl ring-1 ring-border/80 sm:ml-3">
           <button

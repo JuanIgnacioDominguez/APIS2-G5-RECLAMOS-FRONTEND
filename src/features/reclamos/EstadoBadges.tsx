@@ -31,11 +31,6 @@ import {
 } from "@/domain/labels";
 import { ICONO_PRIORIDAD } from "./iconos";
 
-/**
- * Shared "soft color chip" look: vivid text on a saturated wash of the same
- * hue, with a hairline ring in that hue so the chip keeps a crisp edge on any
- * surface. Richer than a flat tint, calmer than a solid fill.
- */
 function chipStyle(color: string): CSSProperties {
   return {
     backgroundColor: `color-mix(in oklab, ${color} 18%, transparent)`,
@@ -44,7 +39,6 @@ function chipStyle(color: string): CSSProperties {
   };
 }
 
-/** A leading dot with a soft halo of its own color. */
 function ChipDot({ color }: { color: string }) {
   return (
     <span
@@ -57,17 +51,7 @@ function ChipDot({ color }: { color: string }) {
   );
 }
 
-/** State: solid pill in the state's own color with white text, so "where the
- * claim is" reads as a strong, unambiguous signal. */
-export function EstadoBadge({
-  estado,
-  className,
-}: {
-  estado: EstadoReclamo;
-  /** Extra classes, e.g. `w-full justify-center` to give every state badge the
-   * same width in a list. */
-  className?: string;
-}) {
+export function EstadoBadge({ estado, className }: { estado: EstadoReclamo; className?: string }) {
   const color = ESTADO_HEX[estado];
   return (
     <Badge
@@ -84,7 +68,6 @@ export function EstadoBadge({
   );
 }
 
-/** Priority: outlined pill with a directional icon, visually apart from state. */
 export function PrioridadBadge({ prioridad }: { prioridad: PrioridadReclamo }) {
   const color = PRIORIDAD_HEX[prioridad];
   const Icono = ICONO_PRIORIDAD[prioridad];
@@ -100,11 +83,6 @@ export function PrioridadBadge({ prioridad }: { prioridad: PrioridadReclamo }) {
   );
 }
 
-/**
- * Priority as a compact line whose text and icon take the priority's own
- * color: green (low) -> amber (medium) -> red (high) -> deep red (critical).
- * Used on the claim card instead of an outlined pill.
- */
 export function PrioridadLinea({ prioridad }: { prioridad: PrioridadReclamo }) {
   const Icono = ICONO_PRIORIDAD[prioridad];
   return (
@@ -145,12 +123,6 @@ const ICONO_CATEGORIA: Record<CategoriaReclamo, LucideIcon> = {
   [CategoriaReclamo.OTROS]: MoreHorizontal,
 };
 
-/**
- * Category as an icon + label, with the icon tinted in the category's own
- * brand color (the same tint the feed filters use), so the category reads at
- * a glance. The label stays neutral to keep the state badge dominant.
- * Used on the claim card instead of a colored category chip.
- */
 export function CategoriaLinea({ categoria }: { categoria: CategoriaReclamo }) {
   const Icono = ICONO_CATEGORIA[categoria];
   return (
@@ -161,7 +133,6 @@ export function CategoriaLinea({ categoria }: { categoria: CategoriaReclamo }) {
   );
 }
 
-/** Just the category's icon, tinted in its own brand color. For lists/filters. */
 export function CategoriaIcono({
   categoria,
   className = "size-4",
@@ -173,11 +144,6 @@ export function CategoriaIcono({
   return <Icono className={className} style={{ color: CATEGORIA_HEX[categoria] }} />;
 }
 
-/**
- * Ownership tag as plain colored text (no pill): the citizen's own claims read
- * as a green "Tuyo", everyone else's as a slate-blue "De un vecino". Icon plus
- * label, so the meaning never rests on color alone.
- */
 export function AutoriaBadge({ mio }: { mio: boolean }) {
   const Icono = mio ? User : Users;
   const color = mio ? "var(--ownership-own)" : "var(--ownership-other)";
@@ -189,7 +155,6 @@ export function AutoriaBadge({ mio }: { mio: boolean }) {
   );
 }
 
-/** Small "IA" tag for claims the model classified. */
 export function IaBadge() {
   return (
     <Badge

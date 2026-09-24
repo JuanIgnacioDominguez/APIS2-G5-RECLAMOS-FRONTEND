@@ -47,6 +47,38 @@ describe("GestionarEstado", () => {
     );
   });
 
+  it("no permite asignar sin persona y area", async () => {
+    const cambiar = vi.spyOn(reclamosApi, "cambiarEstado").mockResolvedValue({} as ReclamoOut);
+    renderWithProviders(
+      <GestionarEstado
+        reclamoId="r3"
+        estadoActual={EstadoReclamo.RECIBIDO}
+        onActualizado={vi.fn()}
+      />,
+      { usuario: OPERADOR },
+    );
+
+    await userEvent.click(screen.getByRole("combobox", { name: /nuevo estado/i }));
+    await userEvent.click(await screen.findByRole("option", { name: "Asignado" }));
+
+    const persona = screen.getByLabelText(/asignar a/i);
+    const area = screen.getByLabelText(/área responsable/i);
+    const aplicar = screen.getByRole("button", { name: /aplicar cambio/i });
+
+    expect(aplicar).toBeDisabled();
+    expect(persona).toHaveAttribute("aria-invalid", "true");
+    expect(area).toHaveAttribute("aria-invalid", "true");
+
+    await userEvent.type(persona, "   ");
+    await userEvent.type(area, "Alumbrado");
+    expect(aplicar).toBeDisabled();
+
+    await userEvent.clear(persona);
+    await userEvent.type(persona, "Cuadrilla Norte");
+    expect(aplicar).toBeEnabled();
+    expect(cambiar).not.toHaveBeenCalled();
+  });
+
   it("al asignar manda asignado_a y area_responsable, con Asignarme y area sugerida", async () => {
     const cambiar = vi.spyOn(reclamosApi, "cambiarEstado").mockResolvedValue({} as ReclamoOut);
     renderWithProviders(

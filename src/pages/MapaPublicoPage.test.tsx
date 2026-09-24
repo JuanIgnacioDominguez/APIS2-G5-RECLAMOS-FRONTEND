@@ -4,9 +4,8 @@ import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import * as reclamosApi from "@/api/reclamos";
-import type { Page, ReclamoResumen } from "@/api/types";
+import type { Page, ReclamoListado } from "@/api/types";
 import { CategoriaReclamo, EstadoReclamo, PrioridadReclamo } from "@/domain/enums";
-import { limpiarCacheAsync } from "@/hooks/useAsync";
 import { renderWithProviders } from "@/test/render";
 import { MapaPublicoPage } from "./MapaPublicoPage";
 
@@ -15,7 +14,7 @@ function reclamo(
   titulo: string,
   categoria: CategoriaReclamo,
   lat: number | null,
-): ReclamoResumen {
+): ReclamoListado {
   return {
     id,
     titulo,
@@ -27,17 +26,16 @@ function reclamo(
     longitud: lat === null ? null : -58.4,
     adhesiones_count: 0,
     created_at: new Date().toISOString(),
+    es_propio: false,
   };
 }
 
-function page(items: ReclamoResumen[]): Page<ReclamoResumen> {
+function page(items: ReclamoListado[]): Page<ReclamoListado> {
   return { items, total: items.length, page: 1, size: 100 };
 }
 
 describe("MapaPublicoPage", () => {
-  beforeEach(() => {
-    limpiarCacheAsync();
-  });
+  beforeEach(() => {});
 
   it("muestra en el mapa solo los reclamos con coordenadas", async () => {
     vi.spyOn(reclamosApi, "listarReclamos").mockResolvedValue(
@@ -82,8 +80,8 @@ describe("MapaPublicoPage", () => {
   });
 
   it("deduplica la carga inicial en modo estricto", async () => {
-    let resolver!: (value: Page<ReclamoResumen>) => void;
-    const request = new Promise<Page<ReclamoResumen>>((resolve) => {
+    let resolver!: (value: Page<ReclamoListado>) => void;
+    const request = new Promise<Page<ReclamoListado>>((resolve) => {
       resolver = resolve;
     });
     const listar = vi.spyOn(reclamosApi, "listarReclamos").mockReturnValue(request);

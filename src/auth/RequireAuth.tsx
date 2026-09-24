@@ -3,11 +3,6 @@ import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { Rol, esStaff, type Rol as RolType } from "./roles";
 import { useAuth } from "./AuthContext";
 
-/**
- * Route guard. Redirects to /login without a session, and to /reclamos when the
- * section needs a role the user does not have. Mirrors the backend's
- * UsuarioDep / StaffDep gate on the client.
- */
 export function RequireAuth({
   soloStaff = false,
   soloAdmin = false,

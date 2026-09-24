@@ -41,12 +41,6 @@ const OPCIONES_ORDEN: { value: OrdenFeed; label: string; icon: LucideIcon }[] = 
   { value: "adhesiones", label: "Mas apoyados", icon: ThumbsUp },
 ];
 
-/**
- * Public feed of the city's claims (US-06), filterable by category,
- * neighbourhood and status (US-07), and sortable by recency or support
- * (`orden`, backed by the same param the backend list accepts). Every card
- * links to the claim's detail.
- */
 export function FeedPublicoPage() {
   const { usuario } = useAuth();
   const [categoria, setCategoria] = useState<CategoriaReclamo | null>(null);
@@ -54,19 +48,20 @@ export function FeedPublicoPage() {
   const [estado, setEstado] = useState<EstadoReclamo | null>(null);
   const [orden, setOrden] = useState<OrdenFeed>("recientes");
 
-  const { data, isLoading, error, refetch } = useListarReclamosQuery({ size: 100, orden });
+  const { data, isLoading, error, refetch } = useListarReclamosQuery({
+    size: 100,
+    orden,
+    usuario_cache: usuario?.id,
+  });
   const mensajeError =
     error && "message" in error && typeof error.message === "string" ? error.message : null;
   const items = useMemo(() => data?.items ?? [], [data]);
 
-  // Ids of the logged-in citizen's own claims, so the feed can flag which of
-  // the city's claims are theirs ("Tuyo") vs a neighbour's ("De un vecino").
   const esCiudadano = usuario?.rol === Rol.CIUDADANO;
-  const { data: mios } = useListarReclamosQuery(
-    esCiudadano && usuario ? { ciudadano_id: usuario.id, size: 100 } : undefined,
-    { skip: !esCiudadano || !usuario },
+  const misIds = useMemo(
+    () => new Set(items.filter((reclamo) => reclamo.es_propio).map((reclamo) => reclamo.id)),
+    [items],
   );
-  const misIds = useMemo(() => new Set((mios?.items ?? []).map((r) => r.id)), [mios]);
   const barrios = useMemo(() => barriosDisponibles(items), [items]);
   const visibles = useMemo(
     () => filtrarFeed(items, { categoria, barrio, estado, orden }),
@@ -88,12 +83,12 @@ export function FeedPublicoPage() {
         data-tour="feed-filtros"
         className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-card p-4 shadow-xs ring-1 ring-foreground/10"
       >
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <Select
             value={categoria ?? TODAS}
             onValueChange={(v) => setCategoria(v === TODAS ? null : (v as CategoriaReclamo))}
           >
-            <SelectTrigger className="w-[200px]" aria-label="Filtrar por categoria">
+            <SelectTrigger className="w-full sm:w-[200px]" aria-label="Filtrar por categoria">
               <SelectValue placeholder="Todas las categorias" />
             </SelectTrigger>
             <SelectContent>
@@ -125,7 +120,7 @@ export function FeedPublicoPage() {
           </Select>
 
           <Select value={barrio ?? TODAS} onValueChange={(v) => setBarrio(v === TODAS ? null : v)}>
-            <SelectTrigger className="w-[190px]" aria-label="Filtrar por barrio">
+            <SelectTrigger className="w-full sm:w-[190px]" aria-label="Filtrar por barrio">
               <SelectValue placeholder="Todos los barrios" />
             </SelectTrigger>
             <SelectContent>
@@ -154,7 +149,7 @@ export function FeedPublicoPage() {
             value={estado ?? TODAS}
             onValueChange={(v) => setEstado(v === TODAS ? null : (v as EstadoReclamo))}
           >
-            <SelectTrigger className="w-[190px]" aria-label="Filtrar por estado">
+            <SelectTrigger className="w-full sm:w-[190px]" aria-label="Filtrar por estado">
               <SelectValue placeholder="Todos los estados" />
             </SelectTrigger>
             <SelectContent>
@@ -186,7 +181,7 @@ export function FeedPublicoPage() {
             </SelectContent>
           </Select>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <Badge variant="secondary" className="text-sm tabular-nums">
             {visibles.length} {visibles.length === 1 ? "reclamo" : "reclamos"}
           </Badge>

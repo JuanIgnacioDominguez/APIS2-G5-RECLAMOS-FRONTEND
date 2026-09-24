@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/input-group";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -318,35 +319,50 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
                 <div className="space-y-1.5">
                   <Label htmlFor="direccion">Dirección</Label>
                   <div className="relative">
-                    <InputGroup>
-                      <InputGroupInput
-                        id="direccion"
-                        placeholder="Av. Rivadavia 800"
-                        autoComplete="off"
-                        value={values.direccion}
-                        onChange={(e) => setValue("direccion", e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            void buscarPorDireccion();
-                          }
-                        }}
-                      />
-                      <InputGroupAddon align="inline-end">
-                        <InputGroupButton
-                          type="button"
-                          size="icon-xs"
-                          aria-label="Buscar dirección en el mapa"
-                          onClick={() => void buscarPorDireccion()}
-                        >
-                          {buscandoDir ? <Loader2 className="animate-spin" /> : <Search />}
-                        </InputGroupButton>
-                      </InputGroupAddon>
-                    </InputGroup>
-                    {opcionesDir.length > 0 && (
-                      <ul
+                    <Popover
+                      open={opcionesDir.length > 0}
+                      onOpenChange={(abierto) => {
+                        if (!abierto) setOpcionesDir([]);
+                      }}
+                    >
+                      <PopoverAnchor asChild>
+                        <div>
+                          <InputGroup>
+                            <InputGroupInput
+                              id="direccion"
+                              placeholder="Av. Rivadavia 800"
+                              autoComplete="off"
+                              value={values.direccion}
+                              onChange={(e) => setValue("direccion", e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  void buscarPorDireccion();
+                                }
+                              }}
+                            />
+                            <InputGroupAddon align="inline-end">
+                              <InputGroupButton
+                                type="button"
+                                size="icon-xs"
+                                aria-label="Buscar dirección en el mapa"
+                                onClick={() => void buscarPorDireccion()}
+                              >
+                                {buscandoDir ? <Loader2 className="animate-spin" /> : <Search />}
+                              </InputGroupButton>
+                            </InputGroupAddon>
+                          </InputGroup>
+                        </div>
+                      </PopoverAnchor>
+                      <PopoverContent
                         role="listbox"
-                        className="absolute z-10 mt-1 max-h-64 w-full overflow-auto rounded-xl border bg-popover p-1 text-popover-foreground shadow-lg"
+                        aria-label="Sugerencias de dirección"
+                        align="start"
+                        sideOffset={4}
+                        collisionPadding={8}
+                        onOpenAutoFocus={(event) => event.preventDefault()}
+                        onCloseAutoFocus={(event) => event.preventDefault()}
+                        className="max-h-64 w-(--radix-popover-trigger-width) max-w-[calc(100vw-2rem)] gap-0 overflow-y-auto p-1"
                       >
                         {opcionesDir.map((o) => (
                           <li key={o.etiqueta}>
@@ -369,8 +385,8 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
                             </button>
                           </li>
                         ))}
-                      </ul>
-                    )}
+                      </PopoverContent>
+                    </Popover>
                   </div>
                 </div>
 

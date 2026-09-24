@@ -1,15 +1,5 @@
-/**
- * Human, stable error messages for the UI. We key off the backend's `code`
- * (RFC 7807 extension member) and the HTTP status, never the raw `detail` text,
- * so a wording change on the server never breaks what the citizen reads.
- *
- * Pure module: no React, no fetch. Tested directly.
- */
-
-/** Sentinel code used by the api client when `fetch` itself fails (offline). */
 export const CODIGO_RED = "red";
 
-/** Messages for the backend's domain error codes (app/core/exceptions.py). */
 const MENSAJE_POR_CODIGO: Record<string, string> = {
   reclamo_no_encontrado: "Ese reclamo no existe o fue eliminado.",
   transicion_invalida: "Ese cambio de estado no esta permitido desde el estado actual.",
@@ -22,7 +12,6 @@ const MENSAJE_POR_CODIGO: Record<string, string> = {
   [CODIGO_RED]: "No pudimos conectar con el servidor. Revisa tu conexion e intenta de nuevo.",
 };
 
-/** Fallback messages by HTTP status, when there is no known domain `code`. */
 function mensajePorStatus(status: number): string | null {
   if (status === 403) return "No tenes permisos para ver esto.";
   if (status === 404) return "No encontramos lo que buscabas.";
@@ -35,11 +24,6 @@ interface DatosError {
   code?: string;
 }
 
-/**
- * Friendly message for an API error, or `null` to let the caller fall back to
- * the raw backend text. 401 returns `null` on purpose: an expired session is
- * handled by redirecting to login (with its own notice), not by a message here.
- */
 export function mensajeDeError({ status, code }: DatosError): string | null {
   if (code && MENSAJE_POR_CODIGO[code]) return MENSAJE_POR_CODIGO[code];
   if (status === 401) return null;
@@ -47,7 +31,6 @@ export function mensajeDeError({ status, code }: DatosError): string | null {
   return null;
 }
 
-/** True when the failure is a network/offline error (no HTTP response). */
 export function esErrorDeRed(code?: string, status?: number): boolean {
   return code === CODIGO_RED || status === 0;
 }

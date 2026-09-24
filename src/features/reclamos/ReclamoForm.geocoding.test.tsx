@@ -145,5 +145,10 @@ describe("ReclamoForm - geocodificacion", () => {
 
     expect(await screen.findByText("Avenida Mitre 500", {}, ESPERA)).toBeInTheDocument();
     expect(screen.getByText("Lanus, Buenos Aires")).toBeInTheDocument();
+    expect(
+      screen
+        .getByRole("listbox", { name: "Sugerencias de dirección" })
+        .closest('[data-slot="card"]'),
+    ).toBeNull();
   });
 });

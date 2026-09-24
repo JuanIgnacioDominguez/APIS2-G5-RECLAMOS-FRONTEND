@@ -1,8 +1,3 @@
-/**
- * TypeScript mirror of the backend HTTP contracts (`app/schemas/reclamo.py`).
- * Keep these in sync with the OpenAPI schema the backend publishes.
- */
-
 import type {
   CanalOrigen,
   CategoriaReclamo,
@@ -45,7 +40,10 @@ export interface ReclamoResumen {
   created_at: string;
 }
 
-/** Payload to look for open claims about the same problem before creating one. */
+export interface ReclamoListado extends ReclamoResumen {
+  es_propio: boolean;
+}
+
 export interface BusquedaSimilares {
   titulo: string;
   descripcion: string;
@@ -55,20 +53,11 @@ export interface BusquedaSimilares {
   barrio?: string | null;
 }
 
-/**
- * A claim the backend considers a likely duplicate, ranked by text similarity
- * and proximity. Extends the list projection with the "why it matches" fields.
- */
 export interface ReclamoSimilar extends ReclamoResumen {
-  /** 0..1 text similarity; already sorted, useful to label "muy parecido". */
   similitud: number;
-  /** Distance in metres, or null if either claim has no coordinates. */
   distancia_metros: number | null;
-  /** Human words that overlap, to explain the match ("Coinciden: luz, apagado"). */
   terminos_en_comun: string[];
-  /** The claim was created by the same user asking. */
   es_propio: boolean;
-  /** The user already adhered to this claim. */
   ya_adherido: boolean;
 }
 
@@ -128,6 +117,40 @@ export interface Page<T> {
   size: number;
 }
 
+export type TipoNotificacion = "ESTADO" | "COMENTARIO" | "NUEVO_RECLAMO";
+
+export interface Notificacion {
+  id: string;
+  tipo: TipoNotificacion;
+  reclamo_id: string;
+  titulo: string;
+  mensaje: string;
+  estado_nuevo?: EstadoReclamo | null;
+  comentario_id?: string | null;
+  created_at: string;
+  leida: boolean;
+  leida_at: string | null;
+  datos?: Record<string, unknown> | null;
+}
+
+export interface PaginaNotificaciones extends Page<Notificacion> {
+  unread_count: number;
+}
+
+export interface ConteoNotificaciones {
+  unread_count: number;
+}
+
+export interface FiltroNotificaciones {
+  page?: number;
+  size?: number;
+  unread_only?: boolean;
+}
+
+export interface ResultadoMarcarTodas {
+  leidas: number;
+}
+
 export interface ReclamoBandeja {
   id: string;
   titulo: string;
@@ -164,7 +187,6 @@ export interface FiltroReclamos {
   barrio?: string;
   texto?: string;
   orden?: string;
-  /** Restrict to a single citizen's claims (used to flag "mine" on the map). */
   ciudadano_id?: string;
   page?: number;
   size?: number;

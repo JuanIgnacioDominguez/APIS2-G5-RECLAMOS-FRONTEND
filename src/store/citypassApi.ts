@@ -1,47 +1,52 @@
-/**
- * Central RTK Query slice for the Reclamos backend.
- *
- * Why RTK Query here: navigating between the sidebar screens (Bandeja, Todos
- * los reclamos, Feed, Mapa, Panel…) was re-firing the same GET every time
- * because each page's `useAsync` runs on mount. RTK Query deduplicates in-flight
- * calls, keeps the previous response cached, and revalidates in the background,
- * so tab switches feel instant and the network fires only when data actually
- * expires or is invalidated by a mutation.
- *
- * Each endpoint uses `queryFn` and calls into `@/api/reclamos`. That keeps a
- * single source of truth for how we talk to the backend (auth, 401, code-based
- * friendly errors) and lets our existing tests keep spying on `reclamosApi.X`
- * instead of stubbing `fetch`.
- */
-
-import { createApi } from "@reduxjs/toolkit/query/react";
-import { fakeBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
 
 import { ApiError } from "@/api/client";
+import * as notificacionesApi from "@/api/notificaciones";
 import * as reclamosApi from "@/api/reclamos";
 import type {
   BusquedaSimilares,
+  CambioEstado,
+  ComentarioOut,
+  ConteoNotificaciones,
   Estadisticas,
+  FiltroNotificaciones,
   FiltroReclamos,
+  Notificacion,
+  PaginaNotificaciones,
   Page,
   ReclamoBandeja,
+  ReclamoCrear,
   ReclamoDetalle,
-  ReclamoResumen,
+  ReclamoListado,
+  ReclamoOut,
   ReclamoSimilar,
+  ReclasificacionPedido,
+  ResultadoMarcarTodas,
 } from "@/api/types";
 
-/** Shape RTK Query returns for a failed request; keeps `code` for the UI. */
 interface RtkApiError {
   status: number;
   message: string;
   code?: string;
 }
 
-/** Wraps a call to our API layer so any thrown ApiError becomes a typed error. */
+type FiltroReclamosCache = FiltroReclamos & { usuario_cache?: string };
+
+function tagsLista(
+  result: Page<ReclamoListado> | undefined,
+  listaId: string,
+): Array<{ type: "Reclamo"; id: string }> {
+  return result
+    ? [
+        ...result.items.map((reclamo) => ({ type: "Reclamo" as const, id: reclamo.id })),
+        { type: "Reclamo" as const, id: listaId },
+      ]
+    : [{ type: "Reclamo" as const, id: listaId }];
+}
+
 async function ejecutar<T>(fn: () => Promise<T>): Promise<{ data: T } | { error: RtkApiError }> {
   try {
-    const data = await fn();
-    return { data };
+    return { data: await fn() };
   } catch (err) {
     if (err instanceof ApiError) {
       return { error: { status: err.status, message: err.message, code: err.code } };
@@ -54,30 +59,67 @@ async function ejecutar<T>(fn: () => Promise<T>): Promise<{ data: T } | { error:
 export const citypassApi = createApi({
   reducerPath: "citypassApi",
   baseQuery: fakeBaseQuery<RtkApiError>(),
-  // Tags let a mutation (create claim, adhere, change state…) invalidate every
-  // list/detail that could be showing stale data, so no one has to remember to
-  // reload by hand.
-  tagTypes: ["Reclamo", "Bandeja", "Estadisticas", "Similares"],
-  // Fresh-data window per cache entry (60s): a rapid tab-switch shows the
-  // cached data instantly and does not refetch. After that RTK Query revalidates.
+  tagTypes: ["Reclamo", "Comentarios", "Bandeja", "Estadisticas", "Similares", "Notificacion"],
   keepUnusedDataFor: 60,
   refetchOnMountOrArgChange: 30,
   refetchOnReconnect: true,
   endpoints: (build) => ({
-    listarReclamos: build.query<Page<ReclamoResumen>, FiltroReclamos | undefined>({
-      queryFn: (filtro) => ejecutar(() => reclamosApi.listarReclamos(filtro ?? {})),
-      providesTags: (result) =>
-        result
-          ? [
-              ...result.items.map((r) => ({ type: "Reclamo" as const, id: r.id })),
-              { type: "Reclamo" as const, id: "LIST" },
-            ]
-          : [{ type: "Reclamo" as const, id: "LIST" }],
+    crearReclamo: build.mutation<ReclamoOut, ReclamoCrear>({
+      queryFn: (datos) => ejecutar(() => reclamosApi.crearReclamo(datos)),
+      invalidatesTags: (_result, error) =>
+        error ? [] : [{ type: "Reclamo", id: "LIST" }, "Bandeja", "Estadisticas", "Similares"],
+    }),
+
+    cambiarEstado: build.mutation<ReclamoOut, { id: string; cambio: CambioEstado }>({
+      queryFn: ({ id, cambio }) => ejecutar(() => reclamosApi.cambiarEstado(id, cambio)),
+      invalidatesTags: (_result, error, { id }) =>
+        error
+          ? []
+          : [
+              { type: "Reclamo", id },
+              { type: "Reclamo", id: "LIST" },
+              "Bandeja",
+              "Estadisticas",
+              "Similares",
+              "Notificacion",
+            ],
+    }),
+
+    reclasificar: build.mutation<ReclamoOut, { id: string; cambio: ReclasificacionPedido }>({
+      queryFn: ({ id, cambio }) => ejecutar(() => reclamosApi.reclasificar(id, cambio)),
+      invalidatesTags: (_result, error, { id }) =>
+        error
+          ? []
+          : [
+              { type: "Reclamo", id },
+              { type: "Reclamo", id: "LIST" },
+              "Bandeja",
+              "Estadisticas",
+              "Similares",
+            ],
+    }),
+
+    comentar: build.mutation<ComentarioOut, { id: string; texto: string }>({
+      queryFn: ({ id, texto }) => ejecutar(() => reclamosApi.comentar(id, texto)),
+      invalidatesTags: (_result, error, { id }) =>
+        error ? [] : [{ type: "Comentarios", id }, "Notificacion"],
+    }),
+
+    listarReclamos: build.query<Page<ReclamoListado>, FiltroReclamosCache | undefined>({
+      queryFn: (args) => {
+        const filtro = { ...(args ?? {}) };
+        delete filtro.usuario_cache;
+        return ejecutar(() => reclamosApi.listarReclamos(filtro));
+      },
+      providesTags: (result) => tagsLista(result, "LIST"),
     }),
 
     obtenerReclamo: build.query<ReclamoDetalle, string>({
       queryFn: (id) => ejecutar(() => reclamosApi.obtenerReclamo(id)),
-      providesTags: (_result, _err, id) => [{ type: "Reclamo", id }],
+      providesTags: (_result, _err, id) => [
+        { type: "Reclamo", id },
+        { type: "Comentarios", id },
+      ],
     }),
 
     bandeja: build.query<Page<ReclamoBandeja>, { page?: number; size?: number } | undefined>({
@@ -85,9 +127,56 @@ export const citypassApi = createApi({
       providesTags: [{ type: "Bandeja", id: "LIST" }],
     }),
 
+    contarResueltos: build.query<number, void>({
+      queryFn: () => ejecutar(() => reclamosApi.contarResueltos()),
+      providesTags: [{ type: "Estadisticas", id: "RESUELTOS" }],
+    }),
+
     estadisticas: build.query<Estadisticas, void>({
       queryFn: () => ejecutar(() => reclamosApi.estadisticas()),
       providesTags: [{ type: "Estadisticas", id: "GLOBAL" }],
+    }),
+
+    listarNotificaciones: build.query<PaginaNotificaciones, FiltroNotificaciones | undefined>({
+      queryFn: (filtro) => ejecutar(() => notificacionesApi.listarNotificaciones(filtro ?? {})),
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.items.map((notificacion) => ({
+                type: "Notificacion" as const,
+                id: notificacion.id,
+              })),
+              { type: "Notificacion" as const, id: "LIST" },
+            ]
+          : [{ type: "Notificacion" as const, id: "LIST" }],
+    }),
+
+    contarNotificaciones: build.query<ConteoNotificaciones, void>({
+      queryFn: () => ejecutar(() => notificacionesApi.contarNotificaciones()),
+      providesTags: [{ type: "Notificacion", id: "COUNT" }],
+    }),
+
+    marcarNotificacionLeida: build.mutation<Notificacion, string>({
+      queryFn: (id) => ejecutar(() => notificacionesApi.marcarNotificacionLeida(id)),
+      invalidatesTags: (_result, error, id) =>
+        error
+          ? []
+          : [
+              { type: "Notificacion", id },
+              { type: "Notificacion", id: "LIST" },
+              { type: "Notificacion", id: "COUNT" },
+            ],
+    }),
+
+    marcarTodasNotificacionesLeidas: build.mutation<ResultadoMarcarTodas, void>({
+      queryFn: () => ejecutar(() => notificacionesApi.marcarTodasNotificacionesLeidas()),
+      invalidatesTags: (_result, error) =>
+        error
+          ? []
+          : [
+              { type: "Notificacion", id: "LIST" },
+              { type: "Notificacion", id: "COUNT" },
+            ],
     }),
 
     similaresDe: build.query<ReclamoSimilar[], string>({
@@ -101,21 +190,34 @@ export const citypassApi = createApi({
 
     adherir: build.mutation<{ reclamo_id: string; adhesiones_count: number }, string>({
       queryFn: (id) => ejecutar(() => reclamosApi.adherir(id)),
-      // Adhering changes the count in every list plus the detail card.
-      invalidatesTags: (_res, _err, id) => [
-        { type: "Reclamo", id },
-        { type: "Reclamo", id: "LIST" },
-        { type: "Bandeja", id: "LIST" },
-      ],
+      invalidatesTags: (_res, error, id) =>
+        error
+          ? []
+          : [
+              { type: "Reclamo", id },
+              { type: "Reclamo", id: "LIST" },
+              { type: "Bandeja", id: "LIST" },
+              "Similares",
+              "Notificacion",
+            ],
     }),
   }),
 });
 
 export const {
+  useCrearReclamoMutation,
+  useCambiarEstadoMutation,
+  useReclasificarMutation,
+  useComentarMutation,
   useListarReclamosQuery,
   useObtenerReclamoQuery,
   useBandejaQuery,
+  useContarResueltosQuery,
   useEstadisticasQuery,
+  useListarNotificacionesQuery,
+  useContarNotificacionesQuery,
+  useMarcarNotificacionLeidaMutation,
+  useMarcarTodasNotificacionesLeidasMutation,
   useSimilaresDeQuery,
   useBuscarSimilaresMutation,
   useAdherirMutation,
