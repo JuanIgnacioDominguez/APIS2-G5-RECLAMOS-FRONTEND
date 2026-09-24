@@ -135,8 +135,25 @@ async function pedir(params: Record<string, string>, signal?: AbortSignal): Prom
 }
 
 /**
+ * Cache of already-resolved autocomplete queries, keyed by the normalized text
+ * and the proximity centre. Nominatim rate-limits to ~1 req/s, so re-typing or
+ * deleting back to a previous prefix must not fire the request again.
+ */
+const cacheSugerencias = new Map<string, SugerenciaDireccion[]>();
+
+function claveCache(q: string, centro: { lat: number; lng: number }): string {
+  return `${q.toLowerCase()}@${centro.lat.toFixed(2)},${centro.lng.toFixed(2)}`;
+}
+
+/** Clears the suggestion cache. Used by tests to isolate each case. */
+export function limpiarCacheDirecciones(): void {
+  cacheSugerencias.clear();
+}
+
+/**
  * Autocomplete: real candidates for what the citizen is typing, ranked by
  * proximity to `cerca` (defaults to Greater Buenos Aires). Empty under 4 chars.
+ * Results are cached per query+centre to stay within Nominatim's rate limit.
  */
 export async function sugerirDirecciones(
   texto: string,
@@ -145,6 +162,10 @@ export async function sugerirDirecciones(
   const q = texto.trim();
   if (q.length < 4) return [];
   const centro = opts.cerca ?? CENTRO_AMBA;
+
+  const clave = claveCache(q, centro);
+  const enCache = cacheSugerencias.get(clave);
+  if (enCache) return enCache;
 
   const hits = await pedir(
     {
@@ -160,7 +181,7 @@ export async function sugerirDirecciones(
   );
 
   const vistas = new Set<string>();
-  return hits
+  const sugerencias = hits
     .sort(
       (a, b) =>
         distancia2(Number(a.lat), Number(a.lon), centro.lat, centro.lng) -
@@ -173,6 +194,9 @@ export async function sugerirDirecciones(
       return true;
     })
     .slice(0, 6);
+
+  cacheSugerencias.set(clave, sugerencias);
+  return sugerencias;
 }
 
 /** Forward geocoding: free-text address to a real nearby point. Null if none. */

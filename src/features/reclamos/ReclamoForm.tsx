@@ -85,7 +85,9 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
   // Skips the next autocomplete fetch when the address was set programmatically
   // (map click, geolocation, a picked suggestion) instead of typed by the user.
   const omitirSugerencia = useRef(false);
-  const dirDebounced = useDebouncedValue(values.direccion, 300);
+  // Nominatim's usage policy allows ~1 request/second. A 1s debounce (plus the
+  // in-module response cache) keeps us under that limit even when typing fast.
+  const dirDebounced = useDebouncedValue(values.direccion, 1000);
 
   // Proximity centre for ranking suggestions: the dropped pin if any, else the
   // citizen's device location, else Greater Buenos Aires. Kept in a ref so the
