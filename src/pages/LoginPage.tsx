@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from "react";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { useEffect, useState, type FormEvent } from "react";
+import { AlertTriangle, Info, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Logo } from "@/components/Logo";
 import { LoginAside } from "@/components/LoginAside";
-import { useAuth } from "@/auth/AuthContext";
+import { SESION_VENCIDA_KEY, useAuth } from "@/auth/AuthContext";
 import { ROL_LABEL } from "@/auth/roles";
 import { CREDENCIALES_DEMO, type CredencialDemo } from "@/auth/users";
 import { homePorRol } from "@/config/navigation";
@@ -51,10 +51,24 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
   const [cargando, setCargando] = useState(false);
   const [errorLogin, setErrorLogin] = useState<string | null>(null);
+  const [sesionVencida, setSesionVencida] = useState(false);
+
+  // Show a notice when we landed here because a 401 expired the session.
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem(SESION_VENCIDA_KEY)) {
+        setSesionVencida(true);
+        sessionStorage.removeItem(SESION_VENCIDA_KEY);
+      }
+    } catch {
+      // storage unavailable: no notice, not critical
+    }
+  }, []);
 
   async function ingresar(usuarioVal: string, passwordVal: string) {
     setCargando(true);
     setErrorLogin(null);
+    setSesionVencida(false);
     try {
       const u = await login(usuarioVal, passwordVal);
       navigate(homePorRol(u.rol));
@@ -90,6 +104,13 @@ export function LoginPage() {
                 Usa tu cuenta ciudadana para continuar.
               </p>
             </div>
+
+            {sesionVencida && !errorLogin && (
+              <Alert>
+                <Info className="size-4" />
+                <AlertDescription>Tu sesion expiro, volve a ingresar.</AlertDescription>
+              </Alert>
+            )}
 
             {errorLogin && (
               <Alert variant="destructive">

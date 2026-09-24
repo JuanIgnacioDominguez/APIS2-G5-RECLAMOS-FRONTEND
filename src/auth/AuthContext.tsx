@@ -22,6 +22,8 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 const STORAGE_KEY = "citypass.auth.sesion";
+/** Set when a 401 ended the session, so the login page can explain why. */
+export const SESION_VENCIDA_KEY = "citypass.auth.vencida";
 
 function leerAlmacenado(): Sesion | null {
   try {
@@ -40,11 +42,17 @@ export function AuthProvider({
   usuarioInicial?: Usuario | null;
 }) {
   const [sesion, setSesion] = useState<Sesion | null>(() => {
-    if (usuarioInicial) return { usuario: usuarioInicial, token: "seed" };
-    return leerAlmacenado();
+    const inicial = usuarioInicial ? { usuario: usuarioInicial, token: "seed" } : leerAlmacenado();
+    // Seed the api client's token here, in the initializer, so it is set before
+    // any child renders. React runs children's effects before the parent's, so
+    // a page firing its fetch in a `useEffect` would otherwise send the first
+    // request (right after an F5) with no Authorization header and get a 401.
+    setAuthToken(inicial?.token ?? null);
+    return inicial;
   });
 
-  // Keep the api client's bearer token in sync with the session.
+  // Keep the api client's bearer token in sync with later session changes
+  // (login / logout). The initial value is already seeded above.
   useEffect(() => {
     setAuthToken(sesion?.token ?? null);
   }, [sesion]);
@@ -60,9 +68,18 @@ export function AuthProvider({
   }, []);
 
   // Drop the session when any authenticated call returns 401 (expired/revoked
-  // token), so the route guard sends the user back to login.
+  // token), so the route guard sends the user back to login. We flag it as an
+  // expiry (vs. a manual logout) so the login page can say why they're back.
   useEffect(() => {
-    setUnauthorizedHandler(logout);
+    const porVencimiento = () => {
+      try {
+        sessionStorage.setItem(SESION_VENCIDA_KEY, "1");
+      } catch {
+        // storage unavailable: the notice is a nice-to-have, skip it
+      }
+      logout();
+    };
+    setUnauthorizedHandler(porVencimiento);
     return () => setUnauthorizedHandler(null);
   }, [logout]);
 
