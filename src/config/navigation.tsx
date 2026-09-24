@@ -34,9 +34,13 @@ export interface Miga {
   to?: string;
 }
 
+const MAPA: NavItem = { label: "Mapa", to: "/mapa", icon: MapPin };
+
+// Citizens get the public feed plus the map. Staff already see every claim in
+// "Todos los reclamos", so their Comunidad section is just the map.
 const COMUNIDAD: NavItem[] = [
   { label: "Reclamos de la ciudad", to: "/feed", icon: Newspaper },
-  { label: "Mapa", to: "/mapa", icon: MapPin },
+  MAPA,
 ];
 
 /** Personal section pinned to the bottom of the sidebar, same for every role. */
@@ -76,7 +80,7 @@ export function navModulo(rol: Rol): NavSection[] {
       items: [{ label: "Panel", to: "/panel", icon: BarChart3 }],
     });
   }
-  secciones.push({ label: "Comunidad", items: COMUNIDAD });
+  secciones.push({ label: "Comunidad", items: [MAPA] });
   return secciones;
 }
 
@@ -105,9 +109,13 @@ export function migasPara(pathname: string, staff: boolean, origen?: Miga): Miga
   }
   const detalle = /^\/reclamos\/([^/]+)$/.exec(pathname);
   if (detalle) {
+    // Without an explicit origin we cannot tell whose claim this is, so a
+    // citizen falls back to "Reclamos de la ciudad" (which lists every claim)
+    // instead of "Mis reclamos", where a claim that is not theirs never shows.
+    // Staff still fall back to "Todos los reclamos", which lists all of them.
     const padre = origen ?? {
-      label: staff ? "Todos los reclamos" : "Mis reclamos",
-      to: "/reclamos",
+      label: staff ? "Todos los reclamos" : "Reclamos de la ciudad",
+      to: staff ? "/reclamos" : "/feed",
     };
     return [padre, { label: idCorto(detalle[1]) }];
   }
