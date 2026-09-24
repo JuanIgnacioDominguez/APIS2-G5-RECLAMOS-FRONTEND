@@ -2,6 +2,7 @@
 
 import { request } from "./client";
 import type {
+  BusquedaSimilares,
   CambioEstado,
   ComentarioOut,
   Estadisticas,
@@ -13,6 +14,7 @@ import type {
   ReclamoDetalle,
   ReclamoOut,
   ReclamoResumen,
+  ReclamoSimilar,
   ReclasificacionPedido,
   SugerenciaClasificacion,
 } from "./types";
@@ -27,6 +29,20 @@ export function obtenerReclamo(id: string): Promise<ReclamoDetalle> {
 
 export function crearReclamo(datos: ReclamoCrear): Promise<ReclamoOut> {
   return request<ReclamoOut>("/reclamos", { method: "POST", body: datos });
+}
+
+/**
+ * Open claims that likely describe the same problem as `datos`, before creating
+ * a new one (US anti-duplicados). Empty list when nothing looks alike. Stores
+ * nothing, so it is safe to call as many times as needed.
+ */
+export function buscarSimilares(datos: BusquedaSimilares): Promise<ReclamoSimilar[]> {
+  return request<ReclamoSimilar[]>("/reclamos/similares", { method: "POST", body: datos });
+}
+
+/** Possible duplicates of an existing claim (shown to staff on the detail). */
+export function similaresDe(id: string): Promise<ReclamoSimilar[]> {
+  return request<ReclamoSimilar[]>(`/reclamos/${id}/similares`);
 }
 
 export function cambiarEstado(id: string, cambio: CambioEstado): Promise<ReclamoOut> {
