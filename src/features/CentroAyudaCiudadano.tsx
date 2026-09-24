@@ -1,11 +1,9 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
   Bell,
   BookOpen,
   CheckCircle2,
-  ChevronDown,
-  ChevronRight,
   CircleHelp,
   Command,
   Inbox,
@@ -13,41 +11,39 @@ import {
   MapPin,
   MessageCircle,
   Plus,
-  Search,
   Settings,
   Sparkles,
   UserRound,
   Users,
-  type LucideIcon,
 } from "lucide-react";
 
 import { CategoriaReclamo, EstadoReclamo, PrioridadReclamo } from "@/domain/enums";
 import { CATEGORIA_LABEL, ESTADO_LABEL, PRIORIDAD_LABEL } from "@/domain/labels";
 import { CategoriaIcono, EstadoBadge, PrioridadBadge } from "@/features/reclamos/EstadoBadges";
-import { IlustracionAyuda } from "@/features/CentroAyudaOperador";
+import {
+  AccesoRapido,
+  HeroAyuda,
+  RejillaCategorias,
+  TarjetaAccesos,
+  TarjetaAtajoTeclado,
+  TarjetaPreguntas,
+  filtrarPreguntas,
+  subtituloPreguntas,
+  useCentroAyuda,
+  type CategoriaAyuda,
+  type PreguntaAyuda,
+} from "@/features/ayuda/CentroAyudaBase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 
 type ClaveCategoria =
   "primeros-pasos" | "seguimiento" | "clasificacion" | "participacion" | "cuenta";
 
-interface CategoriaCiudadano {
-  id: ClaveCategoria;
-  titulo: string;
-  descripcion: string;
-  icon: LucideIcon;
-  icono: string;
-}
-
-interface PreguntaCiudadano {
-  id: string;
+interface PreguntaCiudadano extends PreguntaAyuda {
   categoria: ClaveCategoria;
-  pregunta: string;
-  respuesta: string;
 }
 
-const CATEGORIAS: CategoriaCiudadano[] = [
+const CATEGORIAS: CategoriaAyuda<ClaveCategoria>[] = [
   {
     id: "primeros-pasos",
     titulo: "Primeros pasos",
@@ -238,49 +234,6 @@ const PREGUNTAS: PreguntaCiudadano[] = [
   },
 ];
 
-function normalizar(texto: string): string {
-  return texto
-    .toLocaleLowerCase("es")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-}
-
-function Pregunta({ pregunta }: { pregunta: PreguntaCiudadano }) {
-  const [abierta, setAbierta] = useState(false);
-
-  return (
-    <div
-      id={pregunta.id}
-      className="scroll-mt-24 rounded-xl border bg-card transition-colors hover:bg-muted/30"
-    >
-      <button
-        type="button"
-        onClick={() => setAbierta((valor) => !valor)}
-        aria-expanded={abierta}
-        className="flex w-full items-center justify-between gap-4 px-4 py-4 text-left text-sm font-medium sm:px-5"
-      >
-        {pregunta.pregunta}
-        <ChevronDown
-          className={`size-4 shrink-0 text-muted-foreground transition-transform duration-200 ${
-            abierta ? "rotate-180" : ""
-          }`}
-        />
-      </button>
-      <div
-        className={`grid transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none ${
-          abierta ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-        }`}
-      >
-        <div className="overflow-hidden">
-          <p className="px-4 pb-4 text-sm leading-relaxed text-muted-foreground sm:px-5">
-            {pregunta.respuesta}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function ReferenciaEstados() {
   const estados = Object.keys(ESTADO_LABEL) as EstadoReclamo[];
 
@@ -401,126 +354,52 @@ function QuickStart() {
   );
 }
 
-function AccesoRapido({ to, icon: Icono, label }: { to: string; icon: LucideIcon; label: string }) {
-  return (
-    <Button
-      asChild
-      variant="secondary"
-      className="h-auto min-h-16 w-full justify-start gap-3 px-3 py-2.5 text-left"
-    >
-      <Link to={to}>
-        <Icono className="text-chart-1" />
-        <span className="text-xs font-medium leading-tight">{label}</span>
-      </Link>
-    </Button>
-  );
-}
-
 export function CentroAyudaCiudadano() {
-  const [consulta, setConsulta] = useState("");
-  const [categoriaActiva, setCategoriaActiva] = useState<ClaveCategoria | null>(null);
+  const {
+    consulta,
+    consultaLimpia,
+    terminoConsulta,
+    categoriaActiva,
+    buscar,
+    mostrarCategoria,
+    verTodas,
+  } = useCentroAyuda<ClaveCategoria>();
   const categoriaSeleccionada = CATEGORIAS.find((categoria) => categoria.id === categoriaActiva);
-  const consultaLimpia = consulta.trim();
-  const terminoConsulta = normalizar(consultaLimpia);
-  const resultados = useMemo(() => {
-    const porCategoria = categoriaActiva
-      ? PREGUNTAS.filter((pregunta) => pregunta.categoria === categoriaActiva)
-      : PREGUNTAS;
-    if (!terminoConsulta) return porCategoria;
-    return porCategoria.filter((pregunta) =>
-      normalizar(`${pregunta.pregunta} ${pregunta.respuesta}`).includes(terminoConsulta),
-    );
-  }, [categoriaActiva, terminoConsulta]);
+  const resultados = useMemo(
+    () => filtrarPreguntas(PREGUNTAS, categoriaActiva, terminoConsulta),
+    [categoriaActiva, terminoConsulta],
+  );
 
-  function mostrarCategoria(categoria: ClaveCategoria): void {
-    setCategoriaActiva(categoria);
-    setConsulta("");
-    window.setTimeout(() => {
-      document.getElementById("preguntas-frecuentes")?.scrollIntoView?.({
-        behavior: "smooth",
-        block: "start",
-      });
-    }, 0);
-  }
-
-  function verTodas(): void {
-    setCategoriaActiva(null);
-    setConsulta("");
-  }
+  const subtitulo = subtituloPreguntas({
+    terminoConsulta,
+    consultaLimpia,
+    hayCategoria: Boolean(categoriaSeleccionada),
+    cantidad: resultados.length,
+    porDefecto: "Respuestas rápidas para cuidar y seguir tu reclamo.",
+  });
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 sm:gap-6">
-      <section className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-accent via-card to-card px-5 py-8 shadow-sm sm:px-8 sm:py-10">
-        <div className="relative z-10 max-w-3xl">
+      <HeroAyuda
+        inputId="busqueda-ayuda-ciudadano"
+        badge={
           <div className="flex items-center gap-2 text-sm font-semibold text-primary">
             <CircleHelp className="size-4" />
             Guía para vecinos
           </div>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Centro de ayuda
-          </h1>
-          <p className="mt-2 max-w-2xl text-base text-muted-foreground">
-            Encontrá respuestas para cargar un reclamo, seguir su avance y participar de la vida de
-            tu barrio.
-          </p>
-          <form
-            role="search"
-            onSubmit={(event) => event.preventDefault()}
-            className="relative mt-7 max-w-2xl"
-          >
-            <label htmlFor="busqueda-ayuda-ciudadano" className="sr-only">
-              Buscar en el centro de ayuda
-            </label>
-            <Search className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              id="busqueda-ayuda-ciudadano"
-              type="search"
-              value={consulta}
-              onChange={(event) => {
-                setConsulta(event.target.value);
-                setCategoriaActiva(null);
-              }}
-              placeholder="Buscar en la ayuda..."
-              className="h-12 bg-card pr-4 pl-12 text-base shadow-sm"
-            />
-          </form>
-        </div>
-        <IlustracionAyuda />
-      </section>
+        }
+        descripcion="Encontrá respuestas para cargar un reclamo, seguir su avance y participar de la vida de tu barrio."
+        consulta={consulta}
+        onConsultaChange={buscar}
+      />
 
-      <section
-        data-tour="ayuda-secciones"
-        aria-label="Categorías de ayuda"
+      <RejillaCategorias
+        categorias={CATEGORIAS}
+        activa={categoriaActiva}
+        onSeleccionar={mostrarCategoria}
         className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5"
-      >
-        {CATEGORIAS.map((categoria) => {
-          const Icono = categoria.icon;
-          return (
-            <button
-              key={categoria.id}
-              type="button"
-              onClick={() => mostrarCategoria(categoria.id)}
-              aria-pressed={categoriaActiva === categoria.id}
-              className={`group flex items-center gap-3 rounded-xl border p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none ${
-                categoriaActiva === categoria.id ? "border-primary/40 bg-accent/50" : "bg-card"
-              }`}
-            >
-              <span
-                className={`grid size-11 shrink-0 place-items-center rounded-xl ${categoria.icono}`}
-              >
-                <Icono className="size-5" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block font-semibold">{categoria.titulo}</span>
-                <span className="mt-0.5 block text-xs text-muted-foreground">
-                  {categoria.descripcion}
-                </span>
-              </span>
-              <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-            </button>
-          );
-        })}
-      </section>
+        dataTour="ayuda-secciones"
+      />
 
       <QuickStart />
 
@@ -531,104 +410,36 @@ export function CentroAyudaCiudadano() {
       </div>
 
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <Card id="preguntas-frecuentes" className="scroll-mt-24">
-          <CardHeader>
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <CardTitle>
-                  {categoriaSeleccionada ? categoriaSeleccionada.titulo : "Preguntas frecuentes"}
-                </CardTitle>
-                <p className="mt-1 text-sm text-muted-foreground" aria-live="polite">
-                  {terminoConsulta
-                    ? `${resultados.length} resultado${resultados.length === 1 ? "" : "s"} para “${consultaLimpia}”`
-                    : categoriaSeleccionada
-                      ? `${resultados.length} guía${resultados.length === 1 ? "" : "s"} en esta categoría.`
-                      : "Respuestas rápidas para cuidar y seguir tu reclamo."}
-                </p>
-              </div>
-              {terminoConsulta || categoriaActiva ? (
-                <Button variant="ghost" size="sm" onClick={verTodas}>
-                  Ver todas
-                </Button>
-              ) : null}
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {resultados.length === 0 ? (
-              <div className="flex flex-col items-center px-4 py-12 text-center">
-                <Search className="size-8 text-muted-foreground/60" />
-                <p className="mt-3 font-medium">No encontramos esa ayuda</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Probá con “reclamo”, “mapa” o “estado”.
-                </p>
-              </div>
-            ) : (
-              resultados.map((pregunta) => <Pregunta key={pregunta.id} pregunta={pregunta} />)
-            )}
-          </CardContent>
-        </Card>
+        <TarjetaPreguntas
+          titulo={categoriaSeleccionada ? categoriaSeleccionada.titulo : "Preguntas frecuentes"}
+          subtitulo={subtitulo}
+          mostrarVerTodas={Boolean(terminoConsulta || categoriaActiva)}
+          onVerTodas={verTodas}
+          resultados={resultados}
+          hintVacio="Probá con “reclamo”, “mapa” o “estado”."
+        />
 
         <aside className="grid gap-4">
-          <Card>
-            <CardContent className="flex flex-col gap-4">
-              <div className="flex items-start gap-3">
-                <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-chart-1/10 text-chart-1">
-                  <Sparkles className="size-5" />
-                </span>
-                <div>
-                  <h2 className="font-semibold">Accesos rápidos</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Saltá directo a tus herramientas.
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <AccesoRapido to="/reclamos" icon={Inbox} label="Mis reclamos" />
-                <AccesoRapido to="/reclamos/nuevo" icon={Plus} label="Nuevo reclamo" />
-                <AccesoRapido to="/feed" icon={MessageCircle} label="Reclamos de la ciudad" />
-                <AccesoRapido to="/mapa" icon={MapPin} label="Mapa" />
-                <AccesoRapido to="/notificaciones" icon={Bell} label="Notificaciones" />
-                <AccesoRapido to="/cuenta" icon={UserRound} label="Mi cuenta" />
-                <AccesoRapido to="/configuracion" icon={Settings} label="Configuración" />
-              </div>
-              <div className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
-                <Users className="size-4 shrink-0 text-chart-2" />
-                Tus datos personales no se muestran públicamente.
-              </div>
-            </CardContent>
-          </Card>
+          <TarjetaAccesos
+            icono={Sparkles}
+            descripcion="Saltá directo a tus herramientas."
+            notaIcono={Users}
+            notaTexto="Tus datos personales no se muestran públicamente."
+          >
+            <AccesoRapido to="/reclamos" icon={Inbox} label="Mis reclamos" />
+            <AccesoRapido to="/reclamos/nuevo" icon={Plus} label="Nuevo reclamo" />
+            <AccesoRapido to="/feed" icon={MessageCircle} label="Reclamos de la ciudad" />
+            <AccesoRapido to="/mapa" icon={MapPin} label="Mapa" />
+            <AccesoRapido to="/notificaciones" icon={Bell} label="Notificaciones" />
+            <AccesoRapido to="/cuenta" icon={UserRound} label="Mi cuenta" />
+            <AccesoRapido to="/configuracion" icon={Settings} label="Configuración" />
+          </TarjetaAccesos>
 
-          <Card>
-            <CardContent className="flex flex-col gap-4">
-              <div className="flex items-start gap-3">
-                <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-chart-1/10 text-chart-1">
-                  <Command className="size-5" />
-                </span>
-                <div>
-                  <h2 className="font-semibold">Atajo de teclado</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Buscá una página o un reclamo sin salir del lugar.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between gap-4 rounded-lg bg-muted px-3 py-3">
-                <div>
-                  <p className="text-sm font-medium">Buscador global</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Buscá por título o nombre.</p>
-                </div>
-                <div className="flex shrink-0 items-center gap-1">
-                  <kbd className="rounded-md border bg-card px-2 py-1 font-mono text-xs font-semibold shadow-sm">
-                    Ctrl
-                  </kbd>
-                  <span className="text-xs text-muted-foreground">+</span>
-                  <kbd className="rounded-md border bg-card px-2 py-1 font-mono text-xs font-semibold shadow-sm">
-                    K
-                  </kbd>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground">En macOS, usá Cmd + K.</p>
-            </CardContent>
-          </Card>
+          <TarjetaAtajoTeclado
+            icono={Command}
+            descripcionEncabezado="Buscá una página o un reclamo sin salir del lugar."
+            descripcionInterna="Buscá por título o nombre."
+          />
         </aside>
       </div>
     </div>
