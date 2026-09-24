@@ -16,6 +16,9 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
     css: true,
+    // Headroom over vitest's 5s default: the form tests type long strings and a
+    // loaded CI runner can drift past 5s. Real waits are bounded by findBy timeouts.
+    testTimeout: 15000,
     coverage: {
       // v8 provider mirrors the backend's pytest-cov: a hard gate at 60%,
       // the threshold required by the course rubric.

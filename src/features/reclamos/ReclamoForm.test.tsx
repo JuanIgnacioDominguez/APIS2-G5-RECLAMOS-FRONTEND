@@ -12,8 +12,13 @@ const TITULO = "Luminaria apagada";
 const DESCRIPCION = "Hace una semana que no funciona el alumbrado.";
 
 describe("ReclamoForm", () => {
+  // `delay: null` types the whole string in one tick instead of key-by-key,
+  // which keeps these long-text tests well under the timeout on a loaded runner.
+  let user: ReturnType<typeof userEvent.setup>;
+
   beforeEach(() => {
     vi.restoreAllMocks();
+    user = userEvent.setup({ delay: null });
     // By default no suggestion, so it never interferes with the base cases.
     vi.spyOn(reclamosApi, "sugerirClasificacion").mockRejectedValue(new Error("sin backend"));
   });
@@ -22,7 +27,7 @@ describe("ReclamoForm", () => {
     const onSubmit = vi.fn();
     renderWithProviders(<ReclamoForm onSubmit={onSubmit} />);
 
-    await userEvent.click(screen.getByRole("button", { name: /enviar reclamo/i }));
+    await user.click(screen.getByRole("button", { name: /enviar reclamo/i }));
 
     expect(await screen.findByText(/al menos 5 caracteres/i)).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
@@ -32,9 +37,9 @@ describe("ReclamoForm", () => {
     const onSubmit = vi.fn();
     renderWithProviders(<ReclamoForm onSubmit={onSubmit} />);
 
-    await userEvent.type(screen.getByLabelText(/titulo/i), TITULO);
-    await userEvent.type(screen.getByLabelText(/descripcion/i), DESCRIPCION);
-    await userEvent.click(screen.getByRole("button", { name: /enviar reclamo/i }));
+    await user.type(screen.getByLabelText(/titulo/i), TITULO);
+    await user.type(screen.getByLabelText(/descripcion/i), DESCRIPCION);
+    await user.click(screen.getByRole("button", { name: /enviar reclamo/i }));
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit).toHaveBeenCalledWith(
@@ -53,8 +58,8 @@ describe("ReclamoForm", () => {
     vi.spyOn(reclamosApi, "sugerirClasificacion").mockResolvedValue(sugerencia);
 
     renderWithProviders(<ReclamoForm onSubmit={vi.fn()} />);
-    await userEvent.type(screen.getByLabelText(/titulo/i), TITULO);
-    await userEvent.type(screen.getByLabelText(/descripcion/i), DESCRIPCION);
+    await user.type(screen.getByLabelText(/titulo/i), TITULO);
+    await user.type(screen.getByLabelText(/descripcion/i), DESCRIPCION);
 
     // La sugerencia aparece tras el debounce.
     expect(
@@ -62,7 +67,7 @@ describe("ReclamoForm", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/de confianza/i)).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: /^aplicar$/i }));
+    await user.click(screen.getByRole("button", { name: /^aplicar$/i }));
 
     // La categoria del select queda seteada al valor sugerido.
     expect(screen.getByRole("combobox", { name: /categoria/i })).toHaveTextContent("Alumbrado");

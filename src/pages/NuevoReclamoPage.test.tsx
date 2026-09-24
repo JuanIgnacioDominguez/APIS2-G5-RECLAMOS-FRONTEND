@@ -19,20 +19,25 @@ function renderNuevo() {
 }
 
 describe("NuevoReclamoPage", () => {
+  // `delay: null` types instantly instead of key-by-key, keeping the long-text
+  // cases under the timeout on a loaded CI runner.
+  let user: ReturnType<typeof userEvent.setup>;
+
   beforeEach(() => {
     vi.restoreAllMocks();
+    user = userEvent.setup({ delay: null });
   });
 
   it("crea el reclamo y navega al detalle", async () => {
     vi.spyOn(reclamosApi, "crearReclamo").mockResolvedValue({ id: "nuevo-1" } as ReclamoOut);
     renderNuevo();
 
-    await userEvent.type(screen.getByLabelText(/titulo/i), "Bache profundo");
-    await userEvent.type(
+    await user.type(screen.getByLabelText(/titulo/i), "Bache profundo");
+    await user.type(
       screen.getByLabelText(/descripcion/i),
       "Hay un bache peligroso hace varios dias.",
     );
-    await userEvent.click(screen.getByRole("button", { name: /enviar reclamo/i }));
+    await user.click(screen.getByRole("button", { name: /enviar reclamo/i }));
 
     await waitFor(() => expect(screen.getByText("detalle del reclamo")).toBeInTheDocument());
     expect(reclamosApi.crearReclamo).toHaveBeenCalledWith(
@@ -44,12 +49,12 @@ describe("NuevoReclamoPage", () => {
     vi.spyOn(reclamosApi, "crearReclamo").mockRejectedValue(new Error("422 invalido"));
     renderNuevo();
 
-    await userEvent.type(screen.getByLabelText(/titulo/i), "Bache profundo");
-    await userEvent.type(
+    await user.type(screen.getByLabelText(/titulo/i), "Bache profundo");
+    await user.type(
       screen.getByLabelText(/descripcion/i),
       "Hay un bache peligroso hace varios dias.",
     );
-    await userEvent.click(screen.getByRole("button", { name: /enviar reclamo/i }));
+    await user.click(screen.getByRole("button", { name: /enviar reclamo/i }));
 
     await waitFor(() => expect(reclamosApi.crearReclamo).toHaveBeenCalled());
     expect(screen.queryByText("detalle del reclamo")).not.toBeInTheDocument();
