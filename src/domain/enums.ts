@@ -1,11 +1,3 @@
-/**
- * The vocabulary of the claims domain.
- *
- * These values mirror the backend contract (`app/domain/enums.py`): they travel
- * over the REST API and inside event payloads, so a value must never drift from
- * the backend without versioning the contract.
- */
-
 export const EstadoReclamo = {
   RECIBIDO: "RECIBIDO",
   EN_REVISION: "EN_REVISION",
@@ -55,7 +47,6 @@ export const OrigenClasificacion = {
 } as const;
 export type OrigenClasificacion = (typeof OrigenClasificacion)[keyof typeof OrigenClasificacion];
 
-/** States that accept no further changes. */
 export const ESTADOS_FINALES: ReadonlySet<EstadoReclamo> = new Set([
   EstadoReclamo.CERRADO,
   EstadoReclamo.RECHAZADO,
@@ -66,7 +57,6 @@ export const ESTADOS_RESUELTOS: ReadonlySet<EstadoReclamo> = new Set([
   EstadoReclamo.CERRADO,
 ]);
 
-/** All values of each enum, handy for building filters and selects. */
 export const ESTADOS = Object.values(EstadoReclamo);
 export const PRIORIDADES = Object.values(PrioridadReclamo);
 export const CATEGORIAS = Object.values(CategoriaReclamo);

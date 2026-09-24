@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { ChevronDown, Loader2, MapPin } from "lucide-react";
 
-import { listarReclamos } from "@/api/reclamos";
 import { useAuth } from "@/auth/AuthContext";
 import { Rol } from "@/auth/roles";
 import { EstadoReclamo, type CategoriaReclamo } from "@/domain/enums";
@@ -12,7 +11,7 @@ import {
   opcionesCategoria,
   opcionesEstado,
 } from "@/domain/labels";
-import { useAsync } from "@/hooks/useAsync";
+import { useListarReclamosQuery } from "@/store/citypassApi";
 import { cn } from "cn";
 import { EstadoError } from "@/components/EstadoError";
 import {
@@ -27,10 +26,7 @@ import { MapaReclamos } from "@/features/mapa/MapaReclamos";
 import { reclamosUbicados } from "@/features/mapa/coords";
 
 const TODAS = "todas";
-const CACHE_RECLAMOS_PUBLICOS = "mapa:reclamos-publicos:v1";
-const cacheKeyReclamosPropios = (usuarioId: string) => `mapa:reclamos-propios:${usuarioId}:v1`;
 
-/** Every state, in lifecycle order, for the full legend. */
 const ESTADOS_LEYENDA: EstadoReclamo[] = [
   EstadoReclamo.RECIBIDO,
   EstadoReclamo.EN_REVISION,
@@ -41,35 +37,28 @@ const ESTADOS_LEYENDA: EstadoReclamo[] = [
   EstadoReclamo.CERRADO,
 ];
 
-/**
- * Public map of geolocated claims (US-11), filterable by category and state.
- * The map fills the whole tab; the title, filters, count and legend live in a
- * floating panel that can be collapsed to see the map unobstructed.
- * Shows no personal data of the citizen who created each claim.
- */
 export function MapaPublicoPage() {
   const { usuario } = useAuth();
   const [categoria, setCategoria] = useState<CategoriaReclamo | null>(null);
   const [estado, setEstado] = useState<EstadoReclamo | null>(null);
   const [panelAbierto, setPanelAbierto] = useState(true);
 
-  const { data, loading, error, reload } = useAsync(() => listarReclamos({ size: 100 }), [], {
-    cacheKey: CACHE_RECLAMOS_PUBLICOS,
+  const { data, isLoading, error, refetch } = useListarReclamosQuery({
+    size: 100,
+    orden: "recientes",
+    usuario_cache: usuario?.id,
   });
+  const mensajeError =
+    error && "message" in error && typeof error.message === "string" ? error.message : null;
 
-  // Ids of the current citizen's own claims, so the map can highlight them.
   const esCiudadano = usuario?.rol === Rol.CIUDADANO;
-  const { data: mios } = useAsync(
+  const misIds = useMemo(
     () =>
-      esCiudadano && usuario
-        ? listarReclamos({ ciudadano_id: usuario.id, size: 100 })
-        : Promise.resolve(null),
-    [esCiudadano, usuario?.id],
-    {
-      cacheKey: esCiudadano && usuario ? cacheKeyReclamosPropios(usuario.id) : undefined,
-    },
+      new Set(
+        (data?.items ?? []).filter((reclamo) => reclamo.es_propio).map((reclamo) => reclamo.id),
+      ),
+    [data],
   );
-  const misIds = useMemo(() => new Set((mios?.items ?? []).map((r) => r.id)), [mios]);
 
   const puntos = useMemo(() => {
     const ubicados = reclamosUbicados(data?.items ?? []);
@@ -85,11 +74,10 @@ export function MapaPublicoPage() {
       data-slot="mapa-publico"
       className="relative isolate h-[calc(100dvh-4rem)] overflow-hidden"
     >
-      <MapaReclamos reclamos={puntos} misIds={esCiudadano ? misIds : undefined} fill />
+      <div data-tour="mapa-canvas" className="absolute inset-0">
+        <MapaReclamos reclamos={puntos} misIds={esCiudadano ? misIds : undefined} fill />
+      </div>
 
-      {/* Floating panel: transparent to pointer events except on the card, so
-          the map stays fully draggable around it. The card keeps its width in
-          both states; only its body collapses (animated) when hidden. */}
       <div className="pointer-events-none absolute inset-0 z-[1000] p-3 sm:p-4">
         <div className="pointer-events-auto ml-2 w-[min(20rem,calc(100%-1.5rem))] overflow-hidden rounded-xl border border-border/70 bg-background/95 shadow-xl ring-1 ring-border/80 sm:ml-3">
           <button
@@ -128,7 +116,7 @@ export function MapaPublicoPage() {
             aria-hidden={!panelAbierto}
           >
             <div className="min-h-0 overflow-hidden">
-              <div className="flex flex-col gap-3 p-3">
+              <div data-tour="mapa-filtros" className="flex flex-col gap-3 p-3">
                 <div className="flex flex-col gap-1.5">
                   <span className="text-xs font-medium text-muted-foreground">Categoria</span>
                   <Select
@@ -183,7 +171,10 @@ export function MapaPublicoPage() {
                   </Select>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-border/60 pt-2.5">
+                <div
+                  data-tour="mapa-leyenda"
+                  className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-border/60 pt-2.5"
+                >
                   {esCiudadano && (
                     <div className="flex items-center gap-1.5">
                       <span
@@ -209,7 +200,7 @@ export function MapaPublicoPage() {
         </div>
       </div>
 
-      {loading && data === null && (
+      {isLoading && !data && (
         <div className="pointer-events-none absolute inset-0 z-[1001] flex items-center justify-center bg-background/60">
           <span className="flex items-center gap-2 rounded-lg bg-background/90 px-3 py-2 text-sm text-muted-foreground shadow">
             <Loader2 className="size-5 animate-spin" />
@@ -218,10 +209,10 @@ export function MapaPublicoPage() {
         </div>
       )}
 
-      {error && data === null && (
+      {error && !data && (
         <div className="absolute inset-0 z-[1001] flex items-center justify-center bg-background/85 p-6">
           <div className="w-full max-w-md">
-            <EstadoError mensaje={error} onReintentar={reload} />
+            <EstadoError mensaje={mensajeError} onReintentar={refetch} />
           </div>
         </div>
       )}

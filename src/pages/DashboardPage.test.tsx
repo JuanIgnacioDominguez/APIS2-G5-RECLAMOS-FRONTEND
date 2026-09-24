@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, within } from "@testing-library/react";
 
 import * as reclamosApi from "@/api/reclamos";
-import type { Estadisticas, Page, ReclamoResumen } from "@/api/types";
+import type { Estadisticas, Page, ReclamoListado, ReclamoResumen } from "@/api/types";
 import { CategoriaReclamo, EstadoReclamo, PrioridadReclamo } from "@/domain/enums";
 import { renderWithProviders } from "@/test/render";
 import { ADMIN, OPERADOR } from "@/test/usuarios";
@@ -29,7 +29,7 @@ const estadisticas: Estadisticas = {
   tiempo_resolucion_horas_promedio: 18,
 };
 
-function reclamo(id: string, cambios: Partial<ReclamoResumen> = {}): ReclamoResumen {
+function reclamo(id: string, cambios: Partial<ReclamoResumen> = {}): ReclamoListado {
   return {
     id,
     titulo: `Reclamo ${id}`,
@@ -41,11 +41,12 @@ function reclamo(id: string, cambios: Partial<ReclamoResumen> = {}): ReclamoResu
     longitud: null,
     adhesiones_count: 0,
     created_at: "2026-09-23T12:00:00Z",
+    es_propio: false,
     ...cambios,
   };
 }
 
-const recientes: Page<ReclamoResumen> = {
+const recientes: Page<ReclamoListado> = {
   items: [
     reclamo("abc12345-0000-0000-0000-000000000001", {
       titulo: "Luz fundida en la plaza",
@@ -94,7 +95,7 @@ describe("DashboardPage", () => {
     expect(screen.queryByText("Canales de ingreso")).not.toBeInTheDocument();
     expect(screen.queryByText("Tareas del operador")).not.toBeInTheDocument();
     expect(spyEstadisticas).toHaveBeenCalledOnce();
-    expect(spyReclamos).toHaveBeenCalledWith({ orden: "recientes", page: 1, size: 100 });
+    expect(spyReclamos).toHaveBeenCalledWith({ orden: "recientes", size: 100 });
   });
 
   it("usa la muestra reciente y el total global de resueltos para operador", async () => {

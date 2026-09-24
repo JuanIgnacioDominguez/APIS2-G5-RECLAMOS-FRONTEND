@@ -39,12 +39,6 @@ function GoogleIcon() {
   );
 }
 
-/**
- * Login page. Authenticates against the backend dev endpoint
- * (`POST /auth/dev/login`), which returns a real JWT with hardcoded users until
- * Group 2's federated login is integrated. The Google button is a placeholder
- * for that future flow.
- */
 export function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -55,7 +49,6 @@ export function LoginPage() {
   const [credencialesIncorrectas, setCredencialesIncorrectas] = useState(false);
   const [sesionVencida, setSesionVencida] = useState(false);
 
-  // Show a notice when we landed here because a 401 expired the session.
   useEffect(() => {
     try {
       if (sessionStorage.getItem(SESION_VENCIDA_KEY)) {
@@ -63,7 +56,7 @@ export function LoginPage() {
         sessionStorage.removeItem(SESION_VENCIDA_KEY);
       }
     } catch {
-      // storage unavailable: no notice, not critical
+      // ignore
     }
   }, []);
 

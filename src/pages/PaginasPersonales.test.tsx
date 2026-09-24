@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
+import * as notificacionesApi from "@/api/notificaciones";
 import * as reclamosApi from "@/api/reclamos";
 import type { ReclamoBandeja } from "@/api/types";
 import {
@@ -65,7 +66,7 @@ describe("paginas personales del sidebar", () => {
     renderWithProviders(<CuentaPage />, { usuario });
 
     expect(await screen.findByText("Resumen del modulo")).toBeInTheDocument();
-    expect(screen.getByText("Entrantes")).toBeInTheDocument();
+    expect(await screen.findByText("Entrantes")).toBeInTheDocument();
     expect(await screen.findByText("7")).toBeInTheDocument();
     expect(screen.getByText("Recibidos")).toBeInTheDocument();
     expect(screen.getAllByText("1")).toHaveLength(2);
@@ -99,9 +100,16 @@ describe("paginas personales del sidebar", () => {
     expect(screen.queryByText(/No se pudo cargar el resumen/i)).not.toBeInTheDocument();
   });
 
-  it("Notificaciones muestra el estado vacio", () => {
+  it("Notificaciones muestra el estado vacio", async () => {
+    vi.spyOn(notificacionesApi, "listarNotificaciones").mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 1,
+      size: 50,
+      unread_count: 0,
+    });
     renderWithProviders(<NotificacionesPage />);
-    expect(screen.getByText("Sin novedades")).toBeInTheDocument();
+    expect(await screen.findByText("Sin novedades")).toBeInTheDocument();
   });
 
   it("Configuracion cambia el tema y lo persiste", async () => {
@@ -133,6 +141,10 @@ describe("paginas personales del sidebar", () => {
     await userEvent.type(buscador, "mapa");
 
     expect(screen.getByText("¿Qué muestra el mapa?")).toBeInTheDocument();
+
+    await userEvent.clear(buscador);
+    await userEvent.type(buscador, "   ");
+    expect(screen.getByText("Respuestas rápidas sobre el trabajo diario.")).toBeInTheDocument();
   });
 
   it("Gestión de reclamos muestra sus propias guías", async () => {

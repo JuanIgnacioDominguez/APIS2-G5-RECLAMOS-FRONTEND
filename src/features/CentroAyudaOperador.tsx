@@ -193,7 +193,7 @@ function Pregunta({ pregunta }: { pregunta: PreguntaFrecuenta }) {
   );
 }
 
-function IlustracionAyuda() {
+export function IlustracionAyuda() {
   return (
     <div
       aria-hidden="true"
@@ -384,17 +384,18 @@ export function CentroAyudaOperador({ esAdmin }: { esAdmin: boolean }) {
   const [categoriaActiva, setCategoriaActiva] = useState<ClaveCategoria | null>(null);
   const categorias = esAdmin ? CATEGORIAS_ADMIN : CATEGORIAS_STAFF;
   const categoriaSeleccionada = categorias.find((categoria) => categoria.id === categoriaActiva);
+  const consultaLimpia = consulta.trim();
+  const terminoConsulta = normalizar(consultaLimpia);
   const resultados = useMemo(() => {
     const disponibles = PREGUNTAS.filter((item) => !item.soloAdmin || esAdmin);
     const porCategoria = categoriaActiva
       ? disponibles.filter((item) => item.categoria === categoriaActiva)
       : disponibles;
-    const termino = normalizar(consulta.trim());
-    if (!termino) return porCategoria;
+    if (!terminoConsulta) return porCategoria;
     return porCategoria.filter((item) =>
-      normalizar(`${item.pregunta} ${item.respuesta}`).includes(termino),
+      normalizar(`${item.pregunta} ${item.respuesta}`).includes(terminoConsulta),
     );
-  }, [categoriaActiva, consulta, esAdmin]);
+  }, [categoriaActiva, terminoConsulta, esAdmin]);
 
   function mostrarCategoria(categoria: ClaveCategoria) {
     setCategoriaActiva(categoria);
@@ -487,15 +488,15 @@ export function CentroAyudaOperador({ esAdmin }: { esAdmin: boolean }) {
                 <CardTitle>
                   {categoriaSeleccionada ? categoriaSeleccionada.titulo : "Preguntas frecuentes"}
                 </CardTitle>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {consulta
-                    ? `${resultados.length} resultado${resultados.length === 1 ? "" : "s"} para “${consulta}”`
+                <p className="mt-1 text-sm text-muted-foreground" aria-live="polite">
+                  {terminoConsulta
+                    ? `${resultados.length} resultado${resultados.length === 1 ? "" : "s"} para “${consultaLimpia}”`
                     : categoriaSeleccionada
                       ? `${resultados.length} guía${resultados.length === 1 ? "" : "s"} en esta categoría.`
                       : "Respuestas rápidas sobre el trabajo diario."}
                 </p>
               </div>
-              {consulta || categoriaActiva ? (
+              {terminoConsulta || categoriaActiva ? (
                 <Button variant="ghost" size="sm" onClick={verTodas}>
                   Ver todas
                 </Button>

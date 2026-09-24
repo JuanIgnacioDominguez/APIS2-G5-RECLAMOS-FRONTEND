@@ -1,11 +1,6 @@
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 
-/**
- * Composed empty state: a soft brand-tinted icon, a title and a hint, plus an
- * optional action. Shares the visual language of {@link EstadoError} so loading,
- * error and empty results all feel like one system.
- */
 export function EstadoVacio({
   icono: Icono,
   titulo,

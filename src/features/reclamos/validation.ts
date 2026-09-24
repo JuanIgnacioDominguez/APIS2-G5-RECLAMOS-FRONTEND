@@ -1,11 +1,3 @@
-/**
- * Client-side validation of the claim form.
- *
- * Bounds mirror the backend Pydantic schema (`ReclamoCrear`): titulo 5..150,
- * descripcion 10..5000. Validating here gives instant feedback and avoids a
- * round-trip that the API would reject with 422 anyway.
- */
-
 export interface ReclamoFormValues {
   titulo: string;
   descripcion: string;
@@ -31,13 +23,11 @@ export function validarDescripcion(descripcion: string): string | null {
   return null;
 }
 
-/** Field-level validators wired into Mantine's `useForm`. */
 export const reclamoValidators = {
   titulo: validarTitulo,
   descripcion: validarDescripcion,
 };
 
-/** Whether the whole form is valid; useful for tests and submit guards. */
 export function esFormularioValido(values: ReclamoFormValues): boolean {
   return validarTitulo(values.titulo) === null && validarDescripcion(values.descripcion) === null;
 }

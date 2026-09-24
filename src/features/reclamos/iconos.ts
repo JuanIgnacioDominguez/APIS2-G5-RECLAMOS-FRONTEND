@@ -25,14 +25,6 @@ import {
 
 import type { CategoriaReclamo, EstadoReclamo, PrioridadReclamo } from "@/domain/enums";
 
-/**
- * Shared iconography for the claim vocabulary, so dropdowns, cards and
- * legends always show the same glyph per value. Colors stay in
- * `domain/labels` (`CATEGORIA_HEX`, `ESTADO_HEX`, `PRIORIDAD_HEX`); this
- * module only maps values to icons.
- */
-
-/** One recognizable icon per category. */
 export const ICONO_CATEGORIA: Record<CategoriaReclamo, LucideIcon> = {
   ALUMBRADO: Lightbulb,
   BACHES: Construction,
@@ -46,7 +38,6 @@ export const ICONO_CATEGORIA: Record<CategoriaReclamo, LucideIcon> = {
   OTROS: Shapes,
 };
 
-/** One recognizable icon per state. */
 export const ICONO_ESTADO: Record<EstadoReclamo, LucideIcon> = {
   RECIBIDO: Inbox,
   EN_REVISION: Eye,
@@ -57,7 +48,6 @@ export const ICONO_ESTADO: Record<EstadoReclamo, LucideIcon> = {
   CERRADO: Archive,
 };
 
-/** Directional icons reading as a calm-to-urgent ramp. */
 export const ICONO_PRIORIDAD: Record<PrioridadReclamo, LucideIcon> = {
   BAJA: ChevronDown,
   MEDIA: Equal,

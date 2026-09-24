@@ -1,17 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
+import { ApiError } from "@/api/client";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes } from "react-router-dom";
 
+import * as notificacionesApi from "@/api/notificaciones";
 import * as reclamosApi from "@/api/reclamos";
-import type { Page, ReclamoResumen } from "@/api/types";
+import type { Notificacion, Page, ReclamoListado } from "@/api/types";
 import { CategoriaReclamo, EstadoReclamo, PrioridadReclamo } from "@/domain/enums";
 import type { Usuario } from "@/auth/users";
 import { renderWithProviders } from "@/test/render";
 import { CIUDADANO, OPERADOR } from "@/test/usuarios";
 import { AppLayout } from "./AppLayout";
 
-function reclamo(id: string, titulo: string): ReclamoResumen {
+function reclamo(id: string, titulo: string): ReclamoListado {
   return {
     id,
     titulo,
@@ -23,11 +25,25 @@ function reclamo(id: string, titulo: string): ReclamoResumen {
     longitud: null,
     adhesiones_count: 0,
     created_at: new Date().toISOString(),
+    es_propio: false,
   };
 }
 
-function page(items: ReclamoResumen[]): Page<ReclamoResumen> {
+function page(items: ReclamoListado[]): Page<ReclamoListado> {
   return { items, total: items.length, page: 1, size: 6 };
+}
+
+function notificacion(id: string, leida = false): Notificacion {
+  return {
+    id,
+    tipo: "ESTADO",
+    reclamo_id: `reclamo-${id}`,
+    titulo: `Actualización del reclamo ${id}`,
+    mensaje: "Tu reclamo cambió de estado.",
+    created_at: new Date().toISOString(),
+    leida,
+    leida_at: leida ? new Date().toISOString() : null,
+  };
 }
 
 function renderLayout(ruta = "/reclamos", usuario: Usuario = CIUDADANO) {
@@ -39,6 +55,7 @@ function renderLayout(ruta = "/reclamos", usuario: Usuario = CIUDADANO) {
         <Route path="/reclamos/nuevo" element={<div>formulario de reclamo</div>} />
         <Route path="/reclamos/:id" element={<div>detalle del reclamo</div>} />
         <Route path="/mapa" element={<div>mapa de reclamos</div>} />
+        <Route path="/notificaciones" element={<div>bandeja de notificaciones</div>} />
       </Route>
     </Routes>,
     { route: ruta, usuario },
@@ -55,7 +72,48 @@ async function abrirBusqueda(): Promise<HTMLElement> {
 }
 
 describe("AppLayout", () => {
-  beforeEach(() => vi.restoreAllMocks());
+  it("detiene el polling de notificaciones cuando la ruta no existe", async () => {
+    vi.useFakeTimers();
+    try {
+      const contar = vi
+        .mocked(notificacionesApi.contarNotificaciones)
+        .mockRejectedValue(new ApiError(404, "No disponible"));
+      renderLayout();
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(100);
+      });
+      expect(contar).toHaveBeenCalledTimes(1);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(60_000);
+      });
+      expect(contar).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("abre el menu movil y lo cierra al navegar o pulsar Escape", async () => {
+    vi.stubGlobal("innerWidth", 390);
+    try {
+      renderLayout();
+      await userEvent.click(screen.getByRole("button", { name: "Abrir o cerrar menú" }));
+      const menu = await screen.findByRole("dialog", { name: "Menú principal" });
+      expect(within(menu).getByRole("button", { name: "Cerrar menú" })).toBeInTheDocument();
+      await userEvent.click(within(menu).getByRole("link", { name: "Mapa" }));
+      expect(await screen.findByText("mapa de reclamos")).toBeInTheDocument();
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      await userEvent.click(screen.getByRole("button", { name: "Abrir o cerrar menú" }));
+      await screen.findByRole("dialog", { name: "Menú principal" });
+      await userEvent.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    vi.spyOn(notificacionesApi, "contarNotificaciones").mockResolvedValue({ unread_count: 0 });
+  });
 
   it("muestra el menu del ciudadano (solo reclamos)", () => {
     const { container } = renderLayout();
@@ -111,6 +169,48 @@ describe("AppLayout", () => {
     const { container } = renderLayout();
     const pie = within(container.querySelector<HTMLElement>('[data-slot="sidebar-footer"]')!);
     expect(pie.getByText("Ciudadano")).toBeInTheDocument();
+  });
+
+  it("muestra el punto rojo cuando hay notificaciones sin leer", async () => {
+    vi.spyOn(notificacionesApi, "contarNotificaciones").mockResolvedValue({ unread_count: 2 });
+    renderLayout();
+
+    expect(await screen.findByTestId("notificaciones-no-leidas")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Notificaciones: 2 sin leer" })).toBeInTheDocument();
+  });
+
+  it("muestra la preview de notificaciones recientes en la campana", async () => {
+    vi.spyOn(notificacionesApi, "listarNotificaciones").mockResolvedValue({
+      items: [notificacion("1"), notificacion("2"), notificacion("3", true)],
+      total: 3,
+      page: 1,
+      size: 3,
+      unread_count: 2,
+    });
+    renderLayout();
+
+    await userEvent.click(screen.getByRole("button", { name: "Notificaciones" }));
+
+    expect(await screen.findByText("Actualización del reclamo 1")).toBeInTheDocument();
+    expect(screen.getByText("Actualización del reclamo 2")).toBeInTheDocument();
+    expect(screen.getByText("Actualización del reclamo 3")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Ver todas" })).toBeInTheDocument();
+  });
+
+  it("navega a la bandeja desde Ver todas", async () => {
+    vi.spyOn(notificacionesApi, "listarNotificaciones").mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 1,
+      size: 3,
+      unread_count: 0,
+    });
+    renderLayout();
+
+    await userEvent.click(screen.getByRole("button", { name: "Notificaciones" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Ver todas" }));
+
+    expect(await screen.findByText("bandeja de notificaciones")).toBeInTheDocument();
   });
 
   it("busca reclamos y navega al elegir un resultado", async () => {

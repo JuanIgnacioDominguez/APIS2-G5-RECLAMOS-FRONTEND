@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Loader2, MessageSquare, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
-import { comentar } from "@/api/reclamos";
+import { useComentarMutation } from "@/store/citypassApi";
 import type { ComentarioOut } from "@/api/types";
 import { useAuth } from "@/auth/AuthContext";
 import { haceCuanto } from "@/lib/format";
@@ -70,27 +70,27 @@ export function ComentariosReclamo({
 }: {
   reclamoId: string;
   comentarios: ComentarioOut[];
-  onComentado: () => void;
+  onComentado?: () => void;
 }) {
   const { usuario } = useAuth();
   const [texto, setTexto] = useState("");
-  const [enviando, setEnviando] = useState(false);
+  const [comentar, { isLoading: enviando }] = useComentarMutation();
 
   async function enviar() {
     const limpio = texto.trim();
     if (!limpio) return;
-    setEnviando(true);
     try {
-      await comentar(reclamoId, limpio);
+      await comentar({ id: reclamoId, texto: limpio }).unwrap();
       setTexto("");
       toast.success("Comentario publicado");
-      onComentado();
+      onComentado?.();
     } catch (err) {
       toast.error("No se pudo comentar", {
-        description: err instanceof Error ? err.message : "Error inesperado",
+        description:
+          err && typeof err === "object" && "message" in err
+            ? String(err.message)
+            : "Error inesperado",
       });
-    } finally {
-      setEnviando(false);
     }
   }
 

@@ -1,20 +1,33 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { NavLink as RouterNavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
+  ArrowRight,
   Bell,
+  CircleDot,
   ChevronLeft,
   ChevronRight,
   ChevronsUpDown,
+  Loader2,
   LogOut,
+  MessageCircle,
   Plus,
   Search,
 } from "lucide-react";
 
-import { bandeja } from "@/api/reclamos";
+import { AyudaFlotante } from "@/features/ayuda/AyudaFlotante";
 import { LogoMark } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { migasPara, NAV_CUENTA, navModulo, type Miga, type NavItem } from "@/config/navigation";
-import { useAsync } from "@/hooks/useAsync";
+import {
+  citypassApi,
+  useBandejaQuery,
+  useContarNotificacionesQuery,
+  useListarNotificacionesQuery,
+  useMarcarNotificacionLeidaMutation,
+} from "@/store/citypassApi";
+import { esEndpointNoDisponible, REFRESCO_NOTIFICACIONES_MS } from "@/lib/notificaciones";
+import type { Notificacion } from "@/api/types";
+import { haceCuanto } from "@/lib/format";
 import { useAuth } from "@/auth/AuthContext";
 import { esStaff, Rol, ROL_LABEL } from "@/auth/roles";
 import { useBusquedaReclamos } from "@/features/reclamos/useBusquedaReclamos";
@@ -46,6 +59,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverDescription,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import {
   Sidebar,
@@ -90,25 +111,192 @@ function Marca() {
 
 const REFRESCO_BANDEJA_MS = 45_000;
 
-/** Live count of pending claims (RECIBIDO/EN_REVISION), for the Bandeja badge. */
 function usePendientesBandeja(activo: boolean): number | null {
-  const { data, reload } = useAsync(
-    () => (activo ? bandeja(1, 1) : Promise.resolve(null)),
-    [activo],
+  const { data } = useBandejaQuery(
+    { page: 1, size: 1 },
+    { skip: !activo, pollingInterval: REFRESCO_BANDEJA_MS, skipPollingIfUnfocused: true },
   );
-  useEffect(() => {
-    if (!activo) return;
-    const id = setInterval(reload, REFRESCO_BANDEJA_MS);
-    return () => clearInterval(id);
-  }, [activo, reload]);
   return data?.total ?? null;
 }
 
-/**
- * Spotlight-style command palette opened from the header search icon (or with
- * Ctrl/Cmd-K): it guides the user around the app (pages and quick actions) and
- * searches claims by title, all in one place.
- */
+function useNotificacionesNoLeidas(activo: boolean): number {
+  const { sinEndpoint } = citypassApi.endpoints.contarNotificaciones.useQueryState(undefined, {
+    selectFromResult: ({ error }) => ({ sinEndpoint: esEndpointNoDisponible(error) }),
+  });
+  const { data } = useContarNotificacionesQuery(undefined, {
+    skip: !activo,
+    pollingInterval: sinEndpoint ? 0 : REFRESCO_NOTIFICACIONES_MS,
+    skipPollingIfUnfocused: true,
+  });
+  return data?.unread_count ?? 0;
+}
+
+const PARAMETROS_PREVIEW_NOTIFICACIONES = { page: 1, size: 3, unread_only: false };
+
+function NotificacionPreviewItem({
+  notificacion,
+  onAbrir,
+}: {
+  notificacion: Notificacion;
+  onAbrir: () => void;
+}) {
+  const Icono = notificacion.tipo === "COMENTARIO" ? MessageCircle : CircleDot;
+
+  return (
+    <button
+      type="button"
+      onClick={onAbrir}
+      aria-label={`${notificacion.titulo}. ${notificacion.mensaje}. ${
+        notificacion.leida ? "Leída" : "No leída"
+      }`}
+      className={`group flex w-full items-start gap-3 rounded-lg px-2.5 py-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 ${
+        notificacion.leida ? "hover:bg-accent" : "bg-primary/[0.04] hover:bg-primary/[0.08]"
+      }`}
+    >
+      <span
+        className={`grid size-8 shrink-0 place-items-center rounded-lg ${
+          notificacion.leida ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"
+        }`}
+      >
+        <Icono className="size-4" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-2">
+          <span className="truncate text-sm font-medium text-foreground">
+            {notificacion.titulo}
+          </span>
+          {!notificacion.leida && (
+            <span className="size-1.5 shrink-0 rounded-full bg-destructive" aria-hidden />
+          )}
+        </span>
+        <span className="mt-0.5 block line-clamp-2 text-xs leading-4 text-muted-foreground">
+          {notificacion.mensaje}
+        </span>
+        <span className="mt-1 block text-[11px] text-muted-foreground">
+          {haceCuanto(notificacion.created_at)}
+        </span>
+      </span>
+    </button>
+  );
+}
+
+function NotificacionesPopover({ noLeidas }: { noLeidas: number }) {
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const [marcarLeida] = useMarcarNotificacionLeidaMutation();
+  const { sinEndpoint } = citypassApi.endpoints.listarNotificaciones.useQueryState(
+    PARAMETROS_PREVIEW_NOTIFICACIONES,
+    {
+      selectFromResult: ({ error }) => ({ sinEndpoint: esEndpointNoDisponible(error) }),
+    },
+  );
+  const { data, error, isLoading } = useListarNotificacionesQuery(
+    PARAMETROS_PREVIEW_NOTIFICACIONES,
+    {
+      skip: !open,
+      pollingInterval: sinEndpoint ? 0 : REFRESCO_NOTIFICACIONES_MS,
+      skipPollingIfUnfocused: true,
+    },
+  );
+  const notificaciones = data?.items ?? [];
+
+  function abrirNotificacion(notificacion: Notificacion): void {
+    setOpen(false);
+    if (!notificacion.leida) {
+      void marcarLeida(notificacion.id).catch(() => undefined);
+    }
+    navigate(`/reclamos/${notificacion.reclamo_id}`);
+  }
+
+  function abrirBandeja(): void {
+    setOpen(false);
+    navigate("/notificaciones");
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={noLeidas > 0 ? `Notificaciones: ${noLeidas} sin leer` : "Notificaciones"}
+          className="relative"
+        >
+          <Bell />
+          {noLeidas > 0 && (
+            <span
+              data-testid="notificaciones-no-leidas"
+              aria-hidden
+              className="absolute top-1.5 right-1.5 size-2 rounded-full bg-destructive ring-2 ring-background"
+            />
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="end"
+        sideOffset={8}
+        aria-label="Notificaciones recientes"
+        data-testid="notificaciones-preview"
+        className="w-80 max-w-[calc(100vw-2rem)] gap-0 p-0"
+      >
+        <PopoverHeader className="border-b px-4 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <PopoverTitle className="text-sm font-semibold">Notificaciones</PopoverTitle>
+            {noLeidas > 0 && (
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                {noLeidas} sin leer
+              </span>
+            )}
+          </div>
+          <PopoverDescription className="mt-1 text-xs">Actividad reciente</PopoverDescription>
+        </PopoverHeader>
+        <div className="max-h-80 overflow-y-auto p-2" aria-live="polite">
+          {isLoading ? (
+            <div className="flex items-center justify-center gap-2 px-3 py-6 text-xs text-muted-foreground">
+              <Loader2 className="size-4 animate-spin" />
+              Cargando...
+            </div>
+          ) : error ? (
+            <p className="px-3 py-6 text-center text-xs leading-5 text-muted-foreground">
+              {sinEndpoint
+                ? "Las notificaciones no están disponibles por ahora."
+                : "No pudimos cargar tus notificaciones."}
+            </p>
+          ) : notificaciones.length === 0 ? (
+            <div className="px-3 py-6 text-center">
+              <p className="text-sm font-medium text-foreground">Todavía no hay avisos</p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                Te avisaremos cuando tengas novedades sobre tus reclamos.
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1">
+              {notificaciones.map((notificacion) => (
+                <NotificacionPreviewItem
+                  key={notificacion.id}
+                  notificacion={notificacion}
+                  onAbrir={() => abrirNotificacion(notificacion)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="border-t p-2">
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full justify-center gap-2"
+            onClick={abrirBandeja}
+          >
+            Ver todas
+            <ArrowRight className="size-4" />
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function BusquedaGlobal() {
   const navigate = useNavigate();
   const { usuario } = useAuth();
@@ -116,7 +304,6 @@ function BusquedaGlobal() {
   const [texto, setTexto] = useState("");
   const { resultados, buscando, activa } = useBusquedaReclamos(texto);
 
-  // Ctrl/Cmd-K toggles the palette from anywhere in the app.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
@@ -128,7 +315,6 @@ function BusquedaGlobal() {
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
-  // Every page the current role can reach, de-duplicated by route.
   const paginas = useMemo(() => {
     if (!usuario) return [] as NavItem[];
     const items = [...navModulo(usuario.rol).flatMap((s) => s.items), ...NAV_CUENTA];
@@ -217,7 +403,6 @@ function BusquedaGlobal() {
   );
 }
 
-/** One sidebar link: 44px row, soft hover, translucent blue selected state. */
 function ItemNav({
   item,
   activo,
@@ -227,6 +412,7 @@ function ItemNav({
   activo: boolean;
   conteo: number | null;
 }) {
+  const { setOpenMobile } = useSidebar();
   const tieneConteo = !!conteo;
   return (
     <SidebarMenuItem>
@@ -238,6 +424,7 @@ function ItemNav({
       >
         <RouterNavLink
           to={item.to}
+          onClick={() => setOpenMobile(false)}
           onFocus={() => void PRECARGA_RUTAS[item.to]?.()}
           onPointerEnter={() => void PRECARGA_RUTAS[item.to]?.()}
         >
@@ -254,7 +441,6 @@ function ItemNav({
   );
 }
 
-/** Account menu in the sidebar footer (shadcn's stock `NavUser` pattern). */
 function NavUser() {
   const navigate = useNavigate();
   const { usuario, logout } = useAuth();
@@ -307,10 +493,6 @@ function NavUser() {
   );
 }
 
-/** Collapse toggle rendered as a sidebar-colored folder-divider tab on the right
- * edge: a tall raised flap with a soft shadow and only its outer corners rounded,
- * so it reads as a bookmark/separator. On hover the chevron nudges toward where
- * it points; it flips with the collapsed/expanded state. */
 function ManijaSidebar() {
   const { state, toggleSidebar } = useSidebar();
   const contraido = state === "collapsed";
@@ -329,6 +511,13 @@ function ManijaSidebar() {
   );
 }
 
+function CerrarMenuAlNavegar() {
+  const { key } = useLocation();
+  const { setOpenMobile } = useSidebar();
+  useEffect(() => setOpenMobile(false), [key, setOpenMobile]);
+  return null;
+}
+
 export function AppLayout() {
   const location = useLocation();
   const { pathname } = location;
@@ -340,17 +529,15 @@ export function AppLayout() {
   const migas = migasPara(pathname, staff, origenState);
   const secciones = usuario ? navModulo(usuario.rol) : [];
   const pendientes = usePendientesBandeja(staff);
+  const notificacionesNoLeidas = useNotificacionesNoLeidas(usuario !== null);
 
-  // On a claim's detail page the URL always lives under "/reclamos", so a plain
-  // prefix match would light up "Mis reclamos" even for a claim opened from the
-  // feed or the map. Highlight instead the section the user actually came from
-  // (its breadcrumb parent), falling back to the same default as the breadcrumb.
   const enDetalle = /^\/reclamos\/[^/]+$/.test(pathname) && pathname !== "/reclamos/nuevo";
   const rutaActiva = enDetalle ? (origenState?.to ?? (staff ? "/reclamos" : "/feed")) : pathname;
   const isActive = (to: string) => rutaActiva === to || rutaActiva.startsWith(`${to}/`);
 
   return (
     <SidebarProvider style={{ "--sidebar-width-icon": "4.5rem" } as CSSProperties}>
+      <CerrarMenuAlNavegar />
       <Sidebar collapsible="icon">
         <SidebarHeader className="border-b border-sidebar-border p-3">
           <Marca />
@@ -411,9 +598,10 @@ export function AppLayout() {
         <ManijaSidebar />
       </Sidebar>
 
-      <SidebarInset>
+      <SidebarInset className="min-w-0">
         <header className="sticky top-0 z-10 flex h-16 items-center gap-3 border-t-2 border-b border-t-primary bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-          <SidebarTrigger />
+          <SidebarTrigger aria-label="Abrir o cerrar menú" className="size-11 shrink-0 md:size-8" />
+          <span className="min-w-0 truncate font-semibold md:hidden">CityPass+</span>
           <Separator orientation="vertical" className="h-6" />
           <Breadcrumb className="hidden md:block">
             <BreadcrumbList>
@@ -439,27 +627,15 @@ export function AppLayout() {
           <div className="flex items-center gap-1">
             <BusquedaGlobal />
             <ThemeToggle />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Notificaciones">
-                  <Bell />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-60">
-                <DropdownMenuLabel>Notificaciones</DropdownMenuLabel>
-                <p className="px-2 pb-2 text-sm text-muted-foreground">
-                  Sin novedades por el momento.
-                </p>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <NotificacionesPopover noLeidas={notificacionesNoLeidas} />
           </div>
         </header>
 
         <main
           className={
             esMapa
-              ? "flex-1 bg-muted/40 p-0 dark:bg-background"
-              : "flex-1 bg-muted/40 p-4 dark:bg-background sm:p-6"
+              ? "min-w-0 flex-1 bg-muted/40 p-0 dark:bg-background"
+              : "citypass-content min-w-0 flex-1 bg-muted/40 p-4 dark:bg-background sm:p-6"
           }
         >
           {esMapa ? (
@@ -470,6 +646,7 @@ export function AppLayout() {
             </div>
           )}
         </main>
+        <AyudaFlotante />
       </SidebarInset>
     </SidebarProvider>
   );

@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 
 import { setAuthToken, setUnauthorizedHandler } from "@/api/client";
 import { loginDev } from "@/api/auth";
+import { citypassApi } from "@/store/citypassApi";
+import { useAppDispatch } from "@/store/hooks";
 import { rolPrincipal } from "./roles";
 import type { Usuario } from "./users";
 
@@ -14,7 +16,6 @@ interface Sesion {
 interface AuthContextValue {
   usuario: Usuario | null;
   autenticado: boolean;
-  /** Log in against the backend dev endpoint; resolves with the user or throws. */
   login: (usuario: string, password: string) => Promise<Usuario>;
   logout: () => void;
 }
@@ -22,7 +23,6 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 const STORAGE_KEY = "citypass.auth.sesion";
-/** Set when a 401 ended the session, so the login page can explain why. */
 export const SESION_VENCIDA_KEY = "citypass.auth.vencida";
 
 function leerAlmacenado(): Sesion | null {
@@ -41,18 +41,13 @@ export function AuthProvider({
   children: ReactNode;
   usuarioInicial?: Usuario | null;
 }) {
+  const dispatch = useAppDispatch();
   const [sesion, setSesion] = useState<Sesion | null>(() => {
     const inicial = usuarioInicial ? { usuario: usuarioInicial, token: "seed" } : leerAlmacenado();
-    // Seed the api client's token here, in the initializer, so it is set before
-    // any child renders. React runs children's effects before the parent's, so
-    // a page firing its fetch in a `useEffect` would otherwise send the first
-    // request (right after an F5) with no Authorization header and get a 401.
     setAuthToken(inicial?.token ?? null);
     return inicial;
   });
 
-  // Keep the api client's bearer token in sync with later session changes
-  // (login / logout). The initial value is already seeded above.
   useEffect(() => {
     setAuthToken(sesion?.token ?? null);
   }, [sesion]);
@@ -60,22 +55,20 @@ export function AuthProvider({
   const logout = useCallback(() => {
     setSesion(null);
     setAuthToken(null);
+    dispatch(citypassApi.util.resetApiState());
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch {
       // ignore
     }
-  }, []);
+  }, [dispatch]);
 
-  // Drop the session when any authenticated call returns 401 (expired/revoked
-  // token), so the route guard sends the user back to login. We flag it as an
-  // expiry (vs. a manual logout) so the login page can say why they're back.
   useEffect(() => {
     const porVencimiento = () => {
       try {
         sessionStorage.setItem(SESION_VENCIDA_KEY, "1");
       } catch {
-        // storage unavailable: the notice is a nice-to-have, skip it
+        // ignore
       }
       logout();
     };
@@ -83,24 +76,28 @@ export function AuthProvider({
     return () => setUnauthorizedHandler(null);
   }, [logout]);
 
-  const login = useCallback(async (usuario: string, password: string) => {
-    const { access_token, usuario: perfil } = await loginDev(usuario, password);
-    const u: Usuario = {
-      id: perfil.id,
-      nombre: perfil.nombre,
-      email: perfil.email,
-      rol: rolPrincipal(perfil.roles),
-    };
-    const nueva: Sesion = { usuario: u, token: access_token };
-    setSesion(nueva);
-    setAuthToken(access_token);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(nueva));
-    } catch {
-      // storage may be unavailable (private mode); session stays in memory
-    }
-    return u;
-  }, []);
+  const login = useCallback(
+    async (usuario: string, password: string) => {
+      const { access_token, usuario: perfil } = await loginDev(usuario, password);
+      const u: Usuario = {
+        id: perfil.id,
+        nombre: perfil.nombre,
+        email: perfil.email,
+        rol: rolPrincipal(perfil.roles),
+      };
+      const nueva: Sesion = { usuario: u, token: access_token };
+      setSesion(nueva);
+      setAuthToken(access_token);
+      dispatch(citypassApi.util.resetApiState());
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(nueva));
+      } catch {
+        // ignore
+      }
+      return u;
+    },
+    [dispatch],
+  );
 
   const value = useMemo<AuthContextValue>(
     () => ({ usuario: sesion?.usuario ?? null, autenticado: sesion !== null, login, logout }),

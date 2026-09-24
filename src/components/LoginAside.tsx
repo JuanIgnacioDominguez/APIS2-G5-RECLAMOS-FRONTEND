@@ -3,10 +3,6 @@ import { MapPin } from "lucide-react";
 import { CitySkyline } from "@/components/CitySkyline";
 import "./LoginAside.css";
 
-/**
- * Decorative animated panel for the right side of the login. Purely cosmetic;
- * hidden from assistive tech and motion-safe (respects prefers-reduced-motion).
- */
 export function LoginAside() {
   return (
     <div className="loginAside flex h-full flex-col justify-between p-8" aria-hidden="true">

@@ -1,18 +1,7 @@
-/**
- * Thin wrapper over OpenStreetMap's Nominatim geocoder (no API key). Keeps the
- * address field and the map pin in sync: an address resolves to a real point,
- * and a point resolves back to a real street address. Searches are biased toward
- * a proximity centre (the current pin, the citizen's location, or Greater Buenos
- * Aires by default) and re-ranked by distance, so a bare "Mitre 500" surfaces the
- * nearby one instead of a namesake in another province.
- */
-
 const NOMINATIM = "https://nominatim.openstreetmap.org";
 
-/** Fallback proximity centre: Greater Buenos Aires (covers CABA + GBA sur/norte/oeste). */
 export const CENTRO_AMBA = { lat: -34.68, lng: -58.42 };
 
-/** A place resolved by the geocoder, in the shape the claim form consumes. */
 export interface UbicacionGeocodificada {
   latitud: number;
   longitud: number;
@@ -20,17 +9,12 @@ export interface UbicacionGeocodificada {
   barrio: string | null;
 }
 
-/** An autocomplete candidate: a place plus two short lines for the dropdown. */
 export interface SugerenciaDireccion extends UbicacionGeocodificada {
-  /** First line: the street (e.g. "Av. Mitre 500"). */
   principal: string;
-  /** Second line: locality and region (e.g. "Avellaneda, Buenos Aires"). */
   secundaria: string;
-  /** Unique value for the Mantine Autocomplete option. */
   etiqueta: string;
 }
 
-// Nominatim's structured address bag (only the parts we read).
 interface DireccionOSM {
   road?: string;
   pedestrian?: string;
@@ -64,7 +48,6 @@ function barrioDe(a: DireccionOSM | undefined): string | null {
   return a?.suburb ?? a?.neighbourhood ?? a?.city_district ?? null;
 }
 
-/** The "barrio" field: the CABA neighbourhood, or the GBA locality as fallback. */
 function barrioOZona(a: DireccionOSM | undefined): string | null {
   return barrioDe(a) ?? localidadDe(a);
 }
@@ -89,7 +72,6 @@ function regionCorta(a: DireccionOSM | undefined): string | null {
   return s.replace(/^Provincia de /i, "");
 }
 
-/** Build a suggestion with short display lines from a raw Nominatim hit. */
 function aSugerencia(hit: HitOSM): SugerenciaDireccion {
   const calle = formatearCalle(hit.address);
   const localidad = localidadDe(hit.address);
@@ -110,7 +92,6 @@ function aSugerencia(hit: HitOSM): SugerenciaDireccion {
   };
 }
 
-/** Squared planar distance; fine for ranking nearby candidates. */
 function distancia2(aLat: number, aLng: number, bLat: number, bLng: number): number {
   return (aLat - bLat) ** 2 + (aLng - bLng) ** 2;
 }
@@ -134,27 +115,16 @@ async function pedir(params: Record<string, string>, signal?: AbortSignal): Prom
   return (await res.json()) as HitOSM[];
 }
 
-/**
- * Cache of already-resolved autocomplete queries, keyed by the normalized text
- * and the proximity centre. Nominatim rate-limits to ~1 req/s, so re-typing or
- * deleting back to a previous prefix must not fire the request again.
- */
 const cacheSugerencias = new Map<string, SugerenciaDireccion[]>();
 
 function claveCache(q: string, centro: { lat: number; lng: number }): string {
   return `${q.toLowerCase()}@${centro.lat.toFixed(2)},${centro.lng.toFixed(2)}`;
 }
 
-/** Clears the suggestion cache. Used by tests to isolate each case. */
 export function limpiarCacheDirecciones(): void {
   cacheSugerencias.clear();
 }
 
-/**
- * Autocomplete: real candidates for what the citizen is typing, ranked by
- * proximity to `cerca` (defaults to Greater Buenos Aires). Empty under 4 chars.
- * Results are cached per query+centre to stay within Nominatim's rate limit.
- */
 export async function sugerirDirecciones(
   texto: string,
   opts: OpcionesGeocodificar = {},
@@ -199,7 +169,6 @@ export async function sugerirDirecciones(
   return sugerencias;
 }
 
-/** Forward geocoding: free-text address to a real nearby point. Null if none. */
 export async function buscarDireccion(
   texto: string,
   cerca?: { lat: number; lng: number },
@@ -208,7 +177,6 @@ export async function buscarDireccion(
   return mejor ?? null;
 }
 
-/** Reverse geocoding: a point to its real street address. Null if it fails. */
 export async function direccionDesdePunto(
   lat: number,
   lng: number,

@@ -1,11 +1,3 @@
-/**
- * Roles of the Reclamos module, aligned with the backend authorization:
- * `ciudadano` maps to the backend's UsuarioDep (any authenticated user) and
- * `operador`/`admin` to StaffDep (backoffice). When Group 2's federated login
- * (LDAP + JWT) is wired in, these roles come from the token's claims instead of
- * the hardcoded users here.
- */
-
 export const Rol = {
   CIUDADANO: "ciudadano",
   OPERADOR: "operador",
@@ -19,16 +11,10 @@ export const ROL_LABEL: Record<Rol, string> = {
   [Rol.ADMIN]: "Administrador",
 };
 
-/** Staff (backoffice) roles: they gate the operator/admin sections. */
 export function esStaff(rol: Rol): boolean {
   return rol === Rol.OPERADOR || rol === Rol.ADMIN;
 }
 
-/**
- * Reduce the JWT's `roles` array to the single most privileged role the UI uses
- * (admin > operador > ciudadano). The backend can send several (admin also has
- * operador); the frontend routes on the highest one.
- */
 export function rolPrincipal(roles: string[]): Rol {
   if (roles.includes(Rol.ADMIN)) return Rol.ADMIN;
   if (roles.includes(Rol.OPERADOR)) return Rol.OPERADOR;

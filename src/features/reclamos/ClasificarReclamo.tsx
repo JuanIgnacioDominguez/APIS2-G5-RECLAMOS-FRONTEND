@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Tags, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { reclasificar } from "@/api/reclamos";
+import { useReclasificarMutation } from "@/store/citypassApi";
 import type { CategoriaReclamo, PrioridadReclamo } from "@/domain/enums";
 import {
   CATEGORIA_HEX,
@@ -24,14 +24,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-/**
- * Staff-only control to correct a claim's category and priority (US-14), via
- * `PATCH /reclamos/{id}/clasificacion`. Does not change the claim's state.
- */
-/**
- * Frame around the control: a full card on its own, or a plain titled section
- * when embedded next to another panel (`embebido`).
- */
 function Marco({ embebido, children }: { embebido: boolean; children: ReactNode }) {
   if (embebido) {
     return (
@@ -72,33 +64,35 @@ export function ClasificarReclamo({
   reclamoId: string;
   categoriaActual: CategoriaReclamo;
   prioridadActual: PrioridadReclamo;
-  onActualizado: () => void;
-  /** Render without the card chrome, as a section inside a shared panel. */
+  onActualizado?: () => void;
   embebido?: boolean;
 }) {
   const [categoria, setCategoria] = useState<string>(categoriaActual);
   const [prioridad, setPrioridad] = useState<string>(prioridadActual);
-  const [guardando, setGuardando] = useState(false);
+  const [reclasificar, { isLoading: guardando }] = useReclasificarMutation();
 
   const sinCambios = categoria === categoriaActual && prioridad === prioridadActual;
 
   async function aplicar() {
-    setGuardando(true);
     try {
-      await reclasificar(reclamoId, {
-        categoria: categoria as CategoriaReclamo,
-        prioridad: prioridad as PrioridadReclamo,
-      });
+      await reclasificar({
+        id: reclamoId,
+        cambio: {
+          categoria: categoria as CategoriaReclamo,
+          prioridad: prioridad as PrioridadReclamo,
+        },
+      }).unwrap();
       toast.success("Reclamo clasificado", {
         description: "Se actualizo la categoria y/o prioridad.",
       });
-      onActualizado();
+      onActualizado?.();
     } catch (err) {
       toast.error("No se pudo clasificar", {
-        description: err instanceof Error ? err.message : "Error inesperado",
+        description:
+          err && typeof err === "object" && "message" in err
+            ? String(err.message)
+            : "Error inesperado",
       });
-    } finally {
-      setGuardando(false);
     }
   }
 

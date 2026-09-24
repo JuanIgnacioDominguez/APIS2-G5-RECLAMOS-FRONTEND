@@ -1,10 +1,5 @@
 import type { ReactNode } from "react";
 
-/**
- * Consistent page heading: the title in the display face, a dimmed one-line
- * description, and a right-aligned slot for the page's primary action. Keeps
- * every screen's top on the same rhythm.
- */
 export function PageHeader({
   titulo,
   descripcion,

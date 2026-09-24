@@ -83,12 +83,25 @@ describe("ReclamoDetallePage", () => {
   it("muestra el titulo, los detalles y la trazabilidad", async () => {
     renderDetalle();
     expect(await screen.findByText(detalle.titulo)).toBeInTheDocument();
-    expect(screen.getByText("operador-2")).toBeInTheDocument(); // asignado a
-    expect(screen.getByText("4 vecinos adheridos")).toBeInTheDocument();
-    expect(screen.getByText("Cuadrilla asignada")).toBeInTheDocument(); // motivo en timeline
+    expect(
+      screen.getByRole("heading", { name: `Reclamo #${detalle.id.slice(0, 8)}` }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Volver" })).toBeInTheDocument();
+    expect(screen.getByText("Clasificación")).toBeInTheDocument();
+    expect(screen.getByText("Estado actual")).toBeInTheDocument();
+    expect(screen.getByText("Descripción")).toBeInTheDocument();
+    expect(screen.getByText("4 vecinos se sumaron")).toBeInTheDocument();
+    expect(screen.getByText("Seguimiento")).toBeInTheDocument();
+    expect(screen.queryByText("Gestión del reclamo")).not.toBeInTheDocument();
+    expect(screen.queryByText("Información del reclamo")).not.toBeInTheDocument();
+    expect(screen.queryByText("operador-2")).not.toBeInTheDocument();
+    expect(screen.getByText("Cuadrilla asignada")).toBeInTheDocument();
   });
 
   it("registra una adhesion y actualiza el contador", async () => {
+    vi.mocked(reclamosApi.obtenerReclamo)
+      .mockResolvedValueOnce(detalle)
+      .mockResolvedValue({ ...detalle, adhesiones_count: 5 });
     vi.spyOn(reclamosApi, "adherir").mockResolvedValue({
       reclamo_id: detalle.id,
       adhesiones_count: 5,
@@ -98,8 +111,9 @@ describe("ReclamoDetallePage", () => {
 
     await userEvent.click(screen.getByRole("button", { name: /a mí también me pasa/i }));
 
-    await waitFor(() => expect(screen.getByText("5 vecinos adheridos")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("5 vecinos se sumaron")).toBeInTheDocument());
     expect(reclamosApi.adherir).toHaveBeenCalledWith(detalle.id);
+    expect(reclamosApi.obtenerReclamo).toHaveBeenCalledTimes(2);
   });
 
   it("no ofrece adherir cuando el reclamo es del propio usuario", async () => {
@@ -117,6 +131,7 @@ describe("ReclamoDetallePage", () => {
       renderDetalle(usuario);
       await screen.findByRole("heading", { name: `Reclamo #${detalle.id.slice(0, 8)}` });
 
+      expect(screen.getByRole("button", { name: "Volver" })).toBeInTheDocument();
       expect(
         screen.queryByRole("button", { name: /a mí también me pasa/i }),
       ).not.toBeInTheDocument();

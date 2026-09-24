@@ -2,29 +2,34 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
-import { adherir, buscarSimilares, crearReclamo } from "@/api/reclamos";
+import { useCrearReclamoMutation } from "@/store/citypassApi";
 import type { ReclamoCrear, ReclamoSimilar } from "@/api/types";
 import { ReclamoForm } from "@/features/reclamos/ReclamoForm";
 import { ReclamosSimilaresDialog } from "@/features/reclamos/ReclamosSimilares";
 import { PageHeader } from "@/components/PageHeader";
+import { useAdherirMutation, useBuscarSimilaresMutation } from "@/store/citypassApi";
 
 export function NuevoReclamoPage() {
   const navigate = useNavigate();
+  const [crearReclamo] = useCrearReclamoMutation();
   const [loading, setLoading] = useState(false);
   const [similares, setSimilares] = useState<ReclamoSimilar[]>([]);
-  // Kept aside while the "is it one of these?" modal is open, so "cargar igual"
-  // can create the claim the citizen already filled in.
   const [pendiente, setPendiente] = useState<ReclamoCrear | null>(null);
+  const [buscarSimilaresMutation] = useBuscarSimilaresMutation();
+  const [adherirMutation] = useAdherirMutation();
 
   async function crear(datos: ReclamoCrear) {
     setLoading(true);
     try {
-      const reclamo = await crearReclamo(datos);
+      const reclamo = await crearReclamo(datos).unwrap();
       toast.success("Reclamo creado", { description: "Ya podés seguir su estado." });
       navigate(`/reclamos/${reclamo.id}`);
     } catch (err) {
       toast.error("No se pudo crear el reclamo", {
-        description: err instanceof Error ? err.message : "Error inesperado",
+        description:
+          err && typeof err === "object" && "message" in err
+            ? String(err.message)
+            : "Error inesperado",
       });
     } finally {
       setLoading(false);
@@ -35,18 +40,15 @@ export function NuevoReclamoPage() {
     setLoading(true);
     let parecidos: ReclamoSimilar[] = [];
     try {
-      parecidos = await buscarSimilares({
+      parecidos = await buscarSimilaresMutation({
         titulo: datos.titulo,
         descripcion: datos.descripcion,
         categoria: datos.categoria,
         latitud: datos.latitud,
         longitud: datos.longitud,
         barrio: datos.barrio,
-      });
+      }).unwrap();
     } catch {
-      // The duplicate check is best-effort: if it fails (endpoint unavailable or
-      // network), fall back to creating the claim as usual so the citizen is
-      // never blocked by it.
       parecidos = [];
     }
 
@@ -55,7 +57,6 @@ export function NuevoReclamoPage() {
       return;
     }
 
-    // Pause here: let the citizen adhere to an existing claim or insist.
     setSimilares(parecidos);
     setPendiente(datos);
     setLoading(false);
@@ -64,7 +65,7 @@ export function NuevoReclamoPage() {
   async function sumarme(id: string) {
     setLoading(true);
     try {
-      const res = await adherir(id);
+      const res = await adherirMutation(id).unwrap();
       toast.success("Te sumaste al reclamo", {
         description: `Ya son ${res.adhesiones_count} vecinos.`,
       });
@@ -72,9 +73,11 @@ export function NuevoReclamoPage() {
       setPendiente(null);
       navigate(`/reclamos/${id}`);
     } catch (err) {
-      toast.error("No se pudo adherir", {
-        description: err instanceof Error ? err.message : "Error inesperado",
-      });
+      const desc =
+        err && typeof err === "object" && "message" in err && typeof err.message === "string"
+          ? err.message
+          : "Error inesperado";
+      toast.error("No se pudo adherir", { description: desc });
       setLoading(false);
     }
   }
