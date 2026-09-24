@@ -53,3 +53,32 @@ describe("request - manejo de 401", () => {
     });
   });
 });
+
+describe("request - mensajes y errores de red", () => {
+  it("reemplaza el texto crudo por un mensaje claro segun el code", async () => {
+    setAuthToken("t");
+    mockFetch(409, { detail: "Adhesion rechazada: autor", code: "adhesion_del_autor" });
+
+    await expect(request("/reclamos/1/adhesiones", { method: "POST" })).rejects.toMatchObject({
+      status: 409,
+      code: "adhesion_del_autor",
+      message: expect.stringMatching(/no podes sumarte a tu propio reclamo/i),
+    });
+  });
+
+  it("un fallo de fetch (offline) se convierte en un ApiError de red", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch")));
+
+    await expect(request("/reclamos")).rejects.toMatchObject({
+      status: 0,
+      code: "red",
+      message: expect.stringMatching(/no pudimos conectar/i),
+    });
+  });
+
+  it("no confunde un abort con un error de red", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new DOMException("aborted", "AbortError")));
+
+    await expect(request("/reclamos")).rejects.toBeInstanceOf(DOMException);
+  });
+});
