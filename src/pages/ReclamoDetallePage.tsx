@@ -23,12 +23,11 @@ import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { cn } from "cn";
-import { adherir, obtenerReclamo } from "@/api/reclamos";
 import type { HistorialOut, ReclamoDetalle } from "@/api/types";
+import { useAdherirMutation, useObtenerReclamoQuery } from "@/store/citypassApi";
 import { CanalOrigen, OrigenClasificacion } from "@/domain/enums";
 import { ESTADO_HEX, ESTADO_LABEL, ESTADO_TEXT_COLOR } from "@/domain/labels";
 import { formatConfianza, formatFecha, haceCuanto, idCorto } from "@/lib/format";
-import { useAsync } from "@/hooks/useAsync";
 import { EstadoError } from "@/components/EstadoError";
 import { useAuth } from "@/auth/AuthContext";
 import { esStaff } from "@/auth/roles";
@@ -429,36 +428,39 @@ export function ReclamoDetallePage() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const { usuario } = useAuth();
+  // RTK Query: the cached detail shows instantly on back-navigation and a
+  // background refetch keeps it fresh. `isLoading` is only true the very first
+  // time; `isFetching` covers subsequent revalidations without hiding the UI.
   const {
     data: reclamo,
-    loading,
+    isLoading,
+    isFetching,
     error,
-    reload,
-    mutate,
-  } = useAsync(() => obtenerReclamo(id), [id], { cacheKey: `reclamo:${id}` });
-  const [adhiriendo, setAdhiriendo] = useState(false);
+    refetch,
+  } = useObtenerReclamoQuery(id, { skip: !id });
+  const [adherirMutation, { isLoading: adhiriendo }] = useAdherirMutation();
   const [adhesiones, setAdhesiones] = useState<number | null>(null);
   const staff = usuario ? esStaff(usuario.rol) : false;
+  const mensajeError =
+    error && "message" in error && typeof error.message === "string" ? error.message : null;
 
   async function handleAdherir() {
-    setAdhiriendo(true);
     try {
-      const res = await adherir(id);
+      const res = await adherirMutation(id).unwrap();
       setAdhesiones(res.adhesiones_count);
-      if (reclamo) mutate({ ...reclamo, adhesiones_count: res.adhesiones_count });
       toast.success("Adhesión registrada", {
         description: "Gracias por sumarte a este reclamo.",
       });
     } catch (err) {
-      toast.error("No se pudo adherir", {
-        description: err instanceof Error ? err.message : "Error inesperado",
-      });
-    } finally {
-      setAdhiriendo(false);
+      const desc =
+        err && typeof err === "object" && "message" in err && typeof err.message === "string"
+          ? err.message
+          : "Error inesperado";
+      toast.error("No se pudo adherir", { description: desc });
     }
   }
 
-  if (loading && !reclamo) {
+  if (isLoading && !reclamo) {
     return (
       <div className="flex justify-center py-16">
         <Loader2 className="size-6 animate-spin text-primary" />
@@ -467,14 +469,14 @@ export function ReclamoDetallePage() {
   }
 
   if (error && !reclamo) {
-    return <EstadoError mensaje={error} onReintentar={reload} />;
+    return <EstadoError mensaje={mensajeError ?? "Reclamo no encontrado"} onReintentar={refetch} />;
   }
   if (!reclamo) {
-    return <EstadoError mensaje="Reclamo no encontrado" onReintentar={reload} />;
+    return <EstadoError mensaje="Reclamo no encontrado" onReintentar={refetch} />;
   }
 
   if (staff) {
-    return <VistaGestionReclamo reclamo={reclamo} refrescando={loading} onRecargar={reload} />;
+    return <VistaGestionReclamo reclamo={reclamo} refrescando={isFetching} onRecargar={refetch} />;
   }
 
   const totalAdhesiones = adhesiones ?? reclamo.adhesiones_count;
@@ -508,7 +510,7 @@ export function ReclamoDetallePage() {
                 ·
               </span>
               <span>{haceCuanto(reclamo.created_at)}</span>
-              {loading && (
+              {isFetching && (
                 <span className="inline-flex items-center gap-1 text-primary">
                   <span aria-hidden className="text-foreground/30">
                     ·
@@ -627,7 +629,7 @@ export function ReclamoDetallePage() {
             <ComentariosReclamo
               reclamoId={reclamo.id}
               comentarios={reclamo.comentarios}
-              onComentado={reload}
+              onComentado={refetch}
             />
           </div>
         </div>

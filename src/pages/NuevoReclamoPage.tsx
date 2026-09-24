@@ -2,11 +2,12 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
-import { adherir, buscarSimilares, crearReclamo } from "@/api/reclamos";
+import { crearReclamo } from "@/api/reclamos";
 import type { ReclamoCrear, ReclamoSimilar } from "@/api/types";
 import { ReclamoForm } from "@/features/reclamos/ReclamoForm";
 import { ReclamosSimilaresDialog } from "@/features/reclamos/ReclamosSimilares";
 import { PageHeader } from "@/components/PageHeader";
+import { useAdherirMutation, useBuscarSimilaresMutation } from "@/store/citypassApi";
 
 export function NuevoReclamoPage() {
   const navigate = useNavigate();
@@ -15,6 +16,10 @@ export function NuevoReclamoPage() {
   // Kept aside while the "is it one of these?" modal is open, so "cargar igual"
   // can create the claim the citizen already filled in.
   const [pendiente, setPendiente] = useState<ReclamoCrear | null>(null);
+  // RTK Query mutations: adhering invalidates the claim's detail cache, so
+  // the next visit to the detail page shows the new count without a manual refetch.
+  const [buscarSimilaresMutation] = useBuscarSimilaresMutation();
+  const [adherirMutation] = useAdherirMutation();
 
   async function crear(datos: ReclamoCrear) {
     setLoading(true);
@@ -35,14 +40,14 @@ export function NuevoReclamoPage() {
     setLoading(true);
     let parecidos: ReclamoSimilar[] = [];
     try {
-      parecidos = await buscarSimilares({
+      parecidos = await buscarSimilaresMutation({
         titulo: datos.titulo,
         descripcion: datos.descripcion,
         categoria: datos.categoria,
         latitud: datos.latitud,
         longitud: datos.longitud,
         barrio: datos.barrio,
-      });
+      }).unwrap();
     } catch {
       // The duplicate check is best-effort: if it fails (endpoint unavailable or
       // network), fall back to creating the claim as usual so the citizen is
@@ -64,7 +69,7 @@ export function NuevoReclamoPage() {
   async function sumarme(id: string) {
     setLoading(true);
     try {
-      const res = await adherir(id);
+      const res = await adherirMutation(id).unwrap();
       toast.success("Te sumaste al reclamo", {
         description: `Ya son ${res.adhesiones_count} vecinos.`,
       });
@@ -72,9 +77,11 @@ export function NuevoReclamoPage() {
       setPendiente(null);
       navigate(`/reclamos/${id}`);
     } catch (err) {
-      toast.error("No se pudo adherir", {
-        description: err instanceof Error ? err.message : "Error inesperado",
-      });
+      const desc =
+        err && typeof err === "object" && "message" in err && typeof err.message === "string"
+          ? err.message
+          : "Error inesperado";
+      toast.error("No se pudo adherir", { description: desc });
       setLoading(false);
     }
   }

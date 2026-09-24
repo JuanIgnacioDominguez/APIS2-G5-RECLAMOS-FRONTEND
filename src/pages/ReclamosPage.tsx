@@ -17,12 +17,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { listarReclamos } from "@/api/reclamos";
+import { useListarReclamosQuery } from "@/store/citypassApi";
 import { useAuth } from "@/auth/AuthContext";
 import { esStaff } from "@/auth/roles";
 import type { CategoriaReclamo } from "@/domain/enums";
 import { CATEGORIA_HEX, opcionesCategoria } from "@/domain/labels";
-import { useAsync } from "@/hooks/useAsync";
 import { cn } from "cn";
 import { KpiCard } from "@/components/KpiCard";
 import { Button } from "@/components/ui/button";
@@ -114,10 +113,15 @@ export function ReclamosPage() {
   const [categoria, setCategoria] = useState<CategoriaReclamo | null>(null);
   const [orden, setOrden] = useState<OrdenFeed>("recientes");
 
-  const { data, loading, error, reload } = useAsync(
-    () => listarReclamos(staff ? { orden } : { ciudadano_id: usuario?.id, orden }),
-    [staff, usuario?.id, orden],
+  // RTK Query caches by (staff, ciudadano_id, orden) so switching tabs and
+  // coming back shows the previous list instantly; a background refetch keeps
+  // it fresh. `isLoading` only fires the first time; later revalidations use
+  // `isFetching` and never blank the screen.
+  const { data, isLoading, error, refetch } = useListarReclamosQuery(
+    staff ? { orden } : { ciudadano_id: usuario?.id, orden },
   );
+  const mensajeError =
+    error && "message" in error && typeof error.message === "string" ? error.message : null;
   const items = useMemo(() => data?.items ?? [], [data]);
   const counts = useMemo(() => contarPorTab(items), [items]);
   const visibles = useMemo(
@@ -231,7 +235,7 @@ export function ReclamosPage() {
           </div>
         </div>
 
-        {loading && (
+        {isLoading && (
           <div className="flex items-center justify-center gap-2 py-12 text-muted-foreground">
             <Loader2 className="size-5 animate-spin" />
             Cargando reclamos...
@@ -243,15 +247,15 @@ export function ReclamosPage() {
             <WifiOff className="size-9 text-destructive/80" strokeWidth={1.5} />
             <div>
               <p className="font-medium">No se pudo cargar</p>
-              <p className="text-sm text-muted-foreground">{error}</p>
+              <p className="text-sm text-muted-foreground">{mensajeError}</p>
             </div>
-            <Button variant="outline" onClick={reload}>
+            <Button variant="outline" onClick={refetch}>
               Reintentar
             </Button>
           </div>
         )}
 
-        {!loading && !error && visibles.length === 0 && (
+        {!isLoading && !error && visibles.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-12 text-center">
             <Inbox className="size-9 text-primary/70" strokeWidth={1.5} />
             <p className="font-medium">Todavia no hay reclamos</p>
@@ -265,7 +269,7 @@ export function ReclamosPage() {
           </div>
         )}
 
-        {!loading && !error && visibles.length > 0 && (
+        {!isLoading && !error && visibles.length > 0 && (
           <motion.div
             layout
             data-tour="reclamos-lista"

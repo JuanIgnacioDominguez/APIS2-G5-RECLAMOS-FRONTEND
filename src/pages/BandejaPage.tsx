@@ -1,27 +1,31 @@
 import { useMemo } from "react";
 import { CheckCircle2, ClipboardList, Eye, Inbox, RefreshCw, Sparkles } from "lucide-react";
 
-import { bandeja, contarResueltos } from "@/api/reclamos";
+import { contarResueltos } from "@/api/reclamos";
 import { useAsync } from "@/hooks/useAsync";
 import { KpiCard } from "@/components/KpiCard";
 import { Button } from "@/components/ui/button";
 import { TablaBandeja } from "@/features/reclamos/TablaBandeja";
 import { calcularKpisBandeja } from "@/features/reclamos/bandejaTable";
+import { useBandejaQuery } from "@/store/citypassApi";
 
 /**
  * Backoffice inbox for operators and admins (US-13). Reads `/reclamos/bandeja`
- * (incoming claims, newest first) and tops it with queue KPIs plus the global
- * resolved-and-closed total, so staff see the shape of the work at a glance.
+ * through RTK Query so that switching to another screen and back shows the
+ * cached list instantly; a background refetch keeps it fresh.
  */
 export function BandejaPage() {
-  const { data, loading, error, reload } = useAsync(() => bandeja(), []);
+  const { data, isLoading, isFetching, error, refetch } = useBandejaQuery(undefined);
   const resueltos = useAsync(() => contarResueltos(), []);
 
   const filas = useMemo(() => data?.items ?? [], [data]);
   const kpis = useMemo(() => calcularKpisBandeja(filas, data?.total), [data?.total, filas]);
-  const actualizando = loading || resueltos.loading;
+  const actualizando = isFetching || resueltos.loading;
+  const mensajeError =
+    (error && "message" in error && typeof error.message === "string" ? error.message : null) ??
+    null;
   const refrescar = () => {
-    reload();
+    refetch();
     resueltos.reload();
   };
 
@@ -68,7 +72,12 @@ export function BandejaPage() {
       </div>
 
       <div data-tour="bandeja-tabla">
-        <TablaBandeja filas={filas} loading={loading} error={error} onRefresh={refrescar} />
+        <TablaBandeja
+          filas={filas}
+          loading={isLoading}
+          error={mensajeError}
+          onRefresh={refrescar}
+        />
       </div>
     </div>
   );

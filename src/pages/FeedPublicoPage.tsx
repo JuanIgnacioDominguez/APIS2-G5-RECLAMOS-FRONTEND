@@ -12,12 +12,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { listarReclamos } from "@/api/reclamos";
+import { useListarReclamosQuery } from "@/store/citypassApi";
 import { useAuth } from "@/auth/AuthContext";
 import { Rol } from "@/auth/roles";
 import type { CategoriaReclamo, EstadoReclamo } from "@/domain/enums";
 import { CATEGORIA_HEX, ESTADO_HEX, opcionesCategoria, opcionesEstado } from "@/domain/labels";
-import { useAsync } from "@/hooks/useAsync";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -55,21 +54,17 @@ export function FeedPublicoPage() {
   const [estado, setEstado] = useState<EstadoReclamo | null>(null);
   const [orden, setOrden] = useState<OrdenFeed>("recientes");
 
-  const { data, loading, error, reload } = useAsync(
-    () => listarReclamos({ size: 100, orden }),
-    [orden],
-  );
+  const { data, isLoading, error, refetch } = useListarReclamosQuery({ size: 100, orden });
+  const mensajeError =
+    error && "message" in error && typeof error.message === "string" ? error.message : null;
   const items = useMemo(() => data?.items ?? [], [data]);
 
   // Ids of the logged-in citizen's own claims, so the feed can flag which of
   // the city's claims are theirs ("Tuyo") vs a neighbour's ("De un vecino").
   const esCiudadano = usuario?.rol === Rol.CIUDADANO;
-  const { data: mios } = useAsync(
-    () =>
-      esCiudadano && usuario
-        ? listarReclamos({ ciudadano_id: usuario.id, size: 100 })
-        : Promise.resolve(null),
-    [esCiudadano, usuario?.id],
+  const { data: mios } = useListarReclamosQuery(
+    esCiudadano && usuario ? { ciudadano_id: usuario.id, size: 100 } : undefined,
+    { skip: !esCiudadano || !usuario },
   );
   const misIds = useMemo(() => new Set((mios?.items ?? []).map((r) => r.id)), [mios]);
   const barrios = useMemo(() => barriosDisponibles(items), [items]);
@@ -219,7 +214,7 @@ export function FeedPublicoPage() {
         </div>
       </div>
 
-      {loading && (
+      {isLoading && (
         <div className="flex items-center justify-center gap-2 py-16 text-muted-foreground">
           <Loader2 className="size-5 animate-spin" />
           Cargando reclamos...
@@ -231,15 +226,15 @@ export function FeedPublicoPage() {
           <WifiOff className="size-9 text-destructive/80" strokeWidth={1.5} />
           <div>
             <p className="font-medium">No se pudo cargar</p>
-            <p className="text-sm text-muted-foreground">{error}</p>
+            <p className="text-sm text-muted-foreground">{mensajeError}</p>
           </div>
-          <Button variant="outline" onClick={reload}>
+          <Button variant="outline" onClick={refetch}>
             Reintentar
           </Button>
         </div>
       )}
 
-      {!loading && !error && visibles.length === 0 && (
+      {!isLoading && !error && visibles.length === 0 && (
         <div className="flex flex-col items-center gap-2 py-16 text-center">
           <Newspaper className="size-9 text-primary/70" strokeWidth={1.5} />
           <p className="font-medium">No hay reclamos para mostrar</p>
@@ -249,7 +244,7 @@ export function FeedPublicoPage() {
         </div>
       )}
 
-      {!loading && !error && visibles.length > 0 && (
+      {!isLoading && !error && visibles.length > 0 && (
         <div
           data-tour="feed-lista"
           className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"

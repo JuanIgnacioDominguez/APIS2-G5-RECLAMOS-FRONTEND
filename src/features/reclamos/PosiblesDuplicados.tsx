@@ -1,8 +1,7 @@
 import { Link } from "react-router-dom";
 import { Copy, MapPin } from "lucide-react";
 
-import { similaresDe } from "@/api/reclamos";
-import { useAsync } from "@/hooks/useAsync";
+import { useSimilaresDeQuery } from "@/store/citypassApi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EstadoBadge } from "./EstadoBadges";
 
@@ -19,7 +18,7 @@ function textoDistancia(metros: number | null): string | null {
  * Renders nothing while loading, on error, or when there is nothing alike.
  */
 export function PosiblesDuplicados({ reclamoId }: { reclamoId: string }) {
-  const { data } = useAsync(() => similaresDe(reclamoId), [reclamoId]);
+  const { data } = useSimilaresDeQuery(reclamoId);
   const similares = data ?? [];
   if (similares.length === 0) return null;
 

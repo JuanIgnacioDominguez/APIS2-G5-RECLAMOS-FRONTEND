@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { ChevronDown, Loader2, MapPin } from "lucide-react";
 
-import { listarReclamos } from "@/api/reclamos";
 import { useAuth } from "@/auth/AuthContext";
 import { Rol } from "@/auth/roles";
 import { EstadoReclamo, type CategoriaReclamo } from "@/domain/enums";
@@ -12,7 +11,7 @@ import {
   opcionesCategoria,
   opcionesEstado,
 } from "@/domain/labels";
-import { useAsync } from "@/hooks/useAsync";
+import { useListarReclamosQuery } from "@/store/citypassApi";
 import { cn } from "cn";
 import { EstadoError } from "@/components/EstadoError";
 import {
@@ -27,8 +26,6 @@ import { MapaReclamos } from "@/features/mapa/MapaReclamos";
 import { reclamosUbicados } from "@/features/mapa/coords";
 
 const TODAS = "todas";
-const CACHE_RECLAMOS_PUBLICOS = "mapa:reclamos-publicos:v1";
-const cacheKeyReclamosPropios = (usuarioId: string) => `mapa:reclamos-propios:${usuarioId}:v1`;
 
 /** Every state, in lifecycle order, for the full legend. */
 const ESTADOS_LEYENDA: EstadoReclamo[] = [
@@ -53,21 +50,17 @@ export function MapaPublicoPage() {
   const [estado, setEstado] = useState<EstadoReclamo | null>(null);
   const [panelAbierto, setPanelAbierto] = useState(true);
 
-  const { data, loading, error, reload } = useAsync(() => listarReclamos({ size: 100 }), [], {
-    cacheKey: CACHE_RECLAMOS_PUBLICOS,
-  });
+  // RTK Query: previously-loaded map data appears instantly on tab switches and
+  // is revalidated in the background — no more blank map every time.
+  const { data, isLoading, error, refetch } = useListarReclamosQuery({ size: 100 });
+  const mensajeError =
+    error && "message" in error && typeof error.message === "string" ? error.message : null;
 
   // Ids of the current citizen's own claims, so the map can highlight them.
   const esCiudadano = usuario?.rol === Rol.CIUDADANO;
-  const { data: mios } = useAsync(
-    () =>
-      esCiudadano && usuario
-        ? listarReclamos({ ciudadano_id: usuario.id, size: 100 })
-        : Promise.resolve(null),
-    [esCiudadano, usuario?.id],
-    {
-      cacheKey: esCiudadano && usuario ? cacheKeyReclamosPropios(usuario.id) : undefined,
-    },
+  const { data: mios } = useListarReclamosQuery(
+    esCiudadano && usuario ? { ciudadano_id: usuario.id, size: 100 } : undefined,
+    { skip: !esCiudadano || !usuario },
   );
   const misIds = useMemo(() => new Set((mios?.items ?? []).map((r) => r.id)), [mios]);
 
@@ -214,7 +207,7 @@ export function MapaPublicoPage() {
         </div>
       </div>
 
-      {loading && data === null && (
+      {isLoading && !data && (
         <div className="pointer-events-none absolute inset-0 z-[1001] flex items-center justify-center bg-background/60">
           <span className="flex items-center gap-2 rounded-lg bg-background/90 px-3 py-2 text-sm text-muted-foreground shadow">
             <Loader2 className="size-5 animate-spin" />
@@ -223,10 +216,10 @@ export function MapaPublicoPage() {
         </div>
       )}
 
-      {error && data === null && (
+      {error && !data && (
         <div className="absolute inset-0 z-[1001] flex items-center justify-center bg-background/85 p-6">
           <div className="w-full max-w-md">
-            <EstadoError mensaje={error} onReintentar={reload} />
+            <EstadoError mensaje={mensajeError} onReintentar={refetch} />
           </div>
         </div>
       )}

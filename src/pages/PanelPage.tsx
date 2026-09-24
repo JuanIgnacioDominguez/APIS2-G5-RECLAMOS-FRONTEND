@@ -5,9 +5,8 @@ import { PageHeader } from "@/components/PageHeader";
 import { KpiCard } from "@/components/KpiCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { estadisticas } from "@/api/reclamos";
 import type { ConteoPorClave } from "@/api/types";
-import { useAsync } from "@/hooks/useAsync";
+import { useEstadisticasQuery } from "@/store/citypassApi";
 
 function Distribucion({ titulo, datos }: { titulo: string; datos: ConteoPorClave[] }) {
   const total = datos.reduce((acc, d) => acc + d.cantidad, 0) || 1;
@@ -42,9 +41,11 @@ function Distribucion({ titulo, datos }: { titulo: string; datos: ConteoPorClave
  * (the same endpoint that serves Group 8's Urban Analytics).
  */
 export function PanelPage() {
-  const { data, loading, error, reload } = useAsync(() => estadisticas(), []);
+  const { data, isLoading, error, refetch } = useEstadisticasQuery();
+  const mensajeError =
+    error && "message" in error && typeof error.message === "string" ? error.message : null;
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center py-16">
         <Loader2 className="size-6 animate-spin text-primary" />
@@ -53,7 +54,7 @@ export function PanelPage() {
   }
 
   if (error || !data) {
-    return <EstadoError mensaje={error ?? "Sin datos"} onReintentar={reload} />;
+    return <EstadoError mensaje={mensajeError ?? "Sin datos"} onReintentar={refetch} />;
   }
 
   const horas = data.tiempo_resolucion_horas_promedio;

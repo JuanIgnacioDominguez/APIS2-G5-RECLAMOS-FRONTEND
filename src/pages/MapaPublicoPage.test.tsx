@@ -103,29 +103,21 @@ describe("MapaPublicoPage", () => {
   });
 
   it("muestra al instante los reclamos guardados al volver al mapa", async () => {
-    let resolver!: (value: Page<ReclamoResumen>) => void;
-    const revalidacion = new Promise<Page<ReclamoResumen>>((resolve) => {
-      resolver = resolve;
-    });
-    const listar = vi
-      .spyOn(reclamosApi, "listarReclamos")
-      .mockResolvedValueOnce(page([reclamo("1", "Bache", CategoriaReclamo.BACHES, -34.6)]))
-      .mockReturnValueOnce(revalidacion);
+    // RTK Query keeps the response in its cache slice; if we share the store
+    // between two mounts, the second one shows the previous data straight away
+    // without hitting the network.
+    vi.spyOn(reclamosApi, "listarReclamos").mockResolvedValue(
+      page([reclamo("1", "Bache", CategoriaReclamo.BACHES, -34.6)]),
+    );
 
-    const primeraCarga = renderWithProviders(<MapaPublicoPage />);
+    const { store, unmount } = renderWithProviders(<MapaPublicoPage />);
     expect(await screen.findByText("Bache")).toBeInTheDocument();
-    primeraCarga.unmount();
+    unmount();
 
-    const segundaCarga = renderWithProviders(<MapaPublicoPage />);
-
+    renderWithProviders(<MapaPublicoPage />, { store });
+    // The cached payload is available synchronously on the very next render.
     expect(screen.getByText("Bache")).toBeInTheDocument();
     expect(screen.queryByText("Cargando mapa...")).not.toBeInTheDocument();
-    expect(listar).toHaveBeenCalledTimes(2);
-    await act(async () => {
-      resolver(page([reclamo("1", "Bache", CategoriaReclamo.BACHES, -34.6)]));
-      await revalidacion;
-    });
-    segundaCarga.unmount();
   });
 
   it("muestra un error cuando la API falla", async () => {
