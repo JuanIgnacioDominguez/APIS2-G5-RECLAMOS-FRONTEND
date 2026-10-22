@@ -39,6 +39,22 @@ describe("ComentariosReclamo", () => {
     expect(screen.getByText("Gracias!")).toBeInTheDocument();
   });
 
+  it("distingue los comentarios automaticos de las respuestas oficiales", () => {
+    const automatico: ComentarioOut = {
+      ...comentario("4", "Prioridad elevada automaticamente: el evento 'Feria del libro'", true),
+      autor_id: "sistema",
+      autor_nombre: "CityPass+",
+    };
+    renderWithProviders(
+      <ComentariosReclamo reclamoId="r1" comentarios={[automatico]} onComentado={vi.fn()} />,
+    );
+
+    expect(screen.getByTestId("comentario-automatico")).toHaveTextContent("Feria del libro");
+    expect(screen.getByText("Automático")).toBeInTheDocument();
+    expect(screen.getByText("CityPass+")).toBeInTheDocument();
+    expect(screen.queryByText("Respuesta oficial")).not.toBeInTheDocument();
+  });
+
   it("muestra el estado vacio sin comentarios", () => {
     renderWithProviders(
       <ComentariosReclamo reclamoId="r1" comentarios={[]} onComentado={vi.fn()} />,

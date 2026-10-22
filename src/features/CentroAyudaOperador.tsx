@@ -115,7 +115,7 @@ const PREGUNTAS: PreguntaFrecuenta[] = [
     categoria: "gestion",
     pregunta: "¿Cómo corrijo la categoría o prioridad?",
     respuesta:
-      "En el detalle podés reclasificar el reclamo. La corrección queda registrada y actualiza las métricas disponibles.",
+      "En el detalle podés reclasificar el reclamo. La corrección queda registrada y actualiza las métricas disponibles. Si otro módulo avisa de un evento cultural masivo o una emergencia en la zona, la prioridad sube sola y queda un comentario Automático con el motivo; los reclamos con canal Automático los abrió un sensor de Residuos.",
   },
   {
     id: "datos-ciudadanos",
@@ -129,7 +129,7 @@ const PREGUNTAS: PreguntaFrecuenta[] = [
     categoria: "dashboard-mapa",
     pregunta: "¿Qué muestra el mapa?",
     respuesta:
-      "Muestra únicamente los reclamos que tienen coordenadas. Podés ver categoría, estado y barrio sin exponer datos personales del ciudadano.",
+      "Muestra únicamente los reclamos que tienen coordenadas. Podés ver categoría, estado y barrio sin exponer datos personales del ciudadano. Los abiertos de tránsito, baches y arbolado llevan un anillo ámbar porque afectan la circulación: se comparten con Movilidad, Espacios Públicos y Analítica, así que conviene priorizarlos.",
   },
   {
     id: "dashboard-datos",

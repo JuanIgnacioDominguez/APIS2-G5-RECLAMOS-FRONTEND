@@ -9,11 +9,13 @@ import {
   ShieldCheck,
   Sparkles,
   Tags,
+  TrafficCone,
   type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import type { ReclamoCrear } from "@/api/types";
+import { afectaCirculacion } from "@/domain/circulacion";
 import type { CategoriaReclamo, PrioridadReclamo } from "@/domain/enums";
 import {
   CATEGORIA_HEX,
@@ -106,6 +108,9 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
   };
 
   const { sugerencia } = useSugerenciaClasificacion(values.titulo, values.descripcion);
+  const categoriaEfectiva =
+    (values.categoria as CategoriaReclamo | null) ?? sugerencia?.categoria ?? null;
+  const cortaCirculacion = categoriaEfectiva !== null && afectaCirculacion(categoriaEfectiva);
   const [ubicando, setUbicando] = useState(false);
   const [errorUbicacion, setErrorUbicacion] = useState<string | null>(null);
   const [buscandoDir, setBuscandoDir] = useState(false);
@@ -512,6 +517,19 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
                   </Select>
                 </div>
               </div>
+
+              {cortaCirculacion && (
+                <Alert className="border-warning/30 bg-warning-surface p-3">
+                  <TrafficCone className="size-4 text-warning" />
+                  <AlertTitle className="font-semibold text-warning">
+                    Afecta la circulación
+                  </AlertTitle>
+                  <AlertDescription>
+                    Marcá el punto exacto en el mapa: mientras siga abierto, se comparte con
+                    Movilidad y Espacios Públicos para avisar a quienes pasen por la zona.
+                  </AlertDescription>
+                </Alert>
+              )}
             </CardContent>
           </Card>
         </div>

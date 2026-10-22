@@ -1,8 +1,29 @@
-import { ListChecks, MapPin, Users } from "lucide-react";
+import { ListChecks, MapPin, TrafficCone, Users } from "lucide-react";
 
 import type { ReclamoResumen } from "@/api/types";
+import { esIncidenteActivo } from "@/domain/circulacion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AutoriaBadge, CategoriaLinea, EstadoBadge, PrioridadLinea } from "./EstadoBadges";
+
+export function AvisoCirculacion() {
+  return (
+    <div
+      role="note"
+      className="flex items-start gap-3 rounded-xl border border-warning/30 bg-warning-surface p-3"
+    >
+      <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-warning/15 text-warning">
+        <TrafficCone className="size-4" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-warning">Afecta la circulación</p>
+        <p className="mt-0.5 text-sm leading-relaxed text-foreground/75">
+          Mientras siga abierto, CityPass+ lo comparte con Movilidad y Espacios Públicos para avisar
+          a quienes pasen por la zona.
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export function ReclamoResumenCard({
   reclamo,
@@ -52,6 +73,8 @@ export function ReclamoResumenCard({
             </div>
           </div>
         </div>
+
+        {esIncidenteActivo(reclamo) && <AvisoCirculacion />}
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-3 text-sm text-foreground/70">
           <span className="inline-flex min-w-0 items-center gap-1">

@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Loader2, MessageSquare, ShieldCheck } from "lucide-react";
+import { Loader2, MessageSquare, ShieldCheck, Workflow } from "lucide-react";
 import { toast } from "sonner";
 
 import { useComentarMutation } from "@/store/citypassApi";
 import type { ComentarioOut } from "@/api/types";
 import { useAuth } from "@/auth/AuthContext";
+import { USUARIO_SISTEMA } from "@/domain/enums";
 import { haceCuanto } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,32 @@ function iniciales(nombre: string | null | undefined): string {
     .join("");
 }
 
+function ComentarioAutomatico({ comentario }: { comentario: ComentarioOut }) {
+  return (
+    <div
+      data-testid="comentario-automatico"
+      className="rounded-xl border border-dashed border-primary/30 bg-primary/5 p-4"
+    >
+      <div className="mb-2 flex flex-wrap items-center gap-2">
+        <span className="grid size-7 place-items-center rounded-full bg-primary/10 text-primary">
+          <Workflow className="size-3.5" />
+        </span>
+        <span className="text-sm font-semibold">{comentario.autor_nombre ?? "CityPass+"}</span>
+        <Badge variant="outline" className="border-primary/30 text-primary">
+          Automático
+        </Badge>
+        <span className="text-xs text-muted-foreground">{haceCuanto(comentario.created_at)}</span>
+      </div>
+      <p className="text-sm leading-relaxed">{comentario.texto}</p>
+    </div>
+  );
+}
+
 function Comentario({ comentario }: { comentario: ComentarioOut }) {
+  if (comentario.autor_id === USUARIO_SISTEMA) {
+    return <ComentarioAutomatico comentario={comentario} />;
+  }
+
   if (comentario.es_oficial) {
     return (
       <div
