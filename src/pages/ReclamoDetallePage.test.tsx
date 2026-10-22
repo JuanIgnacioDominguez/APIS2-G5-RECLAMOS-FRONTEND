@@ -142,6 +142,42 @@ describe("ReclamoDetallePage", () => {
     },
   );
 
+  it("al staff le indica si el reclamo afecta la circulacion y de donde vino", async () => {
+    vi.spyOn(reclamosApi, "obtenerReclamo").mockResolvedValue({
+      ...detalle,
+      categoria: CategoriaReclamo.TRANSITO,
+      canal: CanalOrigen.EVENTO,
+    });
+    renderDetalle(OPERADOR);
+    await screen.findByRole("heading", { name: `Reclamo #${detalle.id.slice(0, 8)}` });
+
+    // Header badge plus the row label in "Detalles".
+    expect(screen.getAllByText("Afecta circulación")).toHaveLength(2);
+    expect(screen.getByText("Sí, se comparte")).toBeInTheDocument();
+    expect(screen.getAllByText("Automático (CityPass+)").length).toBeGreaterThan(0);
+  });
+
+  it("un reclamo que no corta la circulacion no lleva la marca", async () => {
+    renderDetalle(OPERADOR);
+    await screen.findByRole("heading", { name: `Reclamo #${detalle.id.slice(0, 8)}` });
+
+    // Only the row label remains; the header badge is gone.
+    expect(screen.getAllByText("Afecta circulación")).toHaveLength(1);
+    expect(screen.getByText("No")).toBeInTheDocument();
+  });
+
+  it("un bache resuelto deja de compartirse", async () => {
+    vi.spyOn(reclamosApi, "obtenerReclamo").mockResolvedValue({
+      ...detalle,
+      categoria: CategoriaReclamo.BACHES,
+      estado: EstadoReclamo.RESUELTO,
+    });
+    renderDetalle(OPERADOR);
+    await screen.findByRole("heading", { name: `Reclamo #${detalle.id.slice(0, 8)}` });
+
+    expect(screen.getByText("Sí, ya no se comparte")).toBeInTheDocument();
+  });
+
   it("muestra las fotos adjuntas con una acción para abrirlas", async () => {
     const foto = "https://cdn.citypass.local/evidencias/IMG_20260923_2054.jpg";
     vi.spyOn(reclamosApi, "obtenerReclamo").mockResolvedValue({

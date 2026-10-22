@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
-import { ChevronDown, Loader2, MapPin } from "lucide-react";
+import { Check, ChevronDown, Loader2, MapPin, TrafficCone } from "lucide-react";
 
 import { useAuth } from "@/auth/AuthContext";
 import { Rol } from "@/auth/roles";
+import { esIncidenteActivo } from "@/domain/circulacion";
 import { EstadoReclamo, type CategoriaReclamo } from "@/domain/enums";
 import {
   CATEGORIA_LABEL,
@@ -22,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CategoriaIcono } from "@/features/reclamos/EstadoBadges";
-import { MapaReclamos } from "@/features/mapa/MapaReclamos";
+import { INCIDENTE_ANILLO, MapaReclamos } from "@/features/mapa/MapaReclamos";
 import { reclamosUbicados } from "@/features/mapa/coords";
 
 const TODAS = "todas";
@@ -41,6 +42,7 @@ export function MapaPublicoPage() {
   const { usuario } = useAuth();
   const [categoria, setCategoria] = useState<CategoriaReclamo | null>(null);
   const [estado, setEstado] = useState<EstadoReclamo | null>(null);
+  const [soloCirculacion, setSoloCirculacion] = useState(false);
   const [panelAbierto, setPanelAbierto] = useState(true);
 
   const { data, isLoading, error, refetch } = useListarReclamosQuery({
@@ -65,9 +67,10 @@ export function MapaPublicoPage() {
     return ubicados.filter(
       (r) =>
         (categoria === null || r.categoria === categoria) &&
-        (estado === null || r.estado === estado),
+        (estado === null || r.estado === estado) &&
+        (!soloCirculacion || esIncidenteActivo(r)),
     );
-  }, [data, categoria, estado]);
+  }, [data, categoria, estado, soloCirculacion]);
 
   return (
     <div
@@ -171,6 +174,24 @@ export function MapaPublicoPage() {
                   </Select>
                 </div>
 
+                <button
+                  type="button"
+                  data-tour="mapa-circulacion"
+                  aria-pressed={soloCirculacion}
+                  tabIndex={panelAbierto ? 0 : -1}
+                  onClick={() => setSoloCirculacion((v) => !v)}
+                  className={cn(
+                    "flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:outline-none",
+                    soloCirculacion
+                      ? "border-warning/40 bg-warning-surface text-warning"
+                      : "border-border text-muted-foreground hover:bg-foreground/[0.03]",
+                  )}
+                >
+                  <TrafficCone className="size-4 shrink-0" />
+                  <span className="flex-1">Solo los que afectan la circulación</span>
+                  {soloCirculacion && <Check className="size-3.5 shrink-0" />}
+                </button>
+
                 <div
                   data-tour="mapa-leyenda"
                   className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-border/60 pt-2.5"
@@ -184,6 +205,13 @@ export function MapaPublicoPage() {
                       <span className="text-xs font-medium text-foreground">Mis reclamos</span>
                     </div>
                   )}
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className="size-3 rounded-full border-2 bg-transparent"
+                      style={{ borderColor: INCIDENTE_ANILLO }}
+                    />
+                    <span className="text-xs font-medium text-foreground">Afecta circulación</span>
+                  </div>
                   {ESTADOS_LEYENDA.map((e) => (
                     <div key={e} className="flex items-center gap-1.5">
                       <span

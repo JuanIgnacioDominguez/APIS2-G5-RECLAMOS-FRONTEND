@@ -177,6 +177,20 @@ const PREGUNTAS: PreguntaCiudadano[] = [
       "Podés elegirlas al cargar el reclamo. Si no lo hacés, el clasificador automático sugiere una opción y un operador puede corregirla.",
   },
   {
+    id: "circulacion",
+    categoria: "clasificacion",
+    pregunta: "¿Qué significa Afecta la circulación?",
+    respuesta:
+      "Los reclamos de tránsito, baches y arbolado pueden cortar o demorar el paso. Mientras siguen abiertos, CityPass+ los comparte con Movilidad y Espacios Públicos para que eviten la zona y avisen a quienes van a un evento cercano.",
+  },
+  {
+    id: "prioridad-automatica",
+    categoria: "clasificacion",
+    pregunta: "¿Por qué mi reclamo cambió de prioridad solo?",
+    respuesta:
+      "Si hay un evento masivo o una emergencia en tu barrio, la prioridad sube automáticamente para que se atienda antes. En los comentarios vas a ver un mensaje Automático con el motivo.",
+  },
+  {
     id: "adhesiones",
     categoria: "participacion",
     pregunta: "¿Qué significa A mí también me pasa?",

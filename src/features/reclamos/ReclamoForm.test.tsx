@@ -79,5 +79,17 @@ describe("ReclamoForm", () => {
 
     // La categoria del select queda seteada al valor sugerido.
     expect(screen.getByRole("combobox", { name: /categoría/i })).toHaveTextContent("Alumbrado");
+    expect(screen.queryByText("Afecta la circulación")).not.toBeInTheDocument();
+  });
+
+  it("pide marcar el punto exacto cuando la categoria corta la circulacion", async () => {
+    renderWithProviders(<ReclamoForm onSubmit={vi.fn()} />);
+    expect(screen.queryByText("Afecta la circulación")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("combobox", { name: /categoría/i }));
+    await user.click(await screen.findByRole("option", { name: "Baches" }));
+
+    expect(screen.getByText("Afecta la circulación")).toBeInTheDocument();
+    expect(screen.getByText(/marcá el punto exacto en el mapa/i)).toBeInTheDocument();
   });
 });

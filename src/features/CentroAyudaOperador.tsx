@@ -118,6 +118,20 @@ const PREGUNTAS: PreguntaFrecuenta[] = [
       "En el detalle podés reclasificar el reclamo. La corrección queda registrada y actualiza las métricas disponibles.",
   },
   {
+    id: "afecta-circulacion",
+    categoria: "gestion",
+    pregunta: "¿Qué significa Afecta circulación?",
+    respuesta:
+      "Marca los reclamos abiertos de tránsito, baches y arbolado. Se comparten con Movilidad, Espacios Públicos y Analítica; cuando los resolvés dejan de afectar las rutas, por eso conviene priorizarlos.",
+  },
+  {
+    id: "escalado-automatico",
+    categoria: "gestion",
+    pregunta: "¿Por qué un reclamo subió de prioridad sin que nadie lo tocara?",
+    respuesta:
+      "Otros módulos avisan de eventos culturales masivos y emergencias. Los reclamos abiertos de esa zona suben de prioridad solos y queda un comentario Automático con el motivo. Los reclamos con canal Automático los abrió un sensor de Residuos.",
+  },
+  {
     id: "datos-ciudadanos",
     categoria: "gestion",
     pregunta: "¿Puedo ver información personal de los ciudadanos?",

@@ -14,6 +14,7 @@ import {
   Radio,
   RefreshCw,
   Smartphone,
+  TrafficCone,
   Users,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -22,13 +23,19 @@ import { useNavigate, useParams } from "react-router-dom";
 import { cn } from "cn";
 import type { HistorialOut, ReclamoDetalle } from "@/api/types";
 import { useAdherirMutation, useObtenerReclamoQuery } from "@/store/citypassApi";
+import { afectaCirculacion, esIncidenteActivo } from "@/domain/circulacion";
 import { CanalOrigen } from "@/domain/enums";
 import { ESTADO_HEX, ESTADO_LABEL, ESTADO_TEXT_COLOR } from "@/domain/labels";
 import { formatFecha, haceCuanto, idCorto } from "@/lib/format";
 import { EstadoError } from "@/components/EstadoError";
 import { useAuth } from "@/auth/AuthContext";
 import { esStaff } from "@/auth/roles";
-import { CategoriaBadge, EstadoBadge, PrioridadBadge } from "@/features/reclamos/EstadoBadges";
+import {
+  CategoriaBadge,
+  CirculacionBadge,
+  EstadoBadge,
+  PrioridadBadge,
+} from "@/features/reclamos/EstadoBadges";
 import { GestionarEstado } from "@/features/reclamos/GestionarEstado";
 import { ClasificarReclamo } from "@/features/reclamos/ClasificarReclamo";
 import { ComentariosReclamo } from "@/features/reclamos/ComentariosReclamo";
@@ -45,8 +52,13 @@ const CANAL_LABEL: Record<CanalOrigen, string> = {
   WEB: "Web",
   TELEFONO: "Teléfono",
   PRESENCIAL: "Presencial",
-  EVENTO: "Evento",
+  EVENTO: "Automático (CityPass+)",
 };
+
+function textoCirculacion(reclamo: ReclamoDetalle): string {
+  if (!afectaCirculacion(reclamo.categoria)) return "No";
+  return esIncidenteActivo(reclamo) ? "Sí, se comparte" : "Sí, ya no se comparte";
+}
 
 function DatoFila({
   etiqueta,
@@ -368,6 +380,7 @@ function VistaGestionReclamo({ reclamo, refrescando, onRecargar, onVolver }: Vis
               <EstadoBadge estado={reclamo.estado} />
               <CategoriaBadge categoria={reclamo.categoria} />
               <PrioridadBadge prioridad={reclamo.prioridad} />
+              {esIncidenteActivo(reclamo) && <CirculacionBadge />}
               {reclamo.barrio && (
                 <Badge variant="outline" className="gap-1 text-muted-foreground">
                   <MapPin className="size-3" />
@@ -447,6 +460,11 @@ function VistaGestionReclamo({ reclamo, refrescando, onRecargar, onVolver }: Vis
               icono={Building2}
             />
             <DatoFila etiqueta="Canal" valor={CANAL_LABEL[reclamo.canal]} icono={Radio} />
+            <DatoFila
+              etiqueta="Afecta circulación"
+              valor={textoCirculacion(reclamo)}
+              icono={TrafficCone}
+            />
             <DatoFila etiqueta="Última actualización" valor={haceCuanto(reclamo.updated_at)} />
           </TarjetaDetalles>
 

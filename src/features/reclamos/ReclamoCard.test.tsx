@@ -35,4 +35,28 @@ describe("ReclamoCard", () => {
     );
     expect(screen.getByText("Sin barrio")).toBeInTheDocument();
   });
+
+  it("marca un bache abierto como incidente de circulacion", () => {
+    renderWithProviders(
+      <ReclamoCard reclamo={{ ...reclamo, categoria: CategoriaReclamo.BACHES }} />,
+    );
+    expect(screen.getByRole("img", { name: "Afecta la circulación" })).toBeInTheDocument();
+  });
+
+  it("no marca un bache ya resuelto ni un reclamo de alumbrado", () => {
+    const { unmount } = renderWithProviders(
+      <ReclamoCard
+        reclamo={{
+          ...reclamo,
+          categoria: CategoriaReclamo.BACHES,
+          estado: EstadoReclamo.RESUELTO,
+        }}
+      />,
+    );
+    expect(screen.queryByRole("img", { name: "Afecta la circulación" })).not.toBeInTheDocument();
+    unmount();
+
+    renderWithProviders(<ReclamoCard reclamo={reclamo} />);
+    expect(screen.queryByRole("img", { name: "Afecta la circulación" })).not.toBeInTheDocument();
+  });
 });

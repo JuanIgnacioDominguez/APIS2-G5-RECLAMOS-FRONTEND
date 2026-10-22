@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import * as reclamosApi from "@/api/reclamos";
@@ -62,6 +62,27 @@ describe("BandejaPage", () => {
     expect(
       screen.getByText("Bache en la esquina").closest("tr")?.querySelector("td.text-center"),
     ).toHaveTextContent("2");
+  });
+
+  it("marca en la bandeja los reclamos abiertos que afectan la circulacion", async () => {
+    vi.spyOn(reclamosApi, "bandeja").mockResolvedValue(
+      page([
+        reclamo("1", "Bache en la esquina", OrigenClasificacion.CIUDADANO),
+        {
+          ...reclamo("2", "Luminaria apagada", OrigenClasificacion.CIUDADANO),
+          categoria: CategoriaReclamo.ALUMBRADO,
+        },
+      ]),
+    );
+
+    renderWithProviders(<BandejaPage />);
+
+    const bache = (await screen.findByText("Bache en la esquina")).closest("tr")!;
+    const luminaria = screen.getByText("Luminaria apagada").closest("tr")!;
+    expect(within(bache).getByRole("img", { name: "Afecta la circulación" })).toBeInTheDocument();
+    expect(
+      within(luminaria).queryByRole("img", { name: "Afecta la circulación" }),
+    ).not.toBeInTheDocument();
   });
 
   it("filtra, selecciona y limpia filas como la tabla de Watermelon UI", async () => {

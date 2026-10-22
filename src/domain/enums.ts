@@ -57,6 +57,16 @@ export const ESTADOS_RESUELTOS: ReadonlySet<EstadoReclamo> = new Set([
   EstadoReclamo.CERRADO,
 ]);
 
+// Mirror of CATEGORIAS_QUE_AFECTAN_CIRCULACION in the backend (CU-INT-01).
+export const CATEGORIAS_QUE_AFECTAN_CIRCULACION: ReadonlySet<CategoriaReclamo> = new Set([
+  CategoriaReclamo.TRANSITO,
+  CategoriaReclamo.BACHES,
+  CategoriaReclamo.ARBOLADO,
+]);
+
+// Author id the backend uses for what the module does on its own.
+export const USUARIO_SISTEMA = "sistema";
+
 export const ESTADOS = Object.values(EstadoReclamo);
 export const PRIORIDADES = Object.values(PrioridadReclamo);
 export const CATEGORIAS = Object.values(CategoriaReclamo);

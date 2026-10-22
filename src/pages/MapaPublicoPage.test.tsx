@@ -79,6 +79,34 @@ describe("MapaPublicoPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("filtra los incidentes abiertos que afectan la circulacion", async () => {
+    vi.spyOn(reclamosApi, "listarReclamos").mockResolvedValue(
+      page([
+        reclamo("1", "Bache en la avenida", CategoriaReclamo.BACHES, -34.6),
+        reclamo("2", "Luminaria apagada", CategoriaReclamo.ALUMBRADO, -34.61),
+        {
+          ...reclamo("3", "Arbol ya retirado", CategoriaReclamo.ARBOLADO, -34.62),
+          estado: EstadoReclamo.RESUELTO,
+        },
+      ]),
+    );
+
+    renderWithProviders(<MapaPublicoPage />);
+    await screen.findByText("Bache en la avenida");
+
+    const filtro = screen.getByRole("button", { name: /solo los que afectan la circulación/i });
+    expect(filtro).toHaveAttribute("aria-pressed", "false");
+    await userEvent.click(filtro);
+
+    expect(filtro).toHaveAttribute("aria-pressed", "true");
+    await waitFor(() => expect(screen.queryByText("Luminaria apagada")).not.toBeInTheDocument());
+    expect(screen.getByText("Bache en la avenida")).toBeInTheDocument();
+    expect(screen.queryByText("Arbol ya retirado")).not.toBeInTheDocument();
+    expect(
+      screen.getByText((_, el) => el?.textContent === "1 reclamo en el mapa"),
+    ).toBeInTheDocument();
+  });
+
   it("deduplica la carga inicial en modo estricto", async () => {
     let resolver!: (value: Page<ReclamoListado>) => void;
     const request = new Promise<Page<ReclamoListado>>((resolve) => {
