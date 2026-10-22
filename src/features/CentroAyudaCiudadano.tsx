@@ -160,7 +160,7 @@ const PREGUNTAS: PreguntaCiudadano[] = [
     categoria: "clasificacion",
     pregunta: "¿Qué son las categorías?",
     respuesta:
-      "La categoría describe el tipo de problema, como alumbrado, baches, residuos, arbolado, agua, tránsito, seguridad u otros. Ayuda a organizar y priorizar los reclamos.",
+      "La categoría describe el tipo de problema, como alumbrado, baches, residuos, arbolado, agua, tránsito, seguridad u otros. Ayuda a organizar y priorizar los reclamos. Los de tránsito, baches y arbolado se marcan como Afecta la circulación: mientras siguen abiertos, CityPass+ los comparte con Movilidad y Espacios Públicos para que eviten la zona y avisen a quienes van a un evento cercano.",
   },
   {
     id: "prioridad",
@@ -174,21 +174,7 @@ const PREGUNTAS: PreguntaCiudadano[] = [
     categoria: "clasificacion",
     pregunta: "¿Quién decide la categoría y la prioridad?",
     respuesta:
-      "Podés elegirlas al cargar el reclamo. Si no lo hacés, el clasificador automático sugiere una opción y un operador puede corregirla.",
-  },
-  {
-    id: "circulacion",
-    categoria: "clasificacion",
-    pregunta: "¿Qué significa Afecta la circulación?",
-    respuesta:
-      "Los reclamos de tránsito, baches y arbolado pueden cortar o demorar el paso. Mientras siguen abiertos, CityPass+ los comparte con Movilidad y Espacios Públicos para que eviten la zona y avisen a quienes van a un evento cercano.",
-  },
-  {
-    id: "prioridad-automatica",
-    categoria: "clasificacion",
-    pregunta: "¿Por qué mi reclamo cambió de prioridad solo?",
-    respuesta:
-      "Si hay un evento masivo o una emergencia en tu barrio, la prioridad sube automáticamente para que se atienda antes. En los comentarios vas a ver un mensaje Automático con el motivo.",
+      "Podés elegirlas al cargar el reclamo. Si no lo hacés, el clasificador automático sugiere una opción y un operador puede corregirla. Si hay un evento masivo o una emergencia en tu barrio, la prioridad sube sola y en los comentarios vas a ver un mensaje Automático con el motivo.",
   },
   {
     id: "adhesiones",
