@@ -25,6 +25,7 @@ function reclamo(
     id,
     titulo,
     categoria: CategoriaReclamo.BACHES,
+    afecta_circulacion: true,
     origen_clasificacion: OrigenClasificacion.MODELO,
     prioridad: PrioridadReclamo.ALTA,
     estado,

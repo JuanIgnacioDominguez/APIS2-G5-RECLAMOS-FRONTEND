@@ -16,6 +16,7 @@ function reclamo(id: string, titulo: string, esPropio: boolean): ReclamoListado 
     id,
     titulo,
     categoria: CategoriaReclamo.BACHES,
+    afecta_circulacion: true,
     prioridad: PrioridadReclamo.MEDIA,
     estado: EstadoReclamo.RECIBIDO,
     barrio: "Centro",

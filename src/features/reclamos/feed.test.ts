@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { ReclamoResumen } from "@/api/types";
 import { CategoriaReclamo, EstadoReclamo, PrioridadReclamo } from "@/domain/enums";
+import { afectaCirculacion } from "@/domain/circulacion";
 import { barriosDisponibles, filtrarFeed } from "./feed";
 
 function reclamo(over: Partial<ReclamoResumen>): ReclamoResumen {
@@ -9,6 +10,8 @@ function reclamo(over: Partial<ReclamoResumen>): ReclamoResumen {
     id: over.id ?? "1",
     titulo: over.titulo ?? "Reclamo",
     categoria: over.categoria ?? CategoriaReclamo.ALUMBRADO,
+    afecta_circulacion:
+      over.afecta_circulacion ?? afectaCirculacion(over.categoria ?? CategoriaReclamo.ALUMBRADO),
     prioridad: over.prioridad ?? PrioridadReclamo.MEDIA,
     estado: over.estado ?? EstadoReclamo.RECIBIDO,
     barrio: "barrio" in over ? (over.barrio ?? null) : "Centro",

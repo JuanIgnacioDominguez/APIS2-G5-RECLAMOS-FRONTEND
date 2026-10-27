@@ -9,6 +9,7 @@ function reclamo(id: string, lat: number | null, lng: number | null): ReclamoRes
     id,
     titulo: `Reclamo ${id}`,
     categoria: CategoriaReclamo.BACHES,
+    afecta_circulacion: true,
     prioridad: PrioridadReclamo.MEDIA,
     estado: EstadoReclamo.RECIBIDO,
     barrio: null,

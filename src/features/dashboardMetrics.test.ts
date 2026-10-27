@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Estadisticas, ReclamoResumen } from "@/api/types";
 import { CategoriaReclamo, EstadoReclamo, PrioridadReclamo } from "@/domain/enums";
+import { afectaCirculacion } from "@/domain/circulacion";
 import {
   cantidadPorEstado,
   resumenDesdeEstadisticas,
@@ -36,6 +37,7 @@ function reclamo(
     id,
     titulo: `Reclamo ${id}`,
     categoria,
+    afecta_circulacion: afectaCirculacion(categoria),
     prioridad,
     estado,
     barrio: "Centro",

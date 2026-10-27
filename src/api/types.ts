@@ -35,6 +35,9 @@ export interface ReclamoResumen {
   categoria: CategoriaReclamo;
   prioridad: PrioridadReclamo;
   estado: EstadoReclamo;
+  // Computed by the backend from the category. The front reads it instead of
+  // deriving the rule locally; see domain/circulacion.ts.
+  afecta_circulacion: boolean;
   barrio: string | null;
   latitud: number | null;
   longitud: number | null;
@@ -158,6 +161,7 @@ export interface ReclamoBandeja {
   id: string;
   titulo: string;
   categoria: CategoriaReclamo;
+  afecta_circulacion: boolean;
   origen_clasificacion: OrigenClasificacion;
   prioridad: PrioridadReclamo;
   estado: EstadoReclamo;

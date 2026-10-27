@@ -6,6 +6,7 @@ import userEvent from "@testing-library/user-event";
 import * as reclamosApi from "@/api/reclamos";
 import type { Page, ReclamoListado } from "@/api/types";
 import { CategoriaReclamo, EstadoReclamo, PrioridadReclamo } from "@/domain/enums";
+import { afectaCirculacion } from "@/domain/circulacion";
 import { renderWithProviders } from "@/test/render";
 import { MapaPublicoPage } from "./MapaPublicoPage";
 
@@ -21,6 +22,7 @@ function reclamo(
     categoria,
     prioridad: PrioridadReclamo.MEDIA,
     estado: EstadoReclamo.RECIBIDO,
+    afecta_circulacion: afectaCirculacion(categoria),
     barrio: null,
     latitud: lat,
     longitud: lat === null ? null : -58.4,

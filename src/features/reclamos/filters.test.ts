@@ -9,6 +9,7 @@ function reclamo(id: string, titulo: string, estado: EstadoReclamo): ReclamoResu
     id,
     titulo,
     categoria: CategoriaReclamo.OTROS,
+    afecta_circulacion: false,
     prioridad: PrioridadReclamo.MEDIA,
     estado,
     barrio: null,
