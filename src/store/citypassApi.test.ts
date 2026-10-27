@@ -36,6 +36,7 @@ const detalle: ReclamoDetalle = {
   descripcion: "Bache",
   origen_clasificacion: OrigenClasificacion.CIUDADANO,
   confianza_clasificacion: null,
+  objeto_afectado: null,
   canal: CanalOrigen.APP,
   direccion: null,
   fotos: [],

@@ -26,6 +26,7 @@ const detalle: ReclamoDetalle = {
   estado: EstadoReclamo.EN_PROCESO,
   origen_clasificacion: OrigenClasificacion.MODELO,
   confianza_clasificacion: 0.9,
+  objeto_afectado: null,
   canal: CanalOrigen.APP,
   direccion: "Rivadavia 800",
   barrio: "Centro",
@@ -164,6 +165,18 @@ describe("ReclamoDetallePage", () => {
     // Only the row label remains; the header badge is gone.
     expect(screen.getAllByText("Afecta circulación")).toHaveLength(1);
     expect(screen.getByText("No")).toBeInTheDocument();
+  });
+
+  it("muestra el objeto afectado traducido o 'Sin especificar' si no hay", async () => {
+    vi.spyOn(reclamosApi, "obtenerReclamo").mockResolvedValue({
+      ...detalle,
+      objeto_afectado: "CICLOVIA",
+    });
+    renderDetalle(OPERADOR);
+    await screen.findByRole("heading", { name: `Reclamo #${detalle.id.slice(0, 8)}` });
+
+    // "Ciclovía / bicisenda" appears in the Clasificación select and the Detalles row.
+    expect(screen.getAllByText(/Ciclovía/).length).toBeGreaterThan(0);
   });
 
   it("un bache resuelto deja de compartirse", async () => {

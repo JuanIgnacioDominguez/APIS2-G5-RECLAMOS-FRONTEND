@@ -92,4 +92,30 @@ describe("ReclamoForm", () => {
     expect(screen.getByText("Afecta la circulación")).toBeInTheDocument();
     expect(screen.getByText(/marcá el punto exacto en el mapa/i)).toBeInTheDocument();
   });
+
+  it("manda null como objeto_afectado cuando el vecino no eligio ninguno", async () => {
+    const onSubmit = vi.fn();
+    renderWithProviders(<ReclamoForm onSubmit={onSubmit} />);
+
+    await user.type(screen.getByLabelText(/título/i), TITULO);
+    await user.type(screen.getByLabelText(/descripción/i), DESCRIPCION);
+    await user.click(screen.getByRole("button", { name: /enviar reclamo/i }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ objeto_afectado: null }));
+  });
+
+  it("manda el objeto afectado elegido por el vecino", async () => {
+    const onSubmit = vi.fn();
+    renderWithProviders(<ReclamoForm onSubmit={onSubmit} />);
+
+    await user.type(screen.getByLabelText(/título/i), TITULO);
+    await user.type(screen.getByLabelText(/descripción/i), DESCRIPCION);
+    await user.click(screen.getByRole("combobox", { name: /objeto afectado/i }));
+    await user.click(await screen.findByRole("option", { name: /ciclovía/i }));
+    await user.click(screen.getByRole("button", { name: /enviar reclamo/i }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ objeto_afectado: "CICLOVIA" }));
+  });
 });
