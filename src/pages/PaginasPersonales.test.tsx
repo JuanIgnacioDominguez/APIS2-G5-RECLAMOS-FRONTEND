@@ -28,6 +28,7 @@ function reclamoBandeja(
     id,
     titulo: `Reclamo ${id}`,
     categoria: CategoriaReclamo.BACHES,
+    afecta_circulacion: true,
     origen_clasificacion: origen,
     prioridad: PrioridadReclamo.MEDIA,
     estado,

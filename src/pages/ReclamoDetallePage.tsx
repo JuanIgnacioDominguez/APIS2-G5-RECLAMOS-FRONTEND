@@ -24,7 +24,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { cn } from "cn";
 import type { HistorialOut, ReclamoDetalle } from "@/api/types";
 import { useAdherirMutation, useObtenerReclamoQuery } from "@/store/citypassApi";
-import { afectaCirculacion, esIncidenteActivo } from "@/domain/circulacion";
+import { esIncidenteActivo } from "@/domain/circulacion";
 import { CanalOrigen } from "@/domain/enums";
 import {
   ESTADO_HEX,
@@ -62,7 +62,7 @@ const CANAL_LABEL: Record<CanalOrigen, string> = {
 };
 
 function textoCirculacion(reclamo: ReclamoDetalle): string {
-  if (!afectaCirculacion(reclamo.categoria)) return "No";
+  if (!reclamo.afecta_circulacion) return "No";
   return esIncidenteActivo(reclamo) ? "Sí, se comparte" : "Sí, ya no se comparte";
 }
 

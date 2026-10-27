@@ -12,6 +12,7 @@ const reclamo: ReclamoResumen = {
   categoria: CategoriaReclamo.ALUMBRADO,
   prioridad: PrioridadReclamo.ALTA,
   estado: EstadoReclamo.EN_REVISION,
+  afecta_circulacion: false,
   barrio: "Centro",
   latitud: null,
   longitud: null,
@@ -39,7 +40,9 @@ describe("ReclamoResumenCard", () => {
 
   it("avisa que un arbol caido abierto se comparte con otros modulos", () => {
     renderWithProviders(
-      <ReclamoResumenCard reclamo={{ ...reclamo, categoria: CategoriaReclamo.ARBOLADO }} />,
+      <ReclamoResumenCard
+        reclamo={{ ...reclamo, categoria: CategoriaReclamo.ARBOLADO, afecta_circulacion: true }}
+      />,
     );
 
     const aviso = screen.getByRole("note");

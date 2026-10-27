@@ -18,6 +18,7 @@ function resumen(id: string): ReclamoListado {
     id,
     titulo: `R${id}`,
     categoria: CategoriaReclamo.BACHES,
+    afecta_circulacion: true,
     prioridad: PrioridadReclamo.MEDIA,
     estado: EstadoReclamo.RECIBIDO,
     barrio: "Centro",

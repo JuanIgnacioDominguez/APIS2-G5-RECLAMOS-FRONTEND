@@ -24,6 +24,7 @@ const detalle: ReclamoDetalle = {
   categoria: CategoriaReclamo.ALUMBRADO,
   prioridad: PrioridadReclamo.ALTA,
   estado: EstadoReclamo.EN_PROCESO,
+  afecta_circulacion: false,
   origen_clasificacion: OrigenClasificacion.MODELO,
   confianza_clasificacion: 0.9,
   objeto_afectado: null,
@@ -147,6 +148,7 @@ describe("ReclamoDetallePage", () => {
     vi.spyOn(reclamosApi, "obtenerReclamo").mockResolvedValue({
       ...detalle,
       categoria: CategoriaReclamo.TRANSITO,
+      afecta_circulacion: true,
       canal: CanalOrigen.EVENTO,
     });
     renderDetalle(OPERADOR);
@@ -183,6 +185,7 @@ describe("ReclamoDetallePage", () => {
     vi.spyOn(reclamosApi, "obtenerReclamo").mockResolvedValue({
       ...detalle,
       categoria: CategoriaReclamo.BACHES,
+      afecta_circulacion: true,
       estado: EstadoReclamo.RESUELTO,
     });
     renderDetalle(OPERADOR);
@@ -220,6 +223,7 @@ describe("ReclamoDetallePage", () => {
       id: "dup-1",
       titulo: "Bache en la misma esquina",
       categoria: CategoriaReclamo.BACHES,
+      afecta_circulacion: true,
       prioridad: PrioridadReclamo.MEDIA,
       estado: EstadoReclamo.RECIBIDO,
       barrio: "Centro",
