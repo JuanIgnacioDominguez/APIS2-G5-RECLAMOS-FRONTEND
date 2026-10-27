@@ -14,6 +14,7 @@ function similar(over: Partial<ReclamoSimilar> = {}): ReclamoSimilar {
     id: "similar-1",
     titulo: "Poste de luz apagado",
     categoria: CategoriaReclamo.ALUMBRADO,
+    afecta_circulacion: false,
     prioridad: PrioridadReclamo.MEDIA,
     estado: EstadoReclamo.RECIBIDO,
     barrio: "Almagro",

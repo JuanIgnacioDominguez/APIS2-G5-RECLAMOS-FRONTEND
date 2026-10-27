@@ -30,12 +30,12 @@ describe("esIncidenteActivo", () => {
     [EstadoReclamo.RECHAZADO, false],
     [EstadoReclamo.CERRADO, false],
   ])("un bache en %s -> %s", (estado, esperado) => {
-    expect(esIncidenteActivo({ categoria: CategoriaReclamo.BACHES, estado })).toBe(esperado);
+    expect(esIncidenteActivo({ afecta_circulacion: true, estado })).toBe(esperado);
   });
 
   it("un reclamo abierto que no corta la circulacion no es incidente", () => {
-    expect(
-      esIncidenteActivo({ categoria: CategoriaReclamo.RUIDOS, estado: EstadoReclamo.RECIBIDO }),
-    ).toBe(false);
+    expect(esIncidenteActivo({ afecta_circulacion: false, estado: EstadoReclamo.RECIBIDO })).toBe(
+      false,
+    );
   });
 });

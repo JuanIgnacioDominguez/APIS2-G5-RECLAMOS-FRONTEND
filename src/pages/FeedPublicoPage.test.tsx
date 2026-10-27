@@ -33,6 +33,7 @@ function reclamo(id: string, titulo: string, barrio: string): ReclamoListado {
     id,
     titulo,
     categoria: CategoriaReclamo.ALUMBRADO,
+    afecta_circulacion: false,
     prioridad: PrioridadReclamo.MEDIA,
     estado: EstadoReclamo.RECIBIDO,
     barrio,

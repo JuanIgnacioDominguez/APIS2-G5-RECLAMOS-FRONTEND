@@ -23,6 +23,7 @@ function reclamo(
     id,
     titulo,
     categoria: CategoriaReclamo.BACHES,
+    afecta_circulacion: true,
     origen_clasificacion: origen,
     prioridad: PrioridadReclamo.ALTA,
     estado,
@@ -71,6 +72,7 @@ describe("BandejaPage", () => {
         {
           ...reclamo("2", "Luminaria apagada", OrigenClasificacion.CIUDADANO),
           categoria: CategoriaReclamo.ALUMBRADO,
+          afecta_circulacion: false,
         },
       ]),
     );

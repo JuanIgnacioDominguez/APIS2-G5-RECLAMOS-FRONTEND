@@ -18,6 +18,7 @@ function reclamo(id: string, titulo: string): ReclamoListado {
     id,
     titulo,
     categoria: CategoriaReclamo.BACHES,
+    afecta_circulacion: true,
     prioridad: PrioridadReclamo.ALTA,
     estado: EstadoReclamo.RECIBIDO,
     barrio: "Centro",

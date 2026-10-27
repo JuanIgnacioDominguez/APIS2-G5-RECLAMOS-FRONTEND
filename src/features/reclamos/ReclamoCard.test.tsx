@@ -12,6 +12,7 @@ const reclamo: ReclamoResumen = {
   categoria: CategoriaReclamo.ALUMBRADO,
   prioridad: PrioridadReclamo.ALTA,
   estado: EstadoReclamo.EN_REVISION,
+  afecta_circulacion: false,
   barrio: "Centro",
   latitud: null,
   longitud: null,
@@ -38,7 +39,9 @@ describe("ReclamoCard", () => {
 
   it("marca un bache abierto como incidente de circulacion", () => {
     renderWithProviders(
-      <ReclamoCard reclamo={{ ...reclamo, categoria: CategoriaReclamo.BACHES }} />,
+      <ReclamoCard
+        reclamo={{ ...reclamo, categoria: CategoriaReclamo.BACHES, afecta_circulacion: true }}
+      />,
     );
     expect(screen.getByRole("img", { name: "Afecta la circulación" })).toBeInTheDocument();
   });
@@ -49,6 +52,7 @@ describe("ReclamoCard", () => {
         reclamo={{
           ...reclamo,
           categoria: CategoriaReclamo.BACHES,
+          afecta_circulacion: true,
           estado: EstadoReclamo.RESUELTO,
         }}
       />,
