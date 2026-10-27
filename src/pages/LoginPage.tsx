@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { AlertTriangle, Info, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { ApiError } from "@/api/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -102,9 +102,9 @@ export function LoginPage() {
             </div>
 
             <div>
-              <p className="text-2xl font-bold">Ingresa a tu cuenta</p>
+              <p className="text-2xl font-bold">Ingreso empleados</p>
               <p className="text-sm text-muted-foreground">
-                Usa tu cuenta ciudadana para continuar.
+                Acceso para operadores y administradores del municipio.
               </p>
             </div>
 
@@ -201,6 +201,13 @@ export function LoginPage() {
                 ))}
               </div>
             </div>
+
+            <p className="text-center text-xs text-muted-foreground">
+              ¿Sos vecino?{" "}
+              <Link to="/login" className="underline">
+                Ingresa o registrate por aca
+              </Link>
+            </p>
           </div>
         </div>
       </div>
