@@ -84,11 +84,11 @@ export function LoginPage() {
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
-    ingresar(usuario.trim(), password);
+    void ingresar(usuario.trim(), password);
   }
 
   function entrarDemo(c: CredencialDemo) {
-    ingresar(c.usuario, c.password);
+    void ingresar(c.usuario, c.password);
   }
 
   return (
