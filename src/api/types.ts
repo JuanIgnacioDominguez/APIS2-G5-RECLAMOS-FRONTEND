@@ -2,6 +2,7 @@ import type {
   CanalOrigen,
   CategoriaReclamo,
   EstadoReclamo,
+  ObjetoAfectado,
   OrigenClasificacion,
   PrioridadReclamo,
 } from "@/domain/enums";
@@ -11,6 +12,7 @@ export interface ReclamoCrear {
   descripcion: string;
   categoria?: CategoriaReclamo | null;
   prioridad?: PrioridadReclamo | null;
+  objeto_afectado?: ObjetoAfectado | null;
   direccion?: string | null;
   barrio?: string | null;
   latitud?: number | null;
@@ -66,6 +68,7 @@ export interface ReclamoOut extends ReclamoResumen {
   descripcion: string;
   origen_clasificacion: OrigenClasificacion;
   confianza_clasificacion: number | null;
+  objeto_afectado: ObjetoAfectado | null;
   canal: CanalOrigen;
   direccion: string | null;
   fotos: string[];
@@ -165,6 +168,7 @@ export interface ReclamoBandeja {
 export interface ReclasificacionPedido {
   categoria?: CategoriaReclamo | null;
   prioridad?: PrioridadReclamo | null;
+  objeto_afectado?: ObjetoAfectado | null;
 }
 
 export interface ConteoPorClave {

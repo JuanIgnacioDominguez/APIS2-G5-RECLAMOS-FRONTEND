@@ -3,7 +3,7 @@ import { Tags, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useReclasificarMutation } from "@/store/citypassApi";
-import type { CategoriaReclamo, PrioridadReclamo } from "@/domain/enums";
+import type { CategoriaReclamo, ObjetoAfectado, PrioridadReclamo } from "@/domain/enums";
 import {
   CATEGORIA_HEX,
   PRIORIDAD_HEX,
@@ -11,6 +11,7 @@ import {
   opcionesPrioridad,
 } from "@/domain/labels";
 import { ICONO_CATEGORIA, ICONO_PRIORIDAD } from "./iconos";
+import { SelectObjetoAfectado } from "./SelectObjetoAfectado";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -34,7 +35,7 @@ function Marco({ embebido, children }: { embebido: boolean; children: ReactNode 
             Clasificación
           </h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Definí la categoría y prioridad del reclamo.
+            Definí la categoría, la prioridad y el objeto afectado.
           </p>
         </div>
         {children}
@@ -58,20 +59,24 @@ export function ClasificarReclamo({
   reclamoId,
   categoriaActual,
   prioridadActual,
+  objetoActual = null,
   onActualizado,
   embebido = false,
 }: {
   reclamoId: string;
   categoriaActual: CategoriaReclamo;
   prioridadActual: PrioridadReclamo;
+  objetoActual?: ObjetoAfectado | null;
   onActualizado?: () => void;
   embebido?: boolean;
 }) {
   const [categoria, setCategoria] = useState<string>(categoriaActual);
   const [prioridad, setPrioridad] = useState<string>(prioridadActual);
+  const [objeto, setObjeto] = useState<ObjetoAfectado | null>(objetoActual);
   const [reclasificar, { isLoading: guardando }] = useReclasificarMutation();
 
-  const sinCambios = categoria === categoriaActual && prioridad === prioridadActual;
+  const sinCambios =
+    categoria === categoriaActual && prioridad === prioridadActual && objeto === objetoActual;
 
   async function aplicar() {
     try {
@@ -80,10 +85,11 @@ export function ClasificarReclamo({
         cambio: {
           categoria: categoria as CategoriaReclamo,
           prioridad: prioridad as PrioridadReclamo,
+          ...(objeto !== objetoActual && { objeto_afectado: objeto }),
         },
       }).unwrap();
       toast.success("Reclamo clasificado", {
-        description: "Se actualizo la categoria y/o prioridad.",
+        description: "Se actualizó la clasificación del reclamo.",
       });
       onActualizado?.();
     } catch (err) {
@@ -151,6 +157,15 @@ export function ClasificarReclamo({
             </SelectGroup>
           </SelectContent>
         </Select>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="clasificar-objeto">Objeto afectado</Label>
+        <SelectObjetoAfectado
+          id="clasificar-objeto"
+          valor={objeto}
+          onCambio={setObjeto}
+          permitirVacio={objetoActual === null}
+        />
       </div>
       <Button
         disabled={sinCambios || guardando}

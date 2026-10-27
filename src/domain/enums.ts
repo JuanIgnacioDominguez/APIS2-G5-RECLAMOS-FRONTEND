@@ -31,6 +31,19 @@ export const CategoriaReclamo = {
 } as const;
 export type CategoriaReclamo = (typeof CategoriaReclamo)[keyof typeof CategoriaReclamo];
 
+// What the claim happened to, orthogonal to the category (what happened).
+export const ObjetoAfectado = {
+  CICLOVIA: "CICLOVIA",
+  CALZADA: "CALZADA",
+  VEREDA: "VEREDA",
+  SENDA_PEATONAL: "SENDA_PEATONAL",
+  PLAZA_PARQUE: "PLAZA_PARQUE",
+  MOBILIARIO_URBANO: "MOBILIARIO_URBANO",
+  EDIFICIO_PUBLICO: "EDIFICIO_PUBLICO",
+  OTRO: "OTRO",
+} as const;
+export type ObjetoAfectado = (typeof ObjetoAfectado)[keyof typeof ObjetoAfectado];
+
 export const CanalOrigen = {
   APP: "APP",
   WEB: "WEB",

@@ -13,6 +13,7 @@ import {
   MapPin,
   Radio,
   RefreshCw,
+  Shapes,
   Smartphone,
   TrafficCone,
   Users,
@@ -25,7 +26,12 @@ import type { HistorialOut, ReclamoDetalle } from "@/api/types";
 import { useAdherirMutation, useObtenerReclamoQuery } from "@/store/citypassApi";
 import { afectaCirculacion, esIncidenteActivo } from "@/domain/circulacion";
 import { CanalOrigen } from "@/domain/enums";
-import { ESTADO_HEX, ESTADO_LABEL, ESTADO_TEXT_COLOR } from "@/domain/labels";
+import {
+  ESTADO_HEX,
+  ESTADO_LABEL,
+  ESTADO_TEXT_COLOR,
+  OBJETO_AFECTADO_LABEL,
+} from "@/domain/labels";
 import { formatFecha, haceCuanto, idCorto } from "@/lib/format";
 import { EstadoError } from "@/components/EstadoError";
 import { useAuth } from "@/auth/AuthContext";
@@ -78,6 +84,13 @@ function DatoFila({
       <span className="text-right text-sm font-medium">{valor}</span>
     </div>
   );
+}
+
+function FilaObjetoAfectado({ reclamo }: { reclamo: ReclamoDetalle }) {
+  const valor = reclamo.objeto_afectado
+    ? OBJETO_AFECTADO_LABEL[reclamo.objeto_afectado]
+    : "Sin especificar";
+  return <DatoFila etiqueta="Objeto afectado" valor={valor} icono={Shapes} />;
 }
 
 function SeccionTitulo({ icon: Icon, children }: { icon: LucideIcon; children: string }) {
@@ -439,6 +452,7 @@ function VistaGestionReclamo({ reclamo, refrescando, onRecargar, onVolver }: Vis
               reclamoId={reclamo.id}
               categoriaActual={reclamo.categoria}
               prioridadActual={reclamo.prioridad}
+              objetoActual={reclamo.objeto_afectado ?? null}
               embebido
             />
           </CardContent>
@@ -460,6 +474,7 @@ function VistaGestionReclamo({ reclamo, refrescando, onRecargar, onVolver }: Vis
               icono={Building2}
             />
             <DatoFila etiqueta="Canal" valor={CANAL_LABEL[reclamo.canal]} icono={Radio} />
+            <FilaObjetoAfectado reclamo={reclamo} />
             <DatoFila
               etiqueta="Afecta circulación"
               valor={textoCirculacion(reclamo)}
@@ -597,6 +612,7 @@ function VistaCiudadanoReclamo({
           <TarjetaDetalles>
             <DatoFila etiqueta="Barrio" valor={reclamo.barrio ?? "Sin barrio"} />
             <DatoFila etiqueta="Canal" valor={CANAL_LABEL[reclamo.canal]} icono={Radio} />
+            <FilaObjetoAfectado reclamo={reclamo} />
             <DatoFila etiqueta="Adhesiones" valor={totalAdhesiones} icono={Users} />
             <DatoFila etiqueta="Última actualización" valor={haceCuanto(reclamo.updated_at)} />
           </TarjetaDetalles>

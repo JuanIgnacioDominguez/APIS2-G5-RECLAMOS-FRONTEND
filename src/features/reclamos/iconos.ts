@@ -1,5 +1,8 @@
 import {
   Archive,
+  Armchair,
+  Bike,
+  Building2,
   CarFront,
   CheckCircle2,
   ChevronDown,
@@ -9,13 +12,18 @@ import {
   Construction,
   Droplets,
   Equal,
+  Ellipsis,
   Eye,
+  Footprints,
   Inbox,
   Landmark,
   Lightbulb,
+  PersonStanding,
+  Route,
   Shapes,
   ShieldAlert,
   Trash2,
+  TreeDeciduous,
   TreePine,
   UserCheck,
   Volume2,
@@ -23,7 +31,12 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import type { CategoriaReclamo, EstadoReclamo, PrioridadReclamo } from "@/domain/enums";
+import type {
+  CategoriaReclamo,
+  EstadoReclamo,
+  ObjetoAfectado,
+  PrioridadReclamo,
+} from "@/domain/enums";
 
 export const ICONO_CATEGORIA: Record<CategoriaReclamo, LucideIcon> = {
   ALUMBRADO: Lightbulb,
@@ -53,4 +66,15 @@ export const ICONO_PRIORIDAD: Record<PrioridadReclamo, LucideIcon> = {
   MEDIA: Equal,
   ALTA: ChevronUp,
   CRITICA: ChevronsUp,
+};
+
+export const ICONO_OBJETO_AFECTADO: Record<ObjetoAfectado, LucideIcon> = {
+  CICLOVIA: Bike,
+  CALZADA: Route,
+  VEREDA: Footprints,
+  SENDA_PEATONAL: PersonStanding,
+  PLAZA_PARQUE: TreeDeciduous,
+  MOBILIARIO_URBANO: Armchair,
+  EDIFICIO_PUBLICO: Building2,
+  OTRO: Ellipsis,
 };

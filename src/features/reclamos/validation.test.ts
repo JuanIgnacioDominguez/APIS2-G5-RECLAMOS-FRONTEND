@@ -45,6 +45,7 @@ describe("esFormularioValido", () => {
     descripcion: "Hace una semana que no funciona el alumbrado.",
     categoria: null,
     prioridad: null,
+    objetoAfectado: null,
     direccion: "",
     barrio: "",
     latitud: null,

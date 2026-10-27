@@ -1,4 +1,10 @@
-import { CategoriaReclamo, EstadoReclamo, OrigenClasificacion, PrioridadReclamo } from "./enums";
+import {
+  CategoriaReclamo,
+  EstadoReclamo,
+  ObjetoAfectado,
+  OrigenClasificacion,
+  PrioridadReclamo,
+} from "./enums";
 
 export const ESTADO_LABEL: Record<EstadoReclamo, string> = {
   [EstadoReclamo.RECIBIDO]: "Recibido",
@@ -93,6 +99,17 @@ export const CATEGORIA_LABEL: Record<CategoriaReclamo, string> = {
   [CategoriaReclamo.OTROS]: "Otros",
 };
 
+export const OBJETO_AFECTADO_LABEL: Record<ObjetoAfectado, string> = {
+  [ObjetoAfectado.CICLOVIA]: "Ciclovía / bicisenda",
+  [ObjetoAfectado.CALZADA]: "Calzada",
+  [ObjetoAfectado.VEREDA]: "Vereda",
+  [ObjetoAfectado.SENDA_PEATONAL]: "Senda peatonal",
+  [ObjetoAfectado.PLAZA_PARQUE]: "Plaza o parque",
+  [ObjetoAfectado.MOBILIARIO_URBANO]: "Mobiliario urbano (bancos, juegos, cestos)",
+  [ObjetoAfectado.EDIFICIO_PUBLICO]: "Edificio público",
+  [ObjetoAfectado.OTRO]: "Otro",
+};
+
 export const ORIGEN_LABEL: Record<OrigenClasificacion, string> = {
   [OrigenClasificacion.CIUDADANO]: "Ciudadano",
   [OrigenClasificacion.MODELO]: "IA",
@@ -109,4 +126,8 @@ export function opcionesPrioridad() {
 
 export function opcionesCategoria() {
   return Object.entries(CATEGORIA_LABEL).map(([value, label]) => ({ value, label }));
+}
+
+export function opcionesObjetoAfectado() {
+  return Object.entries(OBJETO_AFECTADO_LABEL).map(([value, label]) => ({ value, label }));
 }
