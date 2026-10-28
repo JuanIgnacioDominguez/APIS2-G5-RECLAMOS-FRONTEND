@@ -3,6 +3,7 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import * as reclamosApi from "@/api/reclamos";
+import { ApiError } from "@/api/client";
 import type { ComentarioOut } from "@/api/types";
 import { renderWithProviders } from "@/test/render";
 import { ComentariosReclamo } from "./ComentariosReclamo";
@@ -76,5 +77,27 @@ describe("ComentariosReclamo", () => {
 
     await waitFor(() => expect(onComentado).toHaveBeenCalled());
     expect(comentar).toHaveBeenCalledWith("r1", "Sigue sin resolverse");
+  });
+
+  it("ante un 429 conserva el texto, bloquea el envio y no reintenta", async () => {
+    const comentar = vi
+      .spyOn(reclamosApi, "comentar")
+      .mockRejectedValue(new ApiError(429, "Hiciste demasiados intentos.", "rate_limit"));
+    renderWithProviders(
+      <ComentariosReclamo reclamoId="r1" comentarios={[]} onComentado={vi.fn()} />,
+    );
+
+    const caja = screen.getByLabelText(/nuevo comentario/i);
+    await userEvent.type(caja, "Hola");
+    await userEvent.click(screen.getByRole("button", { name: /comentar/i }));
+
+    // Wait message shown, text kept, button disabled, no automatic retry.
+    expect(await screen.findByText(/demasiados intentos/i)).toBeInTheDocument();
+    expect(caja).toHaveValue("Hola");
+    expect(screen.getByRole("button", { name: /comentar/i })).toBeDisabled();
+
+    // Ctrl+Enter must not fire another request during the wait.
+    await userEvent.type(caja, "{Control>}{Enter}{/Control}");
+    expect(comentar).toHaveBeenCalledTimes(1);
   });
 });
