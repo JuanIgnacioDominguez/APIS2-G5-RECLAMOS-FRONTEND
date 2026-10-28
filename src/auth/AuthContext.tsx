@@ -2,7 +2,13 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { ReactNode } from "react";
 
 import { setAuthToken, setUnauthorizedHandler } from "@/api/client";
-import { loginDev } from "@/api/auth";
+import {
+  loginCiudadano as loginCiudadanoApi,
+  loginDev,
+  registrarCiudadano as registrarCiudadanoApi,
+  type RegistroCiudadano,
+  type TokenOut,
+} from "@/api/auth";
 import { citypassApi } from "@/store/citypassApi";
 import { useAppDispatch } from "@/store/hooks";
 import { rolPrincipal } from "./roles";
@@ -16,7 +22,11 @@ interface Sesion {
 interface AuthContextValue {
   usuario: Usuario | null;
   autenticado: boolean;
+  // Municipal staff (dev login / Login Federado).
   login: (usuario: string, password: string) => Promise<Usuario>;
+  // Citizens: against this backend.
+  loginCiudadano: (email: string, password: string) => Promise<Usuario>;
+  registrarCiudadano: (datos: RegistroCiudadano) => Promise<Usuario>;
   logout: () => void;
 }
 
@@ -76,9 +86,10 @@ export function AuthProvider({
     return () => setUnauthorizedHandler(null);
   }, [logout]);
 
-  const login = useCallback(
-    async (usuario: string, password: string) => {
-      const { access_token, usuario: perfil } = await loginDev(usuario, password);
+  // Every login/registration flow returns the same TokenOut shape, so they all
+  // land here: build the session, persist it and reset the server cache.
+  const aplicarSesion = useCallback(
+    ({ access_token, usuario: perfil }: TokenOut) => {
       const u: Usuario = {
         id: perfil.id,
         nombre: perfil.nombre,
@@ -99,9 +110,32 @@ export function AuthProvider({
     [dispatch],
   );
 
+  const login = useCallback(
+    async (usuario: string, password: string) => aplicarSesion(await loginDev(usuario, password)),
+    [aplicarSesion],
+  );
+
+  const loginCiudadano = useCallback(
+    async (email: string, password: string) =>
+      aplicarSesion(await loginCiudadanoApi(email, password)),
+    [aplicarSesion],
+  );
+
+  const registrarCiudadano = useCallback(
+    async (datos: RegistroCiudadano) => aplicarSesion(await registrarCiudadanoApi(datos)),
+    [aplicarSesion],
+  );
+
   const value = useMemo<AuthContextValue>(
-    () => ({ usuario: sesion?.usuario ?? null, autenticado: sesion !== null, login, logout }),
-    [sesion, login, logout],
+    () => ({
+      usuario: sesion?.usuario ?? null,
+      autenticado: sesion !== null,
+      login,
+      loginCiudadano,
+      registrarCiudadano,
+      logout,
+    }),
+    [sesion, login, loginCiudadano, registrarCiudadano, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
