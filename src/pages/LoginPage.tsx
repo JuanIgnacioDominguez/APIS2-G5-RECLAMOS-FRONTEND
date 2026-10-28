@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 
 import { ApiError } from "@/api/client";
+import { esRateLimit } from "@/lib/erroresApi";
+import { useEsperaRateLimit } from "@/hooks/useEsperaRateLimit";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,6 +50,7 @@ export function LoginPage() {
   const [errorLogin, setErrorLogin] = useState<string | null>(null);
   const [credencialesIncorrectas, setCredencialesIncorrectas] = useState(false);
   const [sesionVencida, setSesionVencida] = useState(false);
+  const espera = useEsperaRateLimit();
 
   useEffect(() => {
     try {
@@ -61,6 +64,7 @@ export function LoginPage() {
   }, []);
 
   async function ingresar(usuarioVal: string, passwordVal: string) {
+    if (cargando || espera.enEspera) return;
     setCargando(true);
     setErrorLogin(null);
     setCredencialesIncorrectas(false);
@@ -71,7 +75,10 @@ export function LoginPage() {
     } catch (err) {
       const mensaje = err instanceof Error ? err.message : "No se pudo iniciar sesion";
       setErrorLogin(mensaje);
-      if (err instanceof ApiError && err.status === 401) {
+      if (esRateLimit(err)) {
+        // A 429 is not a credential problem: do not mark the fields as wrong.
+        espera.iniciar();
+      } else if (err instanceof ApiError && err.status === 401) {
         setCredencialesIncorrectas(true);
         toast.error("Datos incorrectos", {
           description: "Verificá tu usuario y contraseña e intentá nuevamente.",
@@ -157,7 +164,11 @@ export function LoginPage() {
                     }}
                   />
                 </div>
-                <Button type="submit" disabled={cargando} className="mt-1 w-full">
+                <Button
+                  type="submit"
+                  disabled={cargando || espera.enEspera}
+                  className="mt-1 w-full"
+                >
                   {cargando && <Loader2 className="size-4 animate-spin" />}
                   Ingresar
                 </Button>
@@ -193,7 +204,7 @@ export function LoginPage() {
                     key={c.usuario}
                     variant="secondary"
                     size="sm"
-                    disabled={cargando}
+                    disabled={cargando || espera.enEspera}
                     onClick={() => entrarDemo(c)}
                   >
                     {ROL_LABEL[c.rol]}

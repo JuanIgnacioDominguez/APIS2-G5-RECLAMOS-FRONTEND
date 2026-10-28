@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 
 import { useCrearReclamoMutation } from "@/store/citypassApi";
 import type { ReclamoCrear, ReclamoSimilar } from "@/api/types";
+import { esRateLimit } from "@/lib/erroresApi";
+import { useEsperaRateLimit } from "@/hooks/useEsperaRateLimit";
 import { ReclamoForm } from "@/features/reclamos/ReclamoForm";
 import { ReclamosSimilaresDialog } from "@/features/reclamos/ReclamosSimilares";
 import { PageHeader } from "@/components/PageHeader";
@@ -17,14 +19,19 @@ export function NuevoReclamoPage() {
   const [pendiente, setPendiente] = useState<ReclamoCrear | null>(null);
   const [buscarSimilaresMutation] = useBuscarSimilaresMutation();
   const [adherirMutation] = useAdherirMutation();
+  const esperaCrear = useEsperaRateLimit();
+  const esperaSumar = useEsperaRateLimit();
 
   async function crear(datos: ReclamoCrear) {
+    if (esperaCrear.enEspera) return;
     setLoading(true);
     try {
       const reclamo = await crearReclamo(datos).unwrap();
       toast.success("Reclamo creado", { description: "Ya podés seguir su estado." });
       navigate(`/reclamos/${reclamo.id}`);
     } catch (err) {
+      // Keep the form data; block a new create for the cooldown.
+      if (esRateLimit(err)) esperaCrear.iniciar();
       toast.error("No se pudo crear el reclamo", {
         description:
           err && typeof err === "object" && "message" in err
@@ -37,6 +44,7 @@ export function NuevoReclamoPage() {
   }
 
   async function handleSubmit(datos: ReclamoCrear) {
+    if (esperaCrear.enEspera) return;
     setLoading(true);
     let parecidos: ReclamoSimilar[] = [];
     try {
@@ -63,6 +71,7 @@ export function NuevoReclamoPage() {
   }
 
   async function sumarme(id: string) {
+    if (esperaSumar.enEspera) return;
     setLoading(true);
     try {
       const res = await adherirMutation(id).unwrap();
@@ -73,6 +82,7 @@ export function NuevoReclamoPage() {
       setPendiente(null);
       navigate(`/reclamos/${id}`);
     } catch (err) {
+      if (esRateLimit(err)) esperaSumar.iniciar();
       const desc =
         err && typeof err === "object" && "message" in err && typeof err.message === "string"
           ? err.message
@@ -97,7 +107,7 @@ export function NuevoReclamoPage() {
         descripcion="Contanos qué pasa y ayudanos a encontrarlo más rápido."
       />
 
-      <ReclamoForm onSubmit={handleSubmit} loading={loading} />
+      <ReclamoForm onSubmit={handleSubmit} loading={loading || esperaCrear.enEspera} />
 
       <ReclamosSimilaresDialog
         open={similares.length > 0}
@@ -110,7 +120,7 @@ export function NuevoReclamoPage() {
         similares={similares}
         onSumarme={sumarme}
         onCargarIgual={cargarIgual}
-        procesando={loading}
+        procesando={loading || esperaSumar.enEspera}
       />
     </div>
   );

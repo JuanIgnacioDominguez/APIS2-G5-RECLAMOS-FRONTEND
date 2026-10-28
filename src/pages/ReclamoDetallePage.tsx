@@ -24,6 +24,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { cn } from "cn";
 import type { HistorialOut, ReclamoDetalle } from "@/api/types";
 import { useAdherirMutation, useObtenerReclamoQuery } from "@/store/citypassApi";
+import { esRateLimit } from "@/lib/erroresApi";
+import { useEsperaRateLimit } from "@/hooks/useEsperaRateLimit";
 import { esIncidenteActivo } from "@/domain/circulacion";
 import { CanalOrigen } from "@/domain/enums";
 import {
@@ -637,17 +639,20 @@ export function ReclamoDetallePage() {
     refetch,
   } = useObtenerReclamoQuery(id, { skip: !id });
   const [adherirMutation, { isLoading: adhiriendo }] = useAdherirMutation();
+  const esperaAdherir = useEsperaRateLimit();
   const staff = usuario ? esStaff(usuario.rol) : false;
   const mensajeError =
     error && "message" in error && typeof error.message === "string" ? error.message : null;
 
   async function handleAdherir() {
+    if (adhiriendo || esperaAdherir.enEspera) return;
     try {
       await adherirMutation(id).unwrap();
       toast.success("Adhesión registrada", {
         description: "Gracias por sumarte a este reclamo.",
       });
     } catch (err) {
+      if (esRateLimit(err)) esperaAdherir.iniciar();
       const desc =
         err && typeof err === "object" && "message" in err && typeof err.message === "string"
           ? err.message
@@ -692,7 +697,7 @@ export function ReclamoDetallePage() {
       totalAdhesiones={totalAdhesiones}
       esPropio={esPropio}
       puedeAdherir={puedeAdherir}
-      adhiriendo={adhiriendo}
+      adhiriendo={adhiriendo || esperaAdherir.enEspera}
       refrescando={isFetching}
       onAdherir={handleAdherir}
       onRecargar={refetch}

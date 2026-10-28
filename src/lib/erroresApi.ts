@@ -11,6 +11,7 @@ const MENSAJE_POR_CODIGO: Record<string, string> = {
   // Same generic message for wrong password, unknown email or disabled account:
   // the backend does not distinguish them on purpose, and neither do we.
   credenciales_invalidas: "Email o contrasena incorrectos.",
+  rate_limit: "Hiciste demasiados intentos. Proba de nuevo en aproximadamente un minuto.",
   conflicto: "La operacion no se pudo completar por un conflicto con el estado actual.",
   interno: "Algo fallo de nuestro lado, proba de nuevo en un rato.",
   [CODIGO_RED]: "No pudimos conectar con el servidor. Revisa tu conexion e intenta de nuevo.",
@@ -38,4 +39,12 @@ export function mensajeDeError({ status, code }: DatosError): string | null {
 
 export function esErrorDeRed(code?: string, status?: number): boolean {
   return code === CODIGO_RED || status === 0;
+}
+
+// True for a 429 from the backend's rate limiting. Works for both an ApiError
+// and the plain { status, code } that RTK Query surfaces on unwrap().
+export function esRateLimit(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+  const e = err as { status?: number; code?: string };
+  return e.code === "rate_limit" || e.status === 429;
 }

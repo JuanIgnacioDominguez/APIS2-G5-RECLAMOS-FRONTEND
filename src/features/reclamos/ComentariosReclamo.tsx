@@ -4,6 +4,8 @@ import { toast } from "sonner";
 
 import { useComentarMutation } from "@/store/citypassApi";
 import type { ComentarioOut } from "@/api/types";
+import { esRateLimit } from "@/lib/erroresApi";
+import { useEsperaRateLimit } from "@/hooks/useEsperaRateLimit";
 import { useAuth } from "@/auth/AuthContext";
 import { USUARIO_SISTEMA } from "@/domain/enums";
 import { haceCuanto } from "@/lib/format";
@@ -101,16 +103,23 @@ export function ComentariosReclamo({
   const { usuario } = useAuth();
   const [texto, setTexto] = useState("");
   const [comentar, { isLoading: enviando }] = useComentarMutation();
+  const espera = useEsperaRateLimit();
 
   async function enviar() {
     const limpio = texto.trim();
-    if (!limpio) return;
+    // Guard here too: a keyboard shortcut or a duplicate event can fire before
+    // React re-renders the disabled button.
+    if (!limpio || enviando || espera.enEspera) return;
     try {
       await comentar({ id: reclamoId, texto: limpio }).unwrap();
       setTexto("");
       toast.success("Comentario publicado");
       onComentado?.();
     } catch (err) {
+      if (esRateLimit(err)) {
+        // Keep the typed text and block this action for the cooldown.
+        espera.iniciar();
+      }
       toast.error("No se pudo comentar", {
         description:
           err && typeof err === "object" && "message" in err
@@ -159,7 +168,7 @@ export function ComentariosReclamo({
           />
           <Button
             type="button"
-            disabled={!texto.trim() || enviando}
+            disabled={!texto.trim() || enviando || espera.enEspera}
             onClick={enviar}
             className="min-w-24"
           >
@@ -167,6 +176,11 @@ export function ComentariosReclamo({
             Comentar
           </Button>
         </div>
+        {espera.enEspera && (
+          <p role="status" className="text-xs text-muted-foreground">
+            Hiciste demasiados intentos. Probá de nuevo en {espera.restante}s.
+          </p>
+        )}
       </CardContent>
     </Card>
   );
