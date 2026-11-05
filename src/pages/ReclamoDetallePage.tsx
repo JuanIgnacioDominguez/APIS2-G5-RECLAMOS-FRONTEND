@@ -27,6 +27,7 @@ import { useAdherirMutation, useObtenerReclamoQuery } from "@/store/citypassApi"
 import { esRateLimit } from "@/lib/erroresApi";
 import { useEsperaRateLimit } from "@/hooks/useEsperaRateLimit";
 import { esIncidenteActivo } from "@/domain/circulacion";
+import { AvisoAlertaClimatica } from "@/features/reclamos/AlertaClimatica";
 import { CanalOrigen } from "@/domain/enums";
 import {
   ESTADO_HEX,
@@ -561,6 +562,8 @@ function VistaCiudadanoReclamo({
           />
         </div>
       </section>
+
+      {reclamo.bajo_alerta_climatica && <AvisoAlertaClimatica nivel={reclamo.alerta_nivel} />}
 
       <div className="grid items-start gap-4 lg:grid-cols-3">
         <div className="flex min-w-0 flex-col gap-4 lg:col-span-2">

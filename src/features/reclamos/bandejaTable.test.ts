@@ -26,6 +26,8 @@ function reclamo(
     titulo,
     categoria: CategoriaReclamo.BACHES,
     afecta_circulacion: true,
+    bajo_alerta_climatica: false,
+    alerta_nivel: null,
     origen_clasificacion: OrigenClasificacion.MODELO,
     prioridad: PrioridadReclamo.ALTA,
     estado,

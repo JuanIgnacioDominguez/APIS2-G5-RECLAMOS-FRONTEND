@@ -17,6 +17,17 @@ export const PrioridadReclamo = {
 } as const;
 export type PrioridadReclamo = (typeof PrioridadReclamo)[keyof typeof PrioridadReclamo];
 
+// Severity of a weather alert, as Public Spaces declares it (Avro enum: these
+// four are the only values that can arrive). Mirrors NivelCriticidad in the
+// backend; a claim under a live alert carries one of these.
+export const NivelCriticidad = {
+  BAJA: "BAJA",
+  MEDIA: "MEDIA",
+  ALTA: "ALTA",
+  CRITICA: "CRITICA",
+} as const;
+export type NivelCriticidad = (typeof NivelCriticidad)[keyof typeof NivelCriticidad];
+
 export const CategoriaReclamo = {
   ALUMBRADO: "ALUMBRADO",
   BACHES: "BACHES",

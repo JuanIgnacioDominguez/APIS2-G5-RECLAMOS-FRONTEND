@@ -23,6 +23,8 @@ function reclamo(
     prioridad: PrioridadReclamo.MEDIA,
     estado: EstadoReclamo.RECIBIDO,
     afecta_circulacion: afectaCirculacion(categoria),
+    bajo_alerta_climatica: false,
+    alerta_nivel: null,
     barrio: null,
     latitud: lat,
     longitud: lat === null ? null : -58.4,

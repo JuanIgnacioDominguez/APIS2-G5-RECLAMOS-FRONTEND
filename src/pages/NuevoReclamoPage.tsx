@@ -6,6 +6,10 @@ import { useCrearReclamoMutation } from "@/store/citypassApi";
 import type { ReclamoCrear, ReclamoSimilar } from "@/api/types";
 import { esRateLimit } from "@/lib/erroresApi";
 import { useEsperaRateLimit } from "@/hooks/useEsperaRateLimit";
+import {
+  MENSAJE_ALERTA_CLIMATICA,
+  TITULO_ALERTA_CLIMATICA,
+} from "@/features/reclamos/AlertaClimatica";
 import { ReclamoForm } from "@/features/reclamos/ReclamoForm";
 import { ReclamosSimilaresDialog } from "@/features/reclamos/ReclamosSimilares";
 import { PageHeader } from "@/components/PageHeader";
@@ -28,6 +32,9 @@ export function NuevoReclamoPage() {
     try {
       const reclamo = await crearReclamo(datos).unwrap();
       toast.success("Reclamo creado", { description: "Ya podés seguir su estado." });
+      if (reclamo.bajo_alerta_climatica) {
+        toast.warning(TITULO_ALERTA_CLIMATICA, { description: MENSAJE_ALERTA_CLIMATICA });
+      }
       navigate(`/reclamos/${reclamo.id}`);
     } catch (err) {
       // Keep the form data; block a new create for the cooldown.

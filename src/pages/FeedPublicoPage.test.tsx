@@ -34,6 +34,8 @@ function reclamo(id: string, titulo: string, barrio: string): ReclamoListado {
     titulo,
     categoria: CategoriaReclamo.ALUMBRADO,
     afecta_circulacion: false,
+    bajo_alerta_climatica: false,
+    alerta_nivel: null,
     prioridad: PrioridadReclamo.MEDIA,
     estado: EstadoReclamo.RECIBIDO,
     barrio,

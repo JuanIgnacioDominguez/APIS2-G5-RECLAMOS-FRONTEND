@@ -10,6 +10,8 @@ function reclamo(id: string, titulo: string, estado: EstadoReclamo): ReclamoResu
     titulo,
     categoria: CategoriaReclamo.OTROS,
     afecta_circulacion: false,
+    bajo_alerta_climatica: false,
+    alerta_nivel: null,
     prioridad: PrioridadReclamo.MEDIA,
     estado,
     barrio: null,

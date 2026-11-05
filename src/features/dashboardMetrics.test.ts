@@ -38,6 +38,8 @@ function reclamo(
     titulo: `Reclamo ${id}`,
     categoria,
     afecta_circulacion: afectaCirculacion(categoria),
+    bajo_alerta_climatica: false,
+    alerta_nivel: null,
     prioridad,
     estado,
     barrio: "Centro",
