@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes } from "react-router-dom";
+import * as sonner from "sonner";
 
 import * as reclamosApi from "@/api/reclamos";
 import type { ReclamoOut, ReclamoSimilar } from "@/api/types";
@@ -15,6 +16,8 @@ function similar(over: Partial<ReclamoSimilar> = {}): ReclamoSimilar {
     titulo: "Poste de luz apagado",
     categoria: CategoriaReclamo.ALUMBRADO,
     afecta_circulacion: false,
+    bajo_alerta_climatica: false,
+    alerta_nivel: null,
     prioridad: PrioridadReclamo.MEDIA,
     estado: EstadoReclamo.RECIBIDO,
     barrio: "Almagro",
@@ -72,6 +75,21 @@ describe("NuevoReclamoPage", () => {
     expect(reclamosApi.crearReclamo).toHaveBeenCalledWith(
       expect.objectContaining({ titulo: "Bache profundo" }),
     );
+  });
+
+  it("si el reclamo creado cae bajo alerta climatica, avisa con un toast", async () => {
+    const warning = vi.spyOn(sonner.toast, "warning");
+    vi.spyOn(reclamosApi, "crearReclamo").mockResolvedValue({
+      id: "nuevo-alerta",
+      bajo_alerta_climatica: true,
+      alerta_nivel: "ALTA",
+    } as ReclamoOut);
+    renderNuevo();
+
+    await completarYEnviar(user);
+
+    await waitFor(() => expect(warning).toHaveBeenCalled());
+    expect(warning.mock.calls[0][0]).toMatch(/alerta climatica/i);
   });
 
   it("si la busqueda de similares falla, crea igual (no bloquea al vecino)", async () => {

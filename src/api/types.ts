@@ -2,6 +2,7 @@ import type {
   CanalOrigen,
   CategoriaReclamo,
   EstadoReclamo,
+  NivelCriticidad,
   ObjetoAfectado,
   OrigenClasificacion,
   PrioridadReclamo,
@@ -38,6 +39,10 @@ export interface ReclamoResumen {
   // Computed by the backend from the category. The front reads it instead of
   // deriving the rule locally; see domain/circulacion.ts.
   afecta_circulacion: boolean;
+  // Weather-alert status, derived by the backend: true while the claim is in the
+  // area of a live alert; alerta_nivel is that alert's severity, else null.
+  bajo_alerta_climatica: boolean;
+  alerta_nivel: NivelCriticidad | null;
   barrio: string | null;
   latitud: number | null;
   longitud: number | null;
@@ -162,6 +167,8 @@ export interface ReclamoBandeja {
   titulo: string;
   categoria: CategoriaReclamo;
   afecta_circulacion: boolean;
+  bajo_alerta_climatica: boolean;
+  alerta_nivel: NivelCriticidad | null;
   origen_clasificacion: OrigenClasificacion;
   prioridad: PrioridadReclamo;
   estado: EstadoReclamo;

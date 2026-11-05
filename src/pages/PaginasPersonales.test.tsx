@@ -29,6 +29,8 @@ function reclamoBandeja(
     titulo: `Reclamo ${id}`,
     categoria: CategoriaReclamo.BACHES,
     afecta_circulacion: true,
+    bajo_alerta_climatica: false,
+    alerta_nivel: null,
     origen_clasificacion: origen,
     prioridad: PrioridadReclamo.MEDIA,
     estado,

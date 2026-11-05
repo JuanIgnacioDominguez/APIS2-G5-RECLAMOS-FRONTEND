@@ -17,6 +17,8 @@ function reclamo(id: string, titulo: string, esPropio: boolean): ReclamoListado 
     titulo,
     categoria: CategoriaReclamo.BACHES,
     afecta_circulacion: true,
+    bajo_alerta_climatica: false,
+    alerta_nivel: null,
     prioridad: PrioridadReclamo.MEDIA,
     estado: EstadoReclamo.RECIBIDO,
     barrio: "Centro",

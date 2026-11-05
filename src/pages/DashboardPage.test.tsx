@@ -35,6 +35,8 @@ function reclamo(id: string, cambios: Partial<ReclamoResumen> = {}): ReclamoList
     titulo: `Reclamo ${id}`,
     categoria: CategoriaReclamo.ALUMBRADO,
     afecta_circulacion: false,
+    bajo_alerta_climatica: false,
+    alerta_nivel: null,
     prioridad: PrioridadReclamo.MEDIA,
     estado: EstadoReclamo.RECIBIDO,
     barrio: "Centro",

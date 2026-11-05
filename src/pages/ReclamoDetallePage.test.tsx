@@ -9,6 +9,7 @@ import {
   CanalOrigen,
   CategoriaReclamo,
   EstadoReclamo,
+  NivelCriticidad,
   OrigenClasificacion,
   PrioridadReclamo,
 } from "@/domain/enums";
@@ -25,6 +26,8 @@ const detalle: ReclamoDetalle = {
   prioridad: PrioridadReclamo.ALTA,
   estado: EstadoReclamo.EN_PROCESO,
   afecta_circulacion: false,
+  bajo_alerta_climatica: false,
+  alerta_nivel: null,
   origen_clasificacion: OrigenClasificacion.MODELO,
   confianza_clasificacion: 0.9,
   objeto_afectado: null,
@@ -149,6 +152,8 @@ describe("ReclamoDetallePage", () => {
       ...detalle,
       categoria: CategoriaReclamo.TRANSITO,
       afecta_circulacion: true,
+      bajo_alerta_climatica: false,
+      alerta_nivel: null,
       canal: CanalOrigen.EVENTO,
     });
     renderDetalle(OPERADOR);
@@ -169,6 +174,23 @@ describe("ReclamoDetallePage", () => {
     expect(screen.getByText("No")).toBeInTheDocument();
   });
 
+  it("al ciudadano le avisa cuando el reclamo esta bajo alerta climatica", async () => {
+    vi.spyOn(reclamosApi, "obtenerReclamo").mockResolvedValue({
+      ...detalle,
+      bajo_alerta_climatica: true,
+      alerta_nivel: NivelCriticidad.ALTA,
+    });
+    renderDetalle(CIUDADANO);
+
+    expect(await screen.findByRole("note", { name: /alerta climatica/i })).toBeInTheDocument();
+  });
+
+  it("sin alerta climatica no muestra el aviso", async () => {
+    renderDetalle(CIUDADANO);
+    await screen.findByText(detalle.titulo);
+    expect(screen.queryByRole("note", { name: /alerta climatica/i })).not.toBeInTheDocument();
+  });
+
   it("muestra el objeto afectado traducido o 'Sin especificar' si no hay", async () => {
     vi.spyOn(reclamosApi, "obtenerReclamo").mockResolvedValue({
       ...detalle,
@@ -186,6 +208,8 @@ describe("ReclamoDetallePage", () => {
       ...detalle,
       categoria: CategoriaReclamo.BACHES,
       afecta_circulacion: true,
+      bajo_alerta_climatica: false,
+      alerta_nivel: null,
       estado: EstadoReclamo.RESUELTO,
     });
     renderDetalle(OPERADOR);
@@ -224,6 +248,8 @@ describe("ReclamoDetallePage", () => {
       titulo: "Bache en la misma esquina",
       categoria: CategoriaReclamo.BACHES,
       afecta_circulacion: true,
+      bajo_alerta_climatica: false,
+      alerta_nivel: null,
       prioridad: PrioridadReclamo.MEDIA,
       estado: EstadoReclamo.RECIBIDO,
       barrio: "Centro",

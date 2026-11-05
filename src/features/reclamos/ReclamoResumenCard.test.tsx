@@ -13,6 +13,8 @@ const reclamo: ReclamoResumen = {
   prioridad: PrioridadReclamo.ALTA,
   estado: EstadoReclamo.EN_REVISION,
   afecta_circulacion: false,
+  bajo_alerta_climatica: false,
+  alerta_nivel: null,
   barrio: "Centro",
   latitud: null,
   longitud: null,
