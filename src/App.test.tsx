@@ -27,7 +27,9 @@ vi.mock("@/api/reclamos", async (importOriginal) => {
   };
 });
 
-const esperaRuta = { timeout: 3000 };
+// Lazy routes compile on first use; under coverage on a busy runner that can
+// take several seconds, so the wait leaves room below the 15 s test timeout.
+const esperaRuta = { timeout: 10000 };
 
 describe("App", () => {
   it("muestra el login en /login", async () => {

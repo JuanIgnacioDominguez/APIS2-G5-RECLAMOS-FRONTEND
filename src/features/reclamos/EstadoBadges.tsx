@@ -8,6 +8,7 @@ import {
   MoreHorizontal,
   ShieldAlert,
   Sparkles,
+  TrafficCone,
   Trash2,
   Trees,
   User,
@@ -152,6 +153,30 @@ export function AutoriaBadge({ mio }: { mio: boolean }) {
       <Icono className="size-3" />
       {mio ? "Tuyo" : "De un vecino"}
     </span>
+  );
+}
+
+export function CirculacionBadge({ compacto = false }: { compacto?: boolean }) {
+  if (compacto) {
+    return (
+      <span
+        role="img"
+        aria-label="Afecta la circulación"
+        title="Afecta la circulación"
+        className="inline-grid size-5 shrink-0 place-items-center rounded-md bg-warning-surface text-warning ring-1 ring-warning/30"
+      >
+        <TrafficCone className="size-3" strokeWidth={2.4} />
+      </span>
+    );
+  }
+  return (
+    <Badge
+      variant="outline"
+      className="gap-1 border-warning/30 bg-warning-surface font-semibold text-warning"
+    >
+      <TrafficCone className="size-3" strokeWidth={2.4} />
+      Afecta circulación
+    </Badge>
   );
 }
 

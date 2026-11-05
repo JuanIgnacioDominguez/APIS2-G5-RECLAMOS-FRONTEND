@@ -12,6 +12,9 @@ const reclamo: ReclamoResumen = {
   categoria: CategoriaReclamo.ALUMBRADO,
   prioridad: PrioridadReclamo.ALTA,
   estado: EstadoReclamo.EN_REVISION,
+  afecta_circulacion: false,
+  bajo_alerta_climatica: false,
+  alerta_nivel: null,
   barrio: "Centro",
   latitud: null,
   longitud: null,
@@ -34,5 +37,34 @@ describe("ReclamoCard", () => {
       <ReclamoCard reclamo={{ ...reclamo, barrio: null, adhesiones_count: 0 }} />,
     );
     expect(screen.getByText("Sin barrio")).toBeInTheDocument();
+  });
+
+  it("marca un bache abierto como incidente de circulacion", () => {
+    renderWithProviders(
+      <ReclamoCard
+        reclamo={{ ...reclamo, categoria: CategoriaReclamo.BACHES, afecta_circulacion: true }}
+      />,
+    );
+    expect(screen.getByRole("img", { name: "Afecta la circulación" })).toBeInTheDocument();
+  });
+
+  it("no marca un bache ya resuelto ni un reclamo de alumbrado", () => {
+    const { unmount } = renderWithProviders(
+      <ReclamoCard
+        reclamo={{
+          ...reclamo,
+          categoria: CategoriaReclamo.BACHES,
+          afecta_circulacion: true,
+          bajo_alerta_climatica: false,
+          alerta_nivel: null,
+          estado: EstadoReclamo.RESUELTO,
+        }}
+      />,
+    );
+    expect(screen.queryByRole("img", { name: "Afecta la circulación" })).not.toBeInTheDocument();
+    unmount();
+
+    renderWithProviders(<ReclamoCard reclamo={reclamo} />);
+    expect(screen.queryByRole("img", { name: "Afecta la circulación" })).not.toBeInTheDocument();
   });
 });

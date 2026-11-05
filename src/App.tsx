@@ -6,6 +6,12 @@ import { RequireAuth } from "@/auth/RequireAuth";
 import { useAuth } from "@/auth/AuthContext";
 import { homePorRol } from "@/config/navigation";
 
+const LoginVecinoPage = lazy(() =>
+  import("@/pages/LoginVecinoPage").then((module) => ({ default: module.LoginVecinoPage })),
+);
+const RegistroPage = lazy(() =>
+  import("@/pages/RegistroPage").then((module) => ({ default: module.RegistroPage })),
+);
 const LoginPage = lazy(() =>
   import("@/pages/LoginPage").then((module) => ({ default: module.LoginPage })),
 );
@@ -72,7 +78,9 @@ function InicioSegunRol() {
 export function App() {
   return (
     <Routes>
-      <Route path="/login" element={conSuspense(<LoginPage />)} />
+      <Route path="/login" element={conSuspense(<LoginVecinoPage />)} />
+      <Route path="/registro" element={conSuspense(<RegistroPage />)} />
+      <Route path="/empleados" element={conSuspense(<LoginPage />)} />
       <Route element={<RequireAuth />}>
         <Route element={<AppLayout />}>
           <Route index element={<InicioSegunRol />} />

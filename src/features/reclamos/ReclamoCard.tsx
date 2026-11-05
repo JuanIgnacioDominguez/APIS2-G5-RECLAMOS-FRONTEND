@@ -3,10 +3,18 @@ import { ArrowUpRight, MapPin, Users } from "lucide-react";
 
 import type { ReclamoResumen } from "@/api/types";
 import type { Miga } from "@/config/navigation";
+import { esIncidenteActivo } from "@/domain/circulacion";
+import { BadgeAlertaClimatica } from "./AlertaClimatica";
 import { haceCuanto, idCorto } from "@/lib/format";
 import { cn } from "cn";
 import { Card, CardContent } from "@/components/ui/card";
-import { AutoriaBadge, CategoriaLinea, EstadoBadge, PrioridadLinea } from "./EstadoBadges";
+import {
+  AutoriaBadge,
+  CategoriaLinea,
+  CirculacionBadge,
+  EstadoBadge,
+  PrioridadLinea,
+} from "./EstadoBadges";
 
 export function ReclamoCard({
   reclamo,
@@ -46,6 +54,8 @@ export function ReclamoCard({
               |
             </span>
             <PrioridadLinea prioridad={reclamo.prioridad} />
+            {esIncidenteActivo(reclamo) && <CirculacionBadge compacto />}
+            {reclamo.bajo_alerta_climatica && <BadgeAlertaClimatica nivel={reclamo.alerta_nivel} />}
           </div>
 
           <div className="mt-auto flex flex-col gap-2 border-t pt-3 text-foreground/70">

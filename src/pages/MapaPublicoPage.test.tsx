@@ -6,6 +6,7 @@ import userEvent from "@testing-library/user-event";
 import * as reclamosApi from "@/api/reclamos";
 import type { Page, ReclamoListado } from "@/api/types";
 import { CategoriaReclamo, EstadoReclamo, PrioridadReclamo } from "@/domain/enums";
+import { afectaCirculacion } from "@/domain/circulacion";
 import { renderWithProviders } from "@/test/render";
 import { MapaPublicoPage } from "./MapaPublicoPage";
 
@@ -21,6 +22,9 @@ function reclamo(
     categoria,
     prioridad: PrioridadReclamo.MEDIA,
     estado: EstadoReclamo.RECIBIDO,
+    afecta_circulacion: afectaCirculacion(categoria),
+    bajo_alerta_climatica: false,
+    alerta_nivel: null,
     barrio: null,
     latitud: lat,
     longitud: lat === null ? null : -58.4,
@@ -74,6 +78,34 @@ describe("MapaPublicoPage", () => {
 
     await waitFor(() => expect(screen.queryByText("Bache")).not.toBeInTheDocument());
     expect(screen.getByText("Basural")).toBeInTheDocument();
+    expect(
+      screen.getByText((_, el) => el?.textContent === "1 reclamo en el mapa"),
+    ).toBeInTheDocument();
+  });
+
+  it("filtra los incidentes abiertos que afectan la circulacion", async () => {
+    vi.spyOn(reclamosApi, "listarReclamos").mockResolvedValue(
+      page([
+        reclamo("1", "Bache en la avenida", CategoriaReclamo.BACHES, -34.6),
+        reclamo("2", "Luminaria apagada", CategoriaReclamo.ALUMBRADO, -34.61),
+        {
+          ...reclamo("3", "Arbol ya retirado", CategoriaReclamo.ARBOLADO, -34.62),
+          estado: EstadoReclamo.RESUELTO,
+        },
+      ]),
+    );
+
+    renderWithProviders(<MapaPublicoPage />);
+    await screen.findByText("Bache en la avenida");
+
+    const filtro = screen.getByRole("button", { name: /solo los que afectan la circulación/i });
+    expect(filtro).toHaveAttribute("aria-pressed", "false");
+    await userEvent.click(filtro);
+
+    expect(filtro).toHaveAttribute("aria-pressed", "true");
+    await waitFor(() => expect(screen.queryByText("Luminaria apagada")).not.toBeInTheDocument());
+    expect(screen.getByText("Bache en la avenida")).toBeInTheDocument();
+    expect(screen.queryByText("Arbol ya retirado")).not.toBeInTheDocument();
     expect(
       screen.getByText((_, el) => el?.textContent === "1 reclamo en el mapa"),
     ).toBeInTheDocument();

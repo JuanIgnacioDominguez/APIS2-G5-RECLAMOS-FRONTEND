@@ -17,6 +17,17 @@ export const PrioridadReclamo = {
 } as const;
 export type PrioridadReclamo = (typeof PrioridadReclamo)[keyof typeof PrioridadReclamo];
 
+// Severity of a weather alert, as Public Spaces declares it (Avro enum: these
+// four are the only values that can arrive). Mirrors NivelCriticidad in the
+// backend; a claim under a live alert carries one of these.
+export const NivelCriticidad = {
+  BAJA: "BAJA",
+  MEDIA: "MEDIA",
+  ALTA: "ALTA",
+  CRITICA: "CRITICA",
+} as const;
+export type NivelCriticidad = (typeof NivelCriticidad)[keyof typeof NivelCriticidad];
+
 export const CategoriaReclamo = {
   ALUMBRADO: "ALUMBRADO",
   BACHES: "BACHES",
@@ -30,6 +41,19 @@ export const CategoriaReclamo = {
   OTROS: "OTROS",
 } as const;
 export type CategoriaReclamo = (typeof CategoriaReclamo)[keyof typeof CategoriaReclamo];
+
+// What the claim happened to, orthogonal to the category (what happened).
+export const ObjetoAfectado = {
+  CICLOVIA: "CICLOVIA",
+  CALZADA: "CALZADA",
+  VEREDA: "VEREDA",
+  SENDA_PEATONAL: "SENDA_PEATONAL",
+  PLAZA_PARQUE: "PLAZA_PARQUE",
+  MOBILIARIO_URBANO: "MOBILIARIO_URBANO",
+  EDIFICIO_PUBLICO: "EDIFICIO_PUBLICO",
+  OTRO: "OTRO",
+} as const;
+export type ObjetoAfectado = (typeof ObjetoAfectado)[keyof typeof ObjetoAfectado];
 
 export const CanalOrigen = {
   APP: "APP",
@@ -56,6 +80,16 @@ export const ESTADOS_RESUELTOS: ReadonlySet<EstadoReclamo> = new Set([
   EstadoReclamo.RESUELTO,
   EstadoReclamo.CERRADO,
 ]);
+
+// Mirror of CATEGORIAS_QUE_AFECTAN_CIRCULACION in the backend (CU-INT-01).
+export const CATEGORIAS_QUE_AFECTAN_CIRCULACION: ReadonlySet<CategoriaReclamo> = new Set([
+  CategoriaReclamo.TRANSITO,
+  CategoriaReclamo.BACHES,
+  CategoriaReclamo.ARBOLADO,
+]);
+
+// Author id the backend uses for what the module does on its own.
+export const USUARIO_SISTEMA = "sistema";
 
 export const ESTADOS = Object.values(EstadoReclamo);
 export const PRIORIDADES = Object.values(PrioridadReclamo);

@@ -46,10 +46,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { esIncidenteActivo } from "@/domain/circulacion";
 import { EstadoReclamo, OrigenClasificacion } from "@/domain/enums";
 import { ESTADO_LABEL } from "@/domain/labels";
 import { haceCuanto, idCorto } from "@/lib/format";
-import { CategoriaLinea, EstadoBadge, IaBadge, PrioridadLinea } from "./EstadoBadges";
+import {
+  CategoriaLinea,
+  CirculacionBadge,
+  EstadoBadge,
+  IaBadge,
+  PrioridadLinea,
+} from "./EstadoBadges";
 import { ICONO_ESTADO } from "./iconos";
 import {
   crearCsvBandeja,
@@ -471,6 +478,7 @@ export function TablaBandeja({ filas, loading, error, onRefresh }: TablaBandejaP
                           {reclamo.origen_clasificacion === OrigenClasificacion.MODELO && (
                             <IaBadge />
                           )}
+                          {esIncidenteActivo(reclamo) && <CirculacionBadge compacto />}
                         </div>
                       </TableCell>
                       <TableCell className="w-32 py-3.5">

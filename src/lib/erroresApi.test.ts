@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { CODIGO_RED, esErrorDeRed, mensajeDeError } from "./erroresApi";
+import { CODIGO_RED, esErrorDeRed, esRateLimit, mensajeDeError } from "./erroresApi";
 
 describe("mensajeDeError", () => {
   it("mapea los codigos de dominio del backend a mensajes claros", () => {
@@ -38,5 +38,23 @@ describe("esErrorDeRed", () => {
     expect(esErrorDeRed(CODIGO_RED)).toBe(true);
     expect(esErrorDeRed(undefined, 0)).toBe(true);
     expect(esErrorDeRed("interno", 500)).toBe(false);
+  });
+});
+
+describe("rate limit", () => {
+  it("tiene un mensaje propio para el code rate_limit", () => {
+    expect(mensajeDeError({ status: 429, code: "rate_limit" })).toMatch(/demasiados intentos/i);
+  });
+
+  it("esRateLimit reconoce el code y el status 429", () => {
+    expect(esRateLimit({ status: 429, code: "rate_limit" })).toBe(true);
+    expect(esRateLimit({ status: 429 })).toBe(true);
+    expect(esRateLimit({ code: "rate_limit" })).toBe(true);
+  });
+
+  it("esRateLimit no confunde otros errores", () => {
+    expect(esRateLimit({ status: 401, code: "credenciales_invalidas" })).toBe(false);
+    expect(esRateLimit(null)).toBe(false);
+    expect(esRateLimit("boom")).toBe(false);
   });
 });

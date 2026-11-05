@@ -85,4 +85,22 @@ describe("LoginPage", () => {
     expect(await screen.findByText("bandeja de backoffice")).toBeInTheDocument();
     expect(authApi.loginDev).toHaveBeenCalledWith("operador1", "operador1");
   });
+
+  it("ante un 429 muestra la espera sin marcar credenciales incorrectas", async () => {
+    vi.spyOn(authApi, "loginDev").mockRejectedValue(
+      new ApiError(429, "Hiciste demasiados intentos.", "rate_limit"),
+    );
+    renderLogin();
+
+    const usuarioInput = screen.getByLabelText(/usuario/i);
+    await userEvent.type(usuarioInput, "operador1");
+    await userEvent.type(screen.getByLabelText(/contrasena/i), "operador1");
+    await userEvent.click(screen.getByRole("button", { name: /^ingresar$/i }));
+
+    expect(await screen.findByText(/demasiados intentos/i)).toBeInTheDocument();
+    // A 429 is not a credential error and the form is blocked during the wait.
+    expect(usuarioInput).not.toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByRole("button", { name: /^ingresar$/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Operador" })).toBeDisabled();
+  });
 });

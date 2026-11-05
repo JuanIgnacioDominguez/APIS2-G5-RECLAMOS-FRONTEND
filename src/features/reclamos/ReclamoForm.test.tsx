@@ -79,5 +79,43 @@ describe("ReclamoForm", () => {
 
     // La categoria del select queda seteada al valor sugerido.
     expect(screen.getByRole("combobox", { name: /categoría/i })).toHaveTextContent("Alumbrado");
+    expect(screen.queryByText("Afecta la circulación")).not.toBeInTheDocument();
+  });
+
+  it("pide marcar el punto exacto cuando la categoria corta la circulacion", async () => {
+    renderWithProviders(<ReclamoForm onSubmit={vi.fn()} />);
+    expect(screen.queryByText("Afecta la circulación")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("combobox", { name: /categoría/i }));
+    await user.click(await screen.findByRole("option", { name: "Baches" }));
+
+    expect(screen.getByText("Afecta la circulación")).toBeInTheDocument();
+    expect(screen.getByText(/marcá el punto exacto en el mapa/i)).toBeInTheDocument();
+  });
+
+  it("manda null como objeto_afectado cuando el vecino no eligio ninguno", async () => {
+    const onSubmit = vi.fn();
+    renderWithProviders(<ReclamoForm onSubmit={onSubmit} />);
+
+    await user.type(screen.getByLabelText(/título/i), TITULO);
+    await user.type(screen.getByLabelText(/descripción/i), DESCRIPCION);
+    await user.click(screen.getByRole("button", { name: /enviar reclamo/i }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ objeto_afectado: null }));
+  });
+
+  it("manda el objeto afectado elegido por el vecino", async () => {
+    const onSubmit = vi.fn();
+    renderWithProviders(<ReclamoForm onSubmit={onSubmit} />);
+
+    await user.type(screen.getByLabelText(/título/i), TITULO);
+    await user.type(screen.getByLabelText(/descripción/i), DESCRIPCION);
+    await user.click(screen.getByRole("combobox", { name: /objeto afectado/i }));
+    await user.click(await screen.findByRole("option", { name: /ciclovía/i }));
+    await user.click(screen.getByRole("button", { name: /enviar reclamo/i }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ objeto_afectado: "CICLOVIA" }));
   });
 });

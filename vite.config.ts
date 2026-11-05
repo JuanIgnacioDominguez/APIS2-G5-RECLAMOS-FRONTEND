@@ -16,6 +16,10 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
     css: true,
+    // .env.local points at the deployed backend; tests must never reach it. A 401
+    // from a leaked request fired the global logout of whatever test ran next.
+    // `.invalid` never resolves (RFC 2606), so an unmocked call fails fast.
+    env: { VITE_API_BASE_URL: "http://api.invalid/api/v1" },
     // Headroom over vitest's 5s default: the form tests type long strings and a
     // loaded CI runner can drift past 5s. Real waits are bounded by findBy timeouts.
     testTimeout: 15000,

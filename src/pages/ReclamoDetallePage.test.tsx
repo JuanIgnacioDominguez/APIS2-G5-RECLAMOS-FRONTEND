@@ -9,6 +9,7 @@ import {
   CanalOrigen,
   CategoriaReclamo,
   EstadoReclamo,
+  NivelCriticidad,
   OrigenClasificacion,
   PrioridadReclamo,
 } from "@/domain/enums";
@@ -24,8 +25,12 @@ const detalle: ReclamoDetalle = {
   categoria: CategoriaReclamo.ALUMBRADO,
   prioridad: PrioridadReclamo.ALTA,
   estado: EstadoReclamo.EN_PROCESO,
+  afecta_circulacion: false,
+  bajo_alerta_climatica: false,
+  alerta_nivel: null,
   origen_clasificacion: OrigenClasificacion.MODELO,
   confianza_clasificacion: 0.9,
+  objeto_afectado: null,
   canal: CanalOrigen.APP,
   direccion: "Rivadavia 800",
   barrio: "Centro",
@@ -142,6 +147,77 @@ describe("ReclamoDetallePage", () => {
     },
   );
 
+  it("al staff le indica si el reclamo afecta la circulacion y de donde vino", async () => {
+    vi.spyOn(reclamosApi, "obtenerReclamo").mockResolvedValue({
+      ...detalle,
+      categoria: CategoriaReclamo.TRANSITO,
+      afecta_circulacion: true,
+      bajo_alerta_climatica: false,
+      alerta_nivel: null,
+      canal: CanalOrigen.EVENTO,
+    });
+    renderDetalle(OPERADOR);
+    await screen.findByRole("heading", { name: `Reclamo #${detalle.id.slice(0, 8)}` });
+
+    // Header badge plus the row label in "Detalles".
+    expect(screen.getAllByText("Afecta circulación")).toHaveLength(2);
+    expect(screen.getByText("Sí, se comparte")).toBeInTheDocument();
+    expect(screen.getAllByText("Automático (CityPass+)").length).toBeGreaterThan(0);
+  });
+
+  it("un reclamo que no corta la circulacion no lleva la marca", async () => {
+    renderDetalle(OPERADOR);
+    await screen.findByRole("heading", { name: `Reclamo #${detalle.id.slice(0, 8)}` });
+
+    // Only the row label remains; the header badge is gone.
+    expect(screen.getAllByText("Afecta circulación")).toHaveLength(1);
+    expect(screen.getByText("No")).toBeInTheDocument();
+  });
+
+  it("al ciudadano le avisa cuando el reclamo esta bajo alerta climatica", async () => {
+    vi.spyOn(reclamosApi, "obtenerReclamo").mockResolvedValue({
+      ...detalle,
+      bajo_alerta_climatica: true,
+      alerta_nivel: NivelCriticidad.ALTA,
+    });
+    renderDetalle(CIUDADANO);
+
+    expect(await screen.findByRole("note", { name: /alerta climatica/i })).toBeInTheDocument();
+  });
+
+  it("sin alerta climatica no muestra el aviso", async () => {
+    renderDetalle(CIUDADANO);
+    await screen.findByText(detalle.titulo);
+    expect(screen.queryByRole("note", { name: /alerta climatica/i })).not.toBeInTheDocument();
+  });
+
+  it("muestra el objeto afectado traducido o 'Sin especificar' si no hay", async () => {
+    vi.spyOn(reclamosApi, "obtenerReclamo").mockResolvedValue({
+      ...detalle,
+      objeto_afectado: "CICLOVIA",
+    });
+    renderDetalle(OPERADOR);
+    await screen.findByRole("heading", { name: `Reclamo #${detalle.id.slice(0, 8)}` });
+
+    // "Ciclovía / bicisenda" appears in the Clasificación select and the Detalles row.
+    expect(screen.getAllByText(/Ciclovía/).length).toBeGreaterThan(0);
+  });
+
+  it("un bache resuelto deja de compartirse", async () => {
+    vi.spyOn(reclamosApi, "obtenerReclamo").mockResolvedValue({
+      ...detalle,
+      categoria: CategoriaReclamo.BACHES,
+      afecta_circulacion: true,
+      bajo_alerta_climatica: false,
+      alerta_nivel: null,
+      estado: EstadoReclamo.RESUELTO,
+    });
+    renderDetalle(OPERADOR);
+    await screen.findByRole("heading", { name: `Reclamo #${detalle.id.slice(0, 8)}` });
+
+    expect(screen.getByText("Sí, ya no se comparte")).toBeInTheDocument();
+  });
+
   it("muestra las fotos adjuntas con una acción para abrirlas", async () => {
     const foto = "https://cdn.citypass.local/evidencias/IMG_20260923_2054.jpg";
     vi.spyOn(reclamosApi, "obtenerReclamo").mockResolvedValue({
@@ -171,6 +247,9 @@ describe("ReclamoDetallePage", () => {
       id: "dup-1",
       titulo: "Bache en la misma esquina",
       categoria: CategoriaReclamo.BACHES,
+      afecta_circulacion: true,
+      bajo_alerta_climatica: false,
+      alerta_nivel: null,
       prioridad: PrioridadReclamo.MEDIA,
       estado: EstadoReclamo.RECIBIDO,
       barrio: "Centro",

@@ -419,10 +419,17 @@ function pasosMapa(): PasoTour[] {
       lado: "bottom",
     },
     {
+      selector: '[data-tour="mapa-circulacion"]',
+      titulo: "Incidentes en la ruta",
+      descripcion:
+        "Dejá solo los reclamos abiertos que cortan o demoran la circulación: baches, tránsito y árboles caídos. Son los mismos que CityPass+ comparte con Movilidad para recomendar recorridos y con Espacios Públicos para avisar a quienes van a un evento cercano.",
+      lado: "bottom",
+    },
+    {
       selector: '[data-tour="mapa-leyenda"]',
       titulo: "Leyenda",
       descripcion:
-        "Traduce los colores del mapa: cada estado tiene el suyo (recibido, en revisión, asignado, en proceso, resuelto, rechazado, cerrado). Si sos ciudadano, tus propios reclamos se marcan con un anillo dorado para que los distingas de un vistazo.",
+        "Traduce los colores del mapa: cada estado tiene el suyo (recibido, en revisión, asignado, en proceso, resuelto, rechazado, cerrado). Los incidentes que afectan la circulación llevan un anillo ámbar y, si sos ciudadano, tus propios reclamos uno verde.",
       lado: "top",
     },
     SIDEBAR_NAV,

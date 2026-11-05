@@ -3,6 +3,7 @@ export interface ReclamoFormValues {
   descripcion: string;
   categoria: string | null;
   prioridad: string | null;
+  objetoAfectado: string | null;
   direccion: string;
   barrio: string;
   latitud: number | null;

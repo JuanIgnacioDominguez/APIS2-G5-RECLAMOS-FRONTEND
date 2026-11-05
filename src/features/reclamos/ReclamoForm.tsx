@@ -9,12 +9,14 @@ import {
   ShieldCheck,
   Sparkles,
   Tags,
+  TrafficCone,
   type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import type { ReclamoCrear } from "@/api/types";
-import type { CategoriaReclamo, PrioridadReclamo } from "@/domain/enums";
+import { afectaCirculacion } from "@/domain/circulacion";
+import type { CategoriaReclamo, ObjetoAfectado, PrioridadReclamo } from "@/domain/enums";
 import {
   CATEGORIA_HEX,
   CATEGORIA_LABEL,
@@ -58,6 +60,7 @@ import {
 } from "@/features/mapa/geocoding";
 import { esFormularioValido, reclamoValidators, type ReclamoFormValues } from "./validation";
 import { ICONO_CATEGORIA, ICONO_PRIORIDAD } from "./iconos";
+import { SelectObjetoAfectado } from "./SelectObjetoAfectado";
 import { useSugerenciaClasificacion } from "./useSugerencia";
 
 const AUTO = "auto";
@@ -72,6 +75,7 @@ const VALORES_INICIALES: ReclamoFormValues = {
   descripcion: "",
   categoria: null,
   prioridad: null,
+  objetoAfectado: null,
   direccion: "",
   barrio: "",
   latitud: null,
@@ -106,6 +110,9 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
   };
 
   const { sugerencia } = useSugerenciaClasificacion(values.titulo, values.descripcion);
+  const categoriaEfectiva =
+    (values.categoria as CategoriaReclamo | null) ?? sugerencia?.categoria ?? null;
+  const cortaCirculacion = categoriaEfectiva !== null && afectaCirculacion(categoriaEfectiva);
   const [ubicando, setUbicando] = useState(false);
   const [errorUbicacion, setErrorUbicacion] = useState<string | null>(null);
   const [buscandoDir, setBuscandoDir] = useState(false);
@@ -235,6 +242,7 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
       descripcion: values.descripcion.trim(),
       categoria: (values.categoria as CategoriaReclamo | null) ?? null,
       prioridad: (values.prioridad as PrioridadReclamo | null) ?? null,
+      objeto_afectado: (values.objetoAfectado as ObjetoAfectado | null) ?? null,
       direccion: values.direccion.trim() || null,
       barrio: values.barrio.trim() || null,
       latitud: values.latitud,
@@ -512,6 +520,34 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
                   </Select>
                 </div>
               </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="objeto-afectado">
+                  Objeto afectado{" "}
+                  <span className="font-normal text-muted-foreground">(opcional)</span>
+                </Label>
+                <SelectObjetoAfectado
+                  id="objeto-afectado"
+                  valor={values.objetoAfectado as ObjetoAfectado | null}
+                  onCambio={(v) => setValue("objetoAfectado", v)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  El espacio donde está el problema: una ciclovía, una vereda, una plaza.
+                </p>
+              </div>
+
+              {cortaCirculacion && (
+                <Alert className="border-warning/30 bg-warning-surface p-3">
+                  <TrafficCone className="size-4 text-warning" />
+                  <AlertTitle className="font-semibold text-warning">
+                    Afecta la circulación
+                  </AlertTitle>
+                  <AlertDescription>
+                    Marcá el punto exacto en el mapa: mientras siga abierto, se comparte con
+                    Movilidad y Espacios Públicos para avisar a quienes pasen por la zona.
+                  </AlertDescription>
+                </Alert>
+              )}
             </CardContent>
           </Card>
         </div>

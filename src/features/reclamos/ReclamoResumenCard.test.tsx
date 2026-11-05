@@ -12,6 +12,9 @@ const reclamo: ReclamoResumen = {
   categoria: CategoriaReclamo.ALUMBRADO,
   prioridad: PrioridadReclamo.ALTA,
   estado: EstadoReclamo.EN_REVISION,
+  afecta_circulacion: false,
+  bajo_alerta_climatica: false,
+  alerta_nivel: null,
   barrio: "Centro",
   latitud: null,
   longitud: null,
@@ -34,5 +37,18 @@ describe("ReclamoResumenCard", () => {
     expect(screen.getByText("Tuyo")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: reclamo.titulo })).not.toBeInTheDocument();
     expect(screen.queryByText("#a1b2c3d4")).not.toBeInTheDocument();
+    expect(screen.queryByRole("note")).not.toBeInTheDocument();
+  });
+
+  it("avisa que un arbol caido abierto se comparte con otros modulos", () => {
+    renderWithProviders(
+      <ReclamoResumenCard
+        reclamo={{ ...reclamo, categoria: CategoriaReclamo.ARBOLADO, afecta_circulacion: true }}
+      />,
+    );
+
+    const aviso = screen.getByRole("note");
+    expect(aviso).toHaveTextContent("Afecta la circulación");
+    expect(aviso).toHaveTextContent(/Movilidad y Espacios Públicos/);
   });
 });

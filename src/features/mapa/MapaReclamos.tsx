@@ -1,15 +1,18 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, TrafficCone } from "lucide-react";
 import { CircleMarker, MapContainer, Popup, TileLayer, ZoomControl, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
+import { esIncidenteActivo } from "@/domain/circulacion";
 import { CATEGORIA_LABEL, ESTADO_HEX, ESTADO_LABEL } from "@/domain/labels";
 import { CategoriaIcono } from "@/features/reclamos/EstadoBadges";
 import { CENTRO_DEFAULT, type ReclamoUbicado } from "./coords";
 import { TILES } from "./tiles";
 
 const MIO_ANILLO = "#22c55e";
+// Leaflet draws on canvas, so the ring needs a concrete color, not a CSS token.
+export const INCIDENTE_ANILLO = "#d97706";
 
 function AjustarVista({ reclamos }: { reclamos: ReclamoUbicado[] }) {
   const map = useMap();
@@ -72,14 +75,16 @@ export function MapaReclamos({
       />
       {reclamos.map((r) => {
         const mio = misIds?.has(r.id) ?? false;
+        const incidente = esIncidenteActivo(r);
+        const destacado = mio || incidente;
         return (
           <CircleMarker
             key={r.id}
             center={[r.latitud, r.longitud]}
-            radius={mio ? 12 : 9}
+            radius={destacado ? 12 : 9}
             pathOptions={{
-              color: mio ? MIO_ANILLO : "#ffffff",
-              weight: mio ? 3 : 2.5,
+              color: mio ? MIO_ANILLO : incidente ? INCIDENTE_ANILLO : "#ffffff",
+              weight: destacado ? 3 : 2.5,
               fillColor: ESTADO_HEX[r.estado] ?? "#2563a6",
               fillOpacity: 1,
             }}
@@ -92,6 +97,12 @@ export function MapaReclamos({
                     style={{ color: MIO_ANILLO }}
                   >
                     Tu reclamo
+                  </span>
+                )}
+                {incidente && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-warning">
+                    <TrafficCone className="size-3" />
+                    Afecta la circulación
                   </span>
                 )}
                 <strong className="text-sm leading-snug">{r.titulo}</strong>
