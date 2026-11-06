@@ -23,12 +23,12 @@ export function loginDev(usuario: string, password: string): Promise<TokenOut> {
 
 export interface RegistroCiudadano {
   email: string;
-  password: string;
   nombre: string;
 }
 
 // Citizens register and log in against this backend, not the Login Federado
-// (that one is only for municipal staff). The response has the same shape as
+// (that one is only for municipal staff). Passwordless since G5D-433: the
+// account is identified by email alone. The response keeps the same shape as
 // loginDev, so the session handling downstream is identical.
 export function registrarCiudadano(datos: RegistroCiudadano): Promise<TokenOut> {
   return request<TokenOut>("/auth/ciudadanos/registro", {
@@ -37,9 +37,9 @@ export function registrarCiudadano(datos: RegistroCiudadano): Promise<TokenOut> 
   });
 }
 
-export function loginCiudadano(email: string, password: string): Promise<TokenOut> {
+export function loginCiudadano(email: string): Promise<TokenOut> {
   return request<TokenOut>("/auth/ciudadanos/login", {
     method: "POST",
-    body: { email, password },
+    body: { email },
   });
 }

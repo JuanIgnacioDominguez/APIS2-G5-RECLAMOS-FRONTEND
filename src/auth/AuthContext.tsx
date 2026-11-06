@@ -24,8 +24,8 @@ interface AuthContextValue {
   autenticado: boolean;
   // Municipal staff (dev login / Login Federado).
   login: (usuario: string, password: string) => Promise<Usuario>;
-  // Citizens: against this backend.
-  loginCiudadano: (email: string, password: string) => Promise<Usuario>;
+  // Citizens: against this backend. Passwordless (G5D-433): login is email only.
+  loginCiudadano: (email: string) => Promise<Usuario>;
   registrarCiudadano: (datos: RegistroCiudadano) => Promise<Usuario>;
   logout: () => void;
 }
@@ -116,8 +116,7 @@ export function AuthProvider({
   );
 
   const loginCiudadano = useCallback(
-    async (email: string, password: string) =>
-      aplicarSesion(await loginCiudadanoApi(email, password)),
+    async (email: string) => aplicarSesion(await loginCiudadanoApi(email)),
     [aplicarSesion],
   );
 

@@ -1,17 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  hayErrores,
-  NOMBRE_MAX,
-  PASSWORD_MAX,
-  PASSWORD_MIN,
-  validarRegistro,
-} from "./validacionRegistro";
+import { hayErrores, NOMBRE_MAX, validarRegistro } from "./validacionRegistro";
 
 const ok = {
   nombre: "Vecina de Palermo",
   email: "vecina@ejemplo.com",
-  password: "una-clave-larga",
 };
 
 describe("validarRegistro", () => {
@@ -39,18 +32,8 @@ describe("validarRegistro", () => {
     expect(validarRegistro({ ...ok, email: "Vecina@Ejemplo.COM" }).email).toBeUndefined();
   });
 
-  it(`pide una contrasena de al menos ${PASSWORD_MIN} caracteres`, () => {
-    expect(validarRegistro({ ...ok, password: "corta" }).password).toBeTruthy();
-  });
-
-  it(`rechaza una contrasena de mas de ${PASSWORD_MAX} caracteres`, () => {
-    expect(
-      validarRegistro({ ...ok, password: "x".repeat(PASSWORD_MAX + 1) }).password,
-    ).toBeTruthy();
-  });
-
-  it("no pide mayusculas ni simbolos, solo longitud", () => {
-    // 10 lowercase letters, no digits or symbols: valid.
-    expect(validarRegistro({ ...ok, password: "abcdefghij" }).password).toBeUndefined();
+  it("ya no pide contrasena (registro sin password)", () => {
+    // Only name and email are validated now.
+    expect(Object.keys(validarRegistro(ok))).toHaveLength(0);
   });
 });
