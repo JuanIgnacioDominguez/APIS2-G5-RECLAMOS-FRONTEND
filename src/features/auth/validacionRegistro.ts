@@ -1,10 +1,9 @@
 // Client-side mirror of the backend's registration rules. Validating here is a
 // better UX than waiting for the 422, but the backend stays the source of truth.
+// Passwordless since G5D-433: a citizen account is name + email only.
 
 export const NOMBRE_MIN = 2;
 export const NOMBRE_MAX = 120;
-export const PASSWORD_MIN = 10;
-export const PASSWORD_MAX = 128;
 
 // Intentionally permissive: the backend has the authoritative check. This only
 // catches the obvious "that is not an email" before we hit the network.
@@ -13,13 +12,11 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export interface DatosRegistro {
   nombre: string;
   email: string;
-  password: string;
 }
 
 export interface ErroresRegistro {
   nombre?: string;
   email?: string;
-  password?: string;
 }
 
 export function validarRegistro(datos: DatosRegistro): ErroresRegistro {
@@ -32,11 +29,6 @@ export function validarRegistro(datos: DatosRegistro): ErroresRegistro {
 
   if (!EMAIL_RE.test(datos.email.trim())) {
     errores.email = "Ingresá un email válido.";
-  }
-
-  // Length is what matters: no composition rules (no uppercase/symbols required).
-  if (datos.password.length < PASSWORD_MIN || datos.password.length > PASSWORD_MAX) {
-    errores.password = `La contraseña debe tener entre ${PASSWORD_MIN} y ${PASSWORD_MAX} caracteres.`;
   }
 
   return errores;

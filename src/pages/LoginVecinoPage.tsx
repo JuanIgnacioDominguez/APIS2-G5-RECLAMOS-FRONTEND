@@ -15,7 +15,6 @@ export function LoginVecinoPage() {
   const navigate = useNavigate();
   const { loginCiudadano } = useAuth();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [credencialesInvalidas, setCredencialesInvalidas] = useState(false);
@@ -39,11 +38,11 @@ export function LoginVecinoPage() {
     setCredencialesInvalidas(false);
     setSesionVencida(false);
     try {
-      const u = await loginCiudadano(email.trim(), password);
+      const u = await loginCiudadano(email.trim());
       navigate(homePorRol(u.rol));
     } catch (err) {
-      // One generic message for any credential problem: the backend returns the
-      // same response for wrong password, unknown email or disabled account.
+      // Passwordless (G5D-433): the message comes from the error code
+      // (email_no_registrado, cuenta_inactiva, rate_limit).
       setError(err instanceof Error ? err.message : "No se pudo iniciar sesion");
       setCredencialesInvalidas(true);
     } finally {
@@ -97,23 +96,6 @@ export function LoginVecinoPage() {
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
-                      setCredencialesInvalidas(false);
-                    }}
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="password">
-                    Contrasena <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Tu contrasena"
-                    autoComplete="current-password"
-                    aria-invalid={credencialesInvalidas}
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
                       setCredencialesInvalidas(false);
                     }}
                   />

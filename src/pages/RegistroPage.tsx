@@ -13,7 +13,6 @@ import { useAuth } from "@/auth/AuthContext";
 import { homePorRol } from "@/config/navigation";
 import {
   hayErrores,
-  PASSWORD_MIN,
   validarRegistro,
   type ErroresRegistro,
 } from "@/features/auth/validacionRegistro";
@@ -23,7 +22,6 @@ export function RegistroPage() {
   const { registrarCiudadano } = useAuth();
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [errores, setErrores] = useState<ErroresRegistro>({});
   const [errorGeneral, setErrorGeneral] = useState<string | null>(null);
   const [emailDuplicado, setEmailDuplicado] = useState(false);
@@ -34,7 +32,7 @@ export function RegistroPage() {
     setErrorGeneral(null);
     setEmailDuplicado(false);
 
-    const datos = { nombre: nombre.trim(), email: email.trim(), password };
+    const datos = { nombre: nombre.trim(), email: email.trim() };
     const validacion = validarRegistro(datos);
     if (hayErrores(validacion)) {
       setErrores(validacion);
@@ -134,27 +132,6 @@ export function RegistroPage() {
                           </Link>
                         </>
                       )}
-                    </p>
-                  )}
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="password">
-                    Contrasena <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder={`Al menos ${PASSWORD_MIN} caracteres`}
-                    autoComplete="new-password"
-                    aria-invalid={Boolean(errores.password)}
-                    aria-describedby={errores.password ? "password-error" : undefined}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                  {errores.password && (
-                    <p id="password-error" className="text-xs text-destructive">
-                      {errores.password}
                     </p>
                   )}
                 </div>
