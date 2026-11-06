@@ -30,29 +30,35 @@ function renderRegistro() {
 
 async function completar(
   user: ReturnType<typeof userEvent.setup>,
-  { nombre = "Vecina de Palermo", email = "vecina@ejemplo.com", password = "una-clave-larga" } = {},
+  { nombre = "Vecina de Palermo", email = "vecina@ejemplo.com" } = {},
 ) {
   await user.type(screen.getByLabelText(/nombre/i), nombre);
   await user.type(screen.getByLabelText(/email/i), email);
-  await user.type(screen.getByLabelText(/contrasena/i), password);
 }
 
 describe("RegistroPage", () => {
   beforeEach(() => vi.restoreAllMocks());
 
-  it("no llama a la API si la contrasena es demasiado corta", async () => {
+  it("no pide contrasena: solo nombre y email", () => {
+    renderRegistro();
+    expect(screen.getByLabelText(/nombre/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/contrasena/i)).not.toBeInTheDocument();
+  });
+
+  it("no llama a la API si el email es invalido", async () => {
     const user = userEvent.setup();
     const spy = vi.spyOn(authApi, "registrarCiudadano");
     renderRegistro();
 
-    await completar(user, { password: "corta" });
+    await completar(user, { email: "no-es-un-email" });
     await user.click(screen.getByRole("button", { name: /crear cuenta/i }));
 
-    expect(await screen.findByText(/entre 10 y 128 caracteres/i)).toBeInTheDocument();
+    expect(await screen.findByText(/un email v.lido/i)).toBeInTheDocument();
     expect(spy).not.toHaveBeenCalled();
   });
 
-  it("registra al vecino y entra directo, sin pedir login", async () => {
+  it("registra al vecino con nombre y email y entra directo, sin pedir login", async () => {
     const user = userEvent.setup();
     const spy = vi.spyOn(authApi, "registrarCiudadano").mockResolvedValue(tokenCiudadano());
     renderRegistro();
@@ -64,7 +70,6 @@ describe("RegistroPage", () => {
     expect(spy).toHaveBeenCalledWith({
       nombre: "Vecina de Palermo",
       email: "vecina@ejemplo.com",
-      password: "una-clave-larga",
     });
   });
 

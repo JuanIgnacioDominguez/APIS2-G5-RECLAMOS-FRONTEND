@@ -31,40 +31,42 @@ function renderLogin() {
 describe("LoginVecinoPage", () => {
   beforeEach(() => vi.restoreAllMocks());
 
-  it("muestra el formulario de vecinos y el acceso a registro", () => {
+  it("pide solo email (sin contrasena) y da acceso a registro", () => {
     renderLogin();
     expect(screen.getByText(/ingreso vecinos/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/contrasena/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText(/contrasena/i)).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: /crear una/i })).toHaveAttribute("href", "/registro");
     expect(
       screen.getByRole("link", { name: /personal municipal|ingresa por aca/i }),
     ).toHaveAttribute("href", "/empleados");
   });
 
-  it("ingresa con credenciales validas y aterriza en reclamos", async () => {
+  it("ingresa solo con el email y aterriza en reclamos", async () => {
     const spy = vi.spyOn(authApi, "loginCiudadano").mockResolvedValue(tokenCiudadano());
     renderLogin();
 
     await userEvent.type(screen.getByLabelText(/email/i), "vecina@ejemplo.com");
-    await userEvent.type(screen.getByLabelText(/contrasena/i), "una-clave-larga");
     await userEvent.click(screen.getByRole("button", { name: /^ingresar$/i }));
 
     expect(await screen.findByText("listado de reclamos")).toBeInTheDocument();
-    expect(spy).toHaveBeenCalledWith("vecina@ejemplo.com", "una-clave-larga");
+    expect(spy).toHaveBeenCalledWith("vecina@ejemplo.com");
   });
 
-  it("ante un error de credenciales muestra un unico mensaje generico", async () => {
+  it("ante un email sin cuenta muestra el mensaje y no entra", async () => {
     vi.spyOn(authApi, "loginCiudadano").mockRejectedValue(
-      new ApiError(401, "Email o contrasena incorrectos.", "credenciales_invalidas"),
+      new ApiError(
+        401,
+        "Ese email no tiene una cuenta. Registrate para continuar.",
+        "email_no_registrado",
+      ),
     );
     renderLogin();
 
-    await userEvent.type(screen.getByLabelText(/email/i), "vecina@ejemplo.com");
-    await userEvent.type(screen.getByLabelText(/contrasena/i), "mala");
+    await userEvent.type(screen.getByLabelText(/email/i), "nueva@ejemplo.com");
     await userEvent.click(screen.getByRole("button", { name: /^ingresar$/i }));
 
-    expect(await screen.findByText(/email o contrasena incorrectos/i)).toBeInTheDocument();
+    expect(await screen.findByText(/no tiene una cuenta/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toHaveAttribute("aria-invalid", "true");
     expect(screen.queryByText("listado de reclamos")).not.toBeInTheDocument();
   });

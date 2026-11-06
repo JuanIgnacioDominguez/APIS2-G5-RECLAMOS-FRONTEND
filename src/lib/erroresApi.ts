@@ -11,6 +11,9 @@ const MENSAJE_POR_CODIGO: Record<string, string> = {
   // Same generic message for wrong password, unknown email or disabled account:
   // the backend does not distinguish them on purpose, and neither do we.
   credenciales_invalidas: "Email o contrasena incorrectos.",
+  // Passwordless citizen login (G5D-433): login is by email only.
+  email_no_registrado: "Ese email no tiene una cuenta. Registrate para continuar.",
+  cuenta_inactiva: "Tu cuenta esta inactiva. Escribinos para reactivarla.",
   rate_limit: "Hiciste demasiados intentos. Proba de nuevo en aproximadamente un minuto.",
   conflicto: "La operacion no se pudo completar por un conflicto con el estado actual.",
   interno: "Algo fallo de nuestro lado, proba de nuevo en un rato.",
