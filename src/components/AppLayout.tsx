@@ -26,6 +26,7 @@ import {
   useMarcarNotificacionLeidaMutation,
 } from "@/store/citypassApi";
 import { esEndpointNoDisponible, REFRESCO_NOTIFICACIONES_MS } from "@/lib/notificaciones";
+import { REFRESCO_PANTALLA_MS } from "@/lib/refresco";
 import type { Notificacion } from "@/api/types";
 import { haceCuanto } from "@/lib/format";
 import { useAuth } from "@/auth/AuthContext";
@@ -109,12 +110,12 @@ function Marca() {
   );
 }
 
-const REFRESCO_BANDEJA_MS = 45_000;
+const REFRESCO_BANDEJA_MS = REFRESCO_PANTALLA_MS;
 
 function usePendientesBandeja(activo: boolean): number | null {
   const { data } = useBandejaQuery(
     { page: 1, size: 1 },
-    { skip: !activo, pollingInterval: REFRESCO_BANDEJA_MS, skipPollingIfUnfocused: true },
+    { skip: !activo, pollingInterval: REFRESCO_BANDEJA_MS, skipPollingIfUnfocused: false },
   );
   return data?.total ?? null;
 }
@@ -126,7 +127,7 @@ function useNotificacionesNoLeidas(activo: boolean): number {
   const { data } = useContarNotificacionesQuery(undefined, {
     skip: !activo,
     pollingInterval: sinEndpoint ? 0 : REFRESCO_NOTIFICACIONES_MS,
-    skipPollingIfUnfocused: true,
+    skipPollingIfUnfocused: false,
   });
   return data?.unread_count ?? 0;
 }
@@ -195,7 +196,7 @@ function NotificacionesPopover({ noLeidas }: { noLeidas: number }) {
     {
       skip: !open,
       pollingInterval: sinEndpoint ? 0 : REFRESCO_NOTIFICACIONES_MS,
-      skipPollingIfUnfocused: true,
+      skipPollingIfUnfocused: false,
     },
   );
   const notificaciones = data?.items ?? [];

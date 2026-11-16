@@ -25,6 +25,7 @@ import { cn } from "cn";
 import type { HistorialOut, ReclamoDetalle } from "@/api/types";
 import { useAdherirMutation, useObtenerReclamoQuery } from "@/store/citypassApi";
 import { esRateLimit } from "@/lib/erroresApi";
+import { OPCIONES_REFRESCO } from "@/lib/refresco";
 import { useEsperaRateLimit } from "@/hooks/useEsperaRateLimit";
 import { esIncidenteActivo } from "@/domain/circulacion";
 import { AvisoAlertaClimatica } from "@/features/reclamos/AlertaClimatica";
@@ -640,7 +641,7 @@ export function ReclamoDetallePage() {
     isFetching,
     error,
     refetch,
-  } = useObtenerReclamoQuery(id, { skip: !id });
+  } = useObtenerReclamoQuery(id, { skip: !id, ...OPCIONES_REFRESCO });
   const [adherirMutation, { isLoading: adhiriendo }] = useAdherirMutation();
   const esperaAdherir = useEsperaRateLimit();
   const staff = usuario ? esStaff(usuario.rol) : false;

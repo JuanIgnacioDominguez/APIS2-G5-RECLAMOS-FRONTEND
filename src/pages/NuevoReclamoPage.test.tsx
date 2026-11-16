@@ -89,7 +89,7 @@ describe("NuevoReclamoPage", () => {
     await completarYEnviar(user);
 
     await waitFor(() => expect(warning).toHaveBeenCalled());
-    expect(warning.mock.calls[0][0]).toMatch(/alerta climatica/i);
+    expect(warning.mock.calls[0][0]).toMatch(/alerta clim[aá]tica/i);
   });
 
   it("si la busqueda de similares falla, crea igual (no bloquea al vecino)", async () => {
