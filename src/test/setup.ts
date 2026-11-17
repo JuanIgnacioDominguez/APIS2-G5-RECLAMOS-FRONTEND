@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 import { createElement, type ReactNode } from "react";
-import { afterEach, vi } from "vitest";
+import { afterEach, beforeEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 
 // Leaflet needs a real DOM (element sizing, canvas) that jsdom lacks, so we
@@ -53,6 +53,11 @@ window.HTMLElement.prototype.scrollIntoView = vi.fn();
 window.HTMLElement.prototype.hasPointerCapture = vi.fn(() => false);
 window.HTMLElement.prototype.setPointerCapture = vi.fn();
 window.HTMLElement.prototype.releasePointerCapture = vi.fn();
+
+// Tests exercise the dev login unless a test opts into the federated one.
+beforeEach(() => {
+  vi.stubEnv("VITE_LOGIN_DEV", "true");
+});
 
 afterEach(() => {
   cleanup();

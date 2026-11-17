@@ -26,12 +26,13 @@ const IDP_URL = import.meta.env.VITE_IDP_URL ?? "https://api.citypass-login.pp.u
 const IDP_CLIENT_ID = import.meta.env.VITE_IDP_CLIENT_ID ?? "citypass-reclamos-web";
 
 /**
- * Production has no dev login (the backend mounts it only in development), so
- * staff sign in against the Login Federado there. Local dev and tests keep the
- * dev login, which is what the local backend serves.
+ * The deployed backend validates only Login Federado tokens (its dev login no
+ * longer exists, it answers 404), so staff sign in there by default, in
+ * production and in local dev alike. Set VITE_LOGIN_DEV=true only when running
+ * a local backend that still mounts the dev login.
  */
 export function loginFederadoActivo(): boolean {
-  return import.meta.env.PROD;
+  return import.meta.env.VITE_LOGIN_DEV !== "true";
 }
 
 /**

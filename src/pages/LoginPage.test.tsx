@@ -105,8 +105,8 @@ describe("LoginPage", () => {
     expect(screen.getByRole("button", { name: "Operador" })).toBeDisabled();
   });
 
-  it("en produccion ingresa por el Login Federado y no ofrece accesos rapidos", async () => {
-    vi.stubEnv("PROD", true);
+  it("por defecto ingresa por el Login Federado y no ofrece accesos rapidos", async () => {
+    vi.stubEnv("VITE_LOGIN_DEV", "false");
     const federado = vi
       .spyOn(authApi, "loginFederado")
       .mockResolvedValue(tokenPara("delegado-rec", ["admin"]));
