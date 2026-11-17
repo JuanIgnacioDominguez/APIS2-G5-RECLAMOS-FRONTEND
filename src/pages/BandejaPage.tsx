@@ -5,13 +5,19 @@ import { KpiCard } from "@/components/KpiCard";
 import { Button } from "@/components/ui/button";
 import { TablaBandeja } from "@/features/reclamos/TablaBandeja";
 import { calcularKpisBandeja } from "@/features/reclamos/bandejaTable";
+import { ordenarPorAlerta } from "@/features/reclamos/nivelAlerta";
+import { OPCIONES_REFRESCO } from "@/lib/refresco";
 import { useBandejaQuery, useContarResueltosQuery } from "@/store/citypassApi";
 
 export function BandejaPage() {
-  const { data, isLoading, isFetching, error, refetch } = useBandejaQuery(undefined);
+  const { data, isLoading, isFetching, error, refetch } = useBandejaQuery(
+    undefined,
+    OPCIONES_REFRESCO,
+  );
   const resueltos = useContarResueltosQuery();
 
-  const filas = useMemo(() => data?.items ?? [], [data]);
+  // Claims under a weather alert go first, most severe first.
+  const filas = useMemo(() => ordenarPorAlerta(data?.items ?? []), [data]);
   const kpis = useMemo(() => calcularKpisBandeja(filas, data?.total), [data?.total, filas]);
   const actualizando = isFetching || resueltos.isFetching;
   const mensajeError =
@@ -31,7 +37,8 @@ export function BandejaPage() {
               Bandeja de reclamos
             </h1>
             <p className="text-sm text-muted-foreground">
-              Reclamos entrantes pendientes de clasificar, mas recientes primero.
+              Reclamos entrantes pendientes de clasificar. Los que están bajo alerta climática van
+              primero.
             </p>
           </div>
         </div>

@@ -19,6 +19,7 @@ import {
 
 import { useListarReclamosQuery } from "@/store/citypassApi";
 import { useAuth } from "@/auth/AuthContext";
+import { OPCIONES_REFRESCO } from "@/lib/refresco";
 import { esStaff } from "@/auth/roles";
 import type { CategoriaReclamo } from "@/domain/enums";
 import { CATEGORIA_HEX, opcionesCategoria } from "@/domain/labels";
@@ -115,7 +116,7 @@ export function ReclamosPage() {
 
   const consultaReclamos = useListarReclamosQuery(
     usuario ? { size: 100, orden, usuario_cache: usuario.id } : undefined,
-    { skip: !usuario },
+    { skip: !usuario, ...OPCIONES_REFRESCO },
   );
   const { data, isLoading, error } = consultaReclamos;
 
