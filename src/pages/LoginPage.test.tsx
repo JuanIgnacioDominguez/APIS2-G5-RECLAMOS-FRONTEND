@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes } from "react-router-dom";
@@ -31,6 +31,7 @@ function renderLogin() {
 
 describe("LoginPage", () => {
   beforeEach(() => vi.restoreAllMocks());
+  afterEach(() => vi.unstubAllEnvs());
 
   it("muestra el formulario, Google y los accesos rapidos por rol", () => {
     const { container } = renderLogin();
@@ -102,5 +103,23 @@ describe("LoginPage", () => {
     expect(usuarioInput).not.toHaveAttribute("aria-invalid", "true");
     expect(screen.getByRole("button", { name: /^ingresar$/i })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Operador" })).toBeDisabled();
+  });
+
+  it("en produccion ingresa por el Login Federado y no ofrece accesos rapidos", async () => {
+    vi.stubEnv("PROD", true);
+    const federado = vi
+      .spyOn(authApi, "loginFederado")
+      .mockResolvedValue(tokenPara("delegado-rec", ["admin"]));
+    const dev = vi.spyOn(authApi, "loginDev");
+    renderLogin();
+
+    expect(screen.queryByRole("button", { name: "Operador" })).not.toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText(/usuario/i), "delegado-rec");
+    await userEvent.type(screen.getByLabelText(/contrasena/i), "secreta");
+    await userEvent.click(screen.getByRole("button", { name: /^ingresar$/i }));
+
+    expect(await screen.findByText("bandeja de backoffice")).toBeInTheDocument();
+    expect(federado).toHaveBeenCalledWith("delegado-rec", "secreta");
+    expect(dev).not.toHaveBeenCalled();
   });
 });
