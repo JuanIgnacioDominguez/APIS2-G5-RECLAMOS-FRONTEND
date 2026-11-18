@@ -45,6 +45,53 @@ describe("ReclamosPage", () => {
     expect(screen.getByText("Ruido nocturno")).toBeInTheDocument();
   });
 
+  it("el staff que llega desde una actividad pide solo sus reclamos y puede quitar el filtro", async () => {
+    const espia = vi.spyOn(reclamosApi, "listarReclamos").mockResolvedValue(
+      page([
+        {
+          ...reclamo("1", "Basura en la plaza"),
+          actividad: {
+            id: "act-1",
+            titulo: "Festival de Primavera",
+            inicio: "2026-11-01T15:00:00Z",
+            fin: "2026-11-01T20:00:00Z",
+          },
+        },
+      ]),
+    );
+
+    renderWithProviders(<ReclamosPage />, {
+      usuario: OPERADOR,
+      route: "/reclamos?actividad=act-1",
+    });
+
+    expect(await screen.findByText("Basura en la plaza")).toBeInTheDocument();
+    expect(espia).toHaveBeenCalledWith(expect.objectContaining({ actividad_id: "act-1" }));
+    expect(screen.getAllByText("Festival de Primavera").length).toBeGreaterThan(0);
+
+    await userEvent.click(screen.getByRole("button", { name: /quitar filtro/i }));
+    await waitFor(() =>
+      expect(espia).toHaveBeenLastCalledWith(
+        expect.not.objectContaining({ actividad_id: expect.anything() }),
+      ),
+    );
+  });
+
+  it("el vecino ignora el parametro de actividad", async () => {
+    const espia = vi
+      .spyOn(reclamosApi, "listarReclamos")
+      .mockResolvedValue(page([reclamo("1", "Bache en la esquina")]));
+
+    renderWithProviders(<ReclamosPage />, {
+      usuario: CIUDADANO,
+      route: "/reclamos?actividad=act-1",
+    });
+
+    await screen.findByText("Bache en la esquina");
+    expect(espia).not.toHaveBeenCalledWith(expect.objectContaining({ actividad_id: "act-1" }));
+    expect(screen.queryByRole("button", { name: /quitar filtro/i })).not.toBeInTheDocument();
+  });
+
   it("filtra por texto en el cliente", async () => {
     vi.spyOn(reclamosApi, "listarReclamos").mockResolvedValue(
       page([reclamo("1", "Bache en la esquina"), reclamo("2", "Ruido nocturno")]),

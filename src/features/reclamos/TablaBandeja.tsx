@@ -57,6 +57,7 @@ import {
   IaBadge,
   PrioridadLinea,
 } from "./EstadoBadges";
+import { BadgeActividadRelacionada } from "./ActividadRelacionada";
 import { ICONO_ESTADO } from "./iconos";
 import {
   crearCsvBandeja,
@@ -480,6 +481,11 @@ export function TablaBandeja({ filas, loading, error, onRefresh }: TablaBandejaP
                           )}
                           {esIncidenteActivo(reclamo) && <CirculacionBadge compacto />}
                         </div>
+                        {reclamo.actividad && (
+                          <div className="mt-1">
+                            <BadgeActividadRelacionada actividad={reclamo.actividad} />
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell className="w-32 py-3.5">
                         <PrioridadLinea prioridad={reclamo.prioridad} />

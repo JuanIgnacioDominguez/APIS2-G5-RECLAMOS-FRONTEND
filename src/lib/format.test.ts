@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { formatConfianza, formatFecha, haceCuanto, idCorto } from "./format";
+import {
+  formatConfianza,
+  formatFecha,
+  formatHorarioActividad,
+  haceCuanto,
+  idCorto,
+} from "./format";
 
 describe("formatFecha", () => {
   it("formatea una fecha ISO valida", () => {
@@ -11,6 +17,24 @@ describe("formatFecha", () => {
 
   it("devuelve '-' ante una fecha invalida", () => {
     expect(formatFecha("no-es-fecha")).toBe("-");
+  });
+});
+
+describe("formatHorarioActividad", () => {
+  it("pasa de UTC a hora de Buenos Aires (UTC-3)", () => {
+    expect(formatHorarioActividad("2026-11-01T15:00:00Z", "2026-11-01T20:00:00Z")).toBe(
+      "1/11 12:00 a 17:00",
+    );
+  });
+
+  it("incluye el dia de fin cuando cruza la medianoche", () => {
+    expect(formatHorarioActividad("2026-11-02T01:00:00Z", "2026-11-02T08:30:00Z")).toBe(
+      "1/11 22:00 a 2/11 05:30",
+    );
+  });
+
+  it("devuelve '-' ante una fecha invalida", () => {
+    expect(formatHorarioActividad("xxx", "2026-11-01T20:00:00Z")).toBe("-");
   });
 });
 

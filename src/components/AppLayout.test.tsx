@@ -21,6 +21,7 @@ function reclamo(id: string, titulo: string): ReclamoListado {
     afecta_circulacion: true,
     bajo_alerta_climatica: false,
     alerta_nivel: null,
+    actividad: null,
     prioridad: PrioridadReclamo.ALTA,
     estado: EstadoReclamo.RECIBIDO,
     barrio: "Centro",
