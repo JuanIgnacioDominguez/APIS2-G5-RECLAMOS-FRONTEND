@@ -18,6 +18,7 @@ function similar(over: Partial<ReclamoSimilar> = {}): ReclamoSimilar {
     afecta_circulacion: false,
     bajo_alerta_climatica: false,
     alerta_nivel: null,
+    actividad: null,
     prioridad: PrioridadReclamo.MEDIA,
     estado: EstadoReclamo.RECIBIDO,
     barrio: "Almagro",
@@ -83,6 +84,7 @@ describe("NuevoReclamoPage", () => {
       id: "nuevo-alerta",
       bajo_alerta_climatica: true,
       alerta_nivel: "ALTA",
+      actividad: null,
     } as ReclamoOut);
     renderNuevo();
 

@@ -4,6 +4,7 @@ import { ArrowUpRight, MapPin, Users } from "lucide-react";
 import type { ReclamoResumen } from "@/api/types";
 import type { Miga } from "@/config/navigation";
 import { esIncidenteActivo } from "@/domain/circulacion";
+import { BadgeActividadRelacionada } from "./ActividadRelacionada";
 import { BadgeAlertaClimatica } from "./AlertaClimatica";
 import { haceCuanto, idCorto } from "@/lib/format";
 import { cn } from "cn";
@@ -20,10 +21,13 @@ export function ReclamoCard({
   reclamo,
   autoria,
   origen,
+  mostrarActividad = false,
 }: {
   reclamo: ReclamoResumen;
   autoria?: "mio" | "ciudad";
   origen?: Miga;
+  // Only staff see which mass activity a claim is related to.
+  mostrarActividad?: boolean;
 }) {
   return (
     <Link
@@ -56,6 +60,9 @@ export function ReclamoCard({
             <PrioridadLinea prioridad={reclamo.prioridad} />
             {esIncidenteActivo(reclamo) && <CirculacionBadge compacto />}
             {reclamo.bajo_alerta_climatica && <BadgeAlertaClimatica nivel={reclamo.alerta_nivel} />}
+            {mostrarActividad && reclamo.actividad && (
+              <BadgeActividadRelacionada actividad={reclamo.actividad} />
+            )}
           </div>
 
           <div className="mt-auto flex flex-col gap-2 border-t pt-3 text-foreground/70">

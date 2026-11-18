@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import {
+  CalendarDays,
   CheckCircle2,
   Clock,
   FolderOpen,
@@ -14,6 +15,7 @@ import {
   ThumbsUp,
   Timer,
   WifiOff,
+  X,
   type LucideIcon,
 } from "lucide-react";
 
@@ -114,8 +116,19 @@ export function ReclamosPage() {
   const [categoria, setCategoria] = useState<CategoriaReclamo | null>(null);
   const [orden, setOrden] = useState<OrdenFeed>("recientes");
 
+  // Staff land here from an activity link (?actividad=<id>) to see its claims.
+  const [params, setParams] = useSearchParams();
+  const actividadId = staff ? params.get("actividad") : null;
+
   const consultaReclamos = useListarReclamosQuery(
-    usuario ? { size: 100, orden, usuario_cache: usuario.id } : undefined,
+    usuario
+      ? {
+          size: 100,
+          orden,
+          usuario_cache: usuario.id,
+          ...(actividadId ? { actividad_id: actividadId } : {}),
+        }
+      : undefined,
     { skip: !usuario, ...OPCIONES_REFRESCO },
   );
   const { data, isLoading, error } = consultaReclamos;
@@ -180,6 +193,27 @@ export function ReclamosPage() {
             {staff ? "Cargar reclamo" : "Nuevo reclamo"}
           </Button>
         </div>
+
+        {actividadId && (
+          <div className="flex flex-wrap items-center gap-2 rounded-xl bg-primary/5 p-3 text-sm ring-1 ring-primary/25">
+            <CalendarDays className="size-4 text-primary" />
+            <span>
+              Reclamos relacionados con{" "}
+              <strong>
+                {todosLosReclamos[0]?.actividad?.titulo ?? "la actividad seleccionada"}
+              </strong>
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="ml-auto gap-1"
+              onClick={() => setParams({}, { replace: true })}
+            >
+              <X className="size-3.5" />
+              Quitar filtro
+            </Button>
+          </div>
+        )}
 
         <div data-tour="reclamos-kpis" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <KpiCard label="Total" value={counts.todos} icon={Inbox} tono="azul" />
@@ -316,6 +350,7 @@ export function ReclamosPage() {
                   <ReclamoCard
                     reclamo={reclamo}
                     autoria={staff ? "ciudad" : "mio"}
+                    mostrarActividad={staff}
                     origen={{
                       label: staff ? "Todos los reclamos" : "Mis reclamos",
                       to: "/reclamos",

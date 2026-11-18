@@ -28,6 +28,7 @@ const detalle: ReclamoDetalle = {
   afecta_circulacion: false,
   bajo_alerta_climatica: false,
   alerta_nivel: null,
+  actividad: null,
   origen_clasificacion: OrigenClasificacion.MODELO,
   confianza_clasificacion: 0.9,
   objeto_afectado: null,
@@ -154,6 +155,7 @@ describe("ReclamoDetallePage", () => {
       afecta_circulacion: true,
       bajo_alerta_climatica: false,
       alerta_nivel: null,
+      actividad: null,
       canal: CanalOrigen.EVENTO,
     });
     renderDetalle(OPERADOR);
@@ -179,10 +181,43 @@ describe("ReclamoDetallePage", () => {
       ...detalle,
       bajo_alerta_climatica: true,
       alerta_nivel: NivelCriticidad.ALTA,
+      actividad: null,
     });
     renderDetalle(CIUDADANO);
 
     expect(await screen.findByRole("note", { name: /alerta clim[aá]tica/i })).toBeInTheDocument();
+  });
+
+  it("al staff le muestra con que actividad masiva esta relacionado el reclamo", async () => {
+    vi.spyOn(reclamosApi, "obtenerReclamo").mockResolvedValue({
+      ...detalle,
+      actividad: {
+        id: "act-1",
+        titulo: "Festival de Primavera",
+        inicio: "2026-11-01T15:00:00Z",
+        fin: "2026-11-01T20:00:00Z",
+      },
+    });
+    renderDetalle(OPERADOR);
+
+    expect(await screen.findByRole("note", { name: /actividad masiva/i })).toHaveTextContent(
+      "Relacionado con: Festival de Primavera",
+    );
+  });
+
+  it("al ciudadano no le muestra la actividad masiva", async () => {
+    vi.spyOn(reclamosApi, "obtenerReclamo").mockResolvedValue({
+      ...detalle,
+      actividad: {
+        id: "act-1",
+        titulo: "Festival de Primavera",
+        inicio: "2026-11-01T15:00:00Z",
+        fin: "2026-11-01T20:00:00Z",
+      },
+    });
+    renderDetalle(CIUDADANO);
+    await screen.findByText(detalle.titulo);
+    expect(screen.queryByRole("note", { name: /actividad masiva/i })).not.toBeInTheDocument();
   });
 
   it("sin alerta climatica no muestra el aviso", async () => {
@@ -210,6 +245,7 @@ describe("ReclamoDetallePage", () => {
       afecta_circulacion: true,
       bajo_alerta_climatica: false,
       alerta_nivel: null,
+      actividad: null,
       estado: EstadoReclamo.RESUELTO,
     });
     renderDetalle(OPERADOR);
@@ -250,6 +286,7 @@ describe("ReclamoDetallePage", () => {
       afecta_circulacion: true,
       bajo_alerta_climatica: false,
       alerta_nivel: null,
+      actividad: null,
       prioridad: PrioridadReclamo.MEDIA,
       estado: EstadoReclamo.RECIBIDO,
       barrio: "Centro",

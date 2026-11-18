@@ -1,9 +1,11 @@
 import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
 
 import { ApiError } from "@/api/client";
+import * as actividadesApi from "@/api/actividades";
 import * as notificacionesApi from "@/api/notificaciones";
 import * as reclamosApi from "@/api/reclamos";
 import type {
+  ActividadOut,
   BusquedaSimilares,
   CambioEstado,
   ComentarioOut,
@@ -132,6 +134,11 @@ export const citypassApi = createApi({
       providesTags: [{ type: "Estadisticas", id: "RESUELTOS" }],
     }),
 
+    listarActividades: build.query<ActividadOut[], boolean | undefined>({
+      queryFn: (incluirFinalizadas) =>
+        ejecutar(() => actividadesApi.listarActividades(incluirFinalizadas ?? false)),
+    }),
+
     estadisticas: build.query<Estadisticas, void>({
       queryFn: () => ejecutar(() => reclamosApi.estadisticas()),
       providesTags: [{ type: "Estadisticas", id: "GLOBAL" }],
@@ -214,6 +221,7 @@ export const {
   useBandejaQuery,
   useContarResueltosQuery,
   useEstadisticasQuery,
+  useListarActividadesQuery,
   useListarNotificacionesQuery,
   useContarNotificacionesQuery,
   useMarcarNotificacionLeidaMutation,

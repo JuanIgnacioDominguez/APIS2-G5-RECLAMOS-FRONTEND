@@ -5,6 +5,8 @@ import { setAuthToken, setUnauthorizedHandler } from "@/api/client";
 import {
   loginCiudadano as loginCiudadanoApi,
   loginDev,
+  loginFederado,
+  loginFederadoActivo,
   registrarCiudadano as registrarCiudadanoApi,
   type RegistroCiudadano,
   type TokenOut,
@@ -111,7 +113,12 @@ export function AuthProvider({
   );
 
   const login = useCallback(
-    async (usuario: string, password: string) => aplicarSesion(await loginDev(usuario, password)),
+    async (usuario: string, password: string) =>
+      aplicarSesion(
+        loginFederadoActivo()
+          ? await loginFederado(usuario, password)
+          : await loginDev(usuario, password),
+      ),
     [aplicarSesion],
   );
 
