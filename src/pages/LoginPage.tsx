@@ -3,6 +3,7 @@ import { AlertTriangle, Info, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 
+import { loginFederadoActivo } from "@/api/auth";
 import { ApiError } from "@/api/client";
 import { esRateLimit } from "@/lib/erroresApi";
 import { useEsperaRateLimit } from "@/hooks/useEsperaRateLimit";
@@ -194,24 +195,26 @@ export function LoginPage() {
               Continuar con Google
             </Button>
 
-            <div className="flex flex-col gap-1.5">
-              <p className="text-center text-xs text-muted-foreground">
-                Acceso rapido (demo, hasta integrar el Login Federado del Grupo 2)
-              </p>
-              <div className="grid grid-cols-3 gap-2">
-                {CREDENCIALES_DEMO.map((c) => (
-                  <Button
-                    key={c.usuario}
-                    variant="secondary"
-                    size="sm"
-                    disabled={cargando || espera.enEspera}
-                    onClick={() => entrarDemo(c)}
-                  >
-                    {ROL_LABEL[c.rol]}
-                  </Button>
-                ))}
+            {!loginFederadoActivo() && (
+              <div className="flex flex-col gap-1.5">
+                <p className="text-center text-xs text-muted-foreground">
+                  Acceso rapido (demo, hasta integrar el Login Federado del Grupo 2)
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {CREDENCIALES_DEMO.map((c) => (
+                    <Button
+                      key={c.usuario}
+                      variant="secondary"
+                      size="sm"
+                      disabled={cargando || espera.enEspera}
+                      onClick={() => entrarDemo(c)}
+                    >
+                      {ROL_LABEL[c.rol]}
+                    </Button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <p className="text-center text-xs text-muted-foreground">
               ¿Sos vecino?{" "}
