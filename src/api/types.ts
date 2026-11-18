@@ -49,6 +49,19 @@ export interface ActividadOut extends ActividadVinculada {
   reclamos_relacionados: number;
 }
 
+/** A weather alert in force, for the staff panel (`GET /alertas-climaticas/activas`). */
+export interface AlertaClimaticaOut {
+  alerta_id: string;
+  nivel: NivelCriticidad;
+  // Public Spaces vocabulary, e.g. "TORMENTA_FUERTE".
+  fenomeno: string;
+  // Normalised (upper case); empty when the alert came with points only.
+  barrios: string[];
+  vigencia_desde: string;
+  vigencia_hasta: string;
+  estado: string;
+}
+
 export interface ReclamoResumen {
   id: string;
   titulo: string;

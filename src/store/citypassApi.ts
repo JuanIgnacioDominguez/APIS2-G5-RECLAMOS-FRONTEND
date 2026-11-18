@@ -2,9 +2,11 @@ import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
 
 import { ApiError } from "@/api/client";
 import * as actividadesApi from "@/api/actividades";
+import * as alertasApi from "@/api/alertas";
 import * as notificacionesApi from "@/api/notificaciones";
 import * as reclamosApi from "@/api/reclamos";
 import type {
+  AlertaClimaticaOut,
   ActividadOut,
   BusquedaSimilares,
   CambioEstado,
@@ -139,6 +141,10 @@ export const citypassApi = createApi({
         ejecutar(() => actividadesApi.listarActividades(incluirFinalizadas ?? false)),
     }),
 
+    listarAlertasActivas: build.query<AlertaClimaticaOut[], void>({
+      queryFn: () => ejecutar(() => alertasApi.listarAlertasActivas()),
+    }),
+
     estadisticas: build.query<Estadisticas, void>({
       queryFn: () => ejecutar(() => reclamosApi.estadisticas()),
       providesTags: [{ type: "Estadisticas", id: "GLOBAL" }],
@@ -222,6 +228,7 @@ export const {
   useContarResueltosQuery,
   useEstadisticasQuery,
   useListarActividadesQuery,
+  useListarAlertasActivasQuery,
   useListarNotificacionesQuery,
   useContarNotificacionesQuery,
   useMarcarNotificacionLeidaMutation,
