@@ -1,4 +1,20 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "rewrites": [{ "source": "/((?!assets/).*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/api/v1/admin/analitica/:path*",
+      "destination": "https://apis2-g5-reclamos-backend.onrender.com/api/v1/admin/analitica/:path*"
+    },
+    {
+      "source": "/api/v1/admin/analitica",
+      "destination": "https://apis2-g5-reclamos-backend.onrender.com/api/v1/admin/analitica"
+    },
+    { "source": "/((?!assets/).*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/api/v1/admin/analitica/:path*",
+      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+    }
+  ]
 }
