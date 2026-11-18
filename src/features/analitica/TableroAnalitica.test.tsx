@@ -37,6 +37,7 @@ describe("TableroAnalitica", () => {
       window.dispatchEvent(
         new MessageEvent("message", {
           data: { tipo: "citypass-tablero-altura", altura: 900 },
+          origin: "null",
           source: (iframe as HTMLIFrameElement).contentWindow,
         }),
       );
@@ -52,6 +53,23 @@ describe("TableroAnalitica", () => {
     act(() => {
       window.dispatchEvent(
         new MessageEvent("message", { data: { tipo: "citypass-tablero-altura", altura: 50 } }),
+      );
+    });
+    expect(iframe).toHaveStyle({ height: "1200px" });
+  });
+
+  it("ignora mensajes de otro origen aunque vengan del iframe", async () => {
+    vi.stubGlobal("fetch", () => html("<p>t</p>"));
+    renderWithProviders(<TableroAnalitica />, { usuario: admin });
+    const iframe = await screen.findByTitle("Tablero de Analitica");
+
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: { tipo: "citypass-tablero-altura", altura: 50 },
+          origin: "https://otro.example",
+          source: (iframe as HTMLIFrameElement).contentWindow,
+        }),
       );
     });
     expect(iframe).toHaveStyle({ height: "1200px" });

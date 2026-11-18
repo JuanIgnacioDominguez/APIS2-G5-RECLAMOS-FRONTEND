@@ -7,6 +7,7 @@ import { EstadoError } from "@/components/EstadoError";
 
 const ALTURA_INICIAL = 1200;
 const TIPO_ALTURA = "citypass-tablero-altura";
+const ORIGEN_SANDBOX = "null";
 
 type Estado =
   { fase: "cargando" } | { fase: "listo"; html: string } | { fase: "error"; mensaje: string };
@@ -47,8 +48,11 @@ export function TableroAnalitica() {
 
   useEffect(() => {
     function alRecibir(evento: MessageEvent) {
-      const datos = evento.data as { tipo?: unknown; altura?: unknown } | null;
+      // The sandbox has no allow-same-origin, so the dashboard's origin is the
+      // opaque "null". Check the origin and the window before trusting the data.
+      if (evento.origin !== ORIGEN_SANDBOX) return;
       if (evento.source !== iframeRef.current?.contentWindow) return;
+      const datos = evento.data as { tipo?: unknown; altura?: unknown } | null;
       if (datos?.tipo === TIPO_ALTURA && typeof datos.altura === "number" && datos.altura > 0) {
         setAltura(Math.ceil(datos.altura));
       }
