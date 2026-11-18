@@ -29,7 +29,7 @@ import { OPCIONES_REFRESCO } from "@/lib/refresco";
 import { useEsperaRateLimit } from "@/hooks/useEsperaRateLimit";
 import { esIncidenteActivo } from "@/domain/circulacion";
 import { AvisoActividadRelacionada } from "@/features/reclamos/ActividadRelacionada";
-import { AvisoAlertaClimatica } from "@/features/reclamos/AlertaClimatica";
+import { AvisoAlertaClimatica, BadgeAlertaClimatica } from "@/features/reclamos/AlertaClimatica";
 import { CanalOrigen } from "@/domain/enums";
 import {
   ESTADO_HEX,
@@ -398,6 +398,9 @@ function VistaGestionReclamo({ reclamo, refrescando, onRecargar, onVolver }: Vis
               <EstadoBadge estado={reclamo.estado} />
               <CategoriaBadge categoria={reclamo.categoria} />
               <PrioridadBadge prioridad={reclamo.prioridad} />
+              {reclamo.bajo_alerta_climatica && (
+                <BadgeAlertaClimatica nivel={reclamo.alerta_nivel} />
+              )}
               {esIncidenteActivo(reclamo) && <CirculacionBadge />}
               {reclamo.barrio && (
                 <Badge variant="outline" className="gap-1 text-muted-foreground">
@@ -433,6 +436,10 @@ function VistaGestionReclamo({ reclamo, refrescando, onRecargar, onVolver }: Vis
           />
         </div>
       </section>
+
+      {reclamo.bajo_alerta_climatica && (
+        <AvisoAlertaClimatica nivel={reclamo.alerta_nivel} paraStaff />
+      )}
 
       {reclamo.actividad && <AvisoActividadRelacionada actividad={reclamo.actividad} />}
 

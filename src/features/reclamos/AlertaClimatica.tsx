@@ -16,6 +16,12 @@ export const MENSAJE_ALERTA_CLIMATICA =
 
 export const TITULO_ALERTA_CLIMATICA = "Alerta climática activa en tu zona";
 
+// Wording for municipal staff: same alert, but it speaks about the claim and
+// not to the neighbour, and it does not promise anything on the area's behalf.
+export const TITULO_ALERTA_CLIMATICA_STAFF = "Reclamo bajo alerta climática";
+export const MENSAJE_ALERTA_CLIMATICA_STAFF =
+  "El vecino ya recibió el aviso de que la gestión puede demorarse. Tenelo en cuenta al priorizar.";
+
 // ALTA and CRITICA read as the loud, destructive styling; the lower levels use
 // the calmer warning palette.
 function esFuerte(nivel: NivelCriticidad | null): boolean {
@@ -26,8 +32,16 @@ function clasesNivel(nivel: NivelCriticidad | null): string {
   return nivel ? NIVEL_ALERTA_CLASES[nivel] : NIVEL_ALERTA_CLASES_SIN_NIVEL;
 }
 
-export function AvisoAlertaClimatica({ nivel }: { nivel: NivelCriticidad | null }) {
+interface AvisoAlertaProps {
+  nivel: NivelCriticidad | null;
+  /** Who reads the notice: the neighbour (default) or municipal staff. */
+  paraStaff?: boolean;
+}
+
+export function AvisoAlertaClimatica({ nivel, paraStaff = false }: AvisoAlertaProps) {
   const fuerte = esFuerte(nivel);
+  const titulo = paraStaff ? TITULO_ALERTA_CLIMATICA_STAFF : TITULO_ALERTA_CLIMATICA;
+  const mensaje = paraStaff ? MENSAJE_ALERTA_CLIMATICA_STAFF : MENSAJE_ALERTA_CLIMATICA;
   return (
     <div
       role="note"
@@ -48,7 +62,7 @@ export function AvisoAlertaClimatica({ nivel }: { nivel: NivelCriticidad | null 
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <p className={cn("text-sm font-semibold", fuerte ? "text-destructive" : "text-warning")}>
-            {TITULO_ALERTA_CLIMATICA}
+            {titulo}
           </p>
           {nivel && (
             <span
@@ -61,9 +75,7 @@ export function AvisoAlertaClimatica({ nivel }: { nivel: NivelCriticidad | null 
             </span>
           )}
         </div>
-        <p className="mt-0.5 text-sm leading-relaxed text-foreground/75">
-          {MENSAJE_ALERTA_CLIMATICA}
-        </p>
+        <p className="mt-0.5 text-sm leading-relaxed text-foreground/75">{mensaje}</p>
       </div>
     </div>
   );
