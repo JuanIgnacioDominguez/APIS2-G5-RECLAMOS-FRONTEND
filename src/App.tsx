@@ -36,6 +36,9 @@ const DashboardPage = lazy(() =>
 const PanelPage = lazy(() =>
   import("@/pages/PanelPage").then((module) => ({ default: module.PanelPage })),
 );
+const AnaliticaPage = lazy(() =>
+  import("@/pages/AnaliticaPage").then((module) => ({ default: module.AnaliticaPage })),
+);
 const MapaPublicoPage = lazy(() =>
   import("@/pages/MapaPublicoPage").then((module) => ({ default: module.MapaPublicoPage })),
 );
@@ -99,6 +102,7 @@ export function App() {
           </Route>
           <Route element={<RequireAuth soloAdmin />}>
             <Route path="/panel" element={conSuspense(<PanelPage />)} />
+            <Route path="/analitica" element={conSuspense(<AnaliticaPage />)} />
           </Route>
           <Route path="*" element={conSuspense(<NotFoundPage />)} />
         </Route>
