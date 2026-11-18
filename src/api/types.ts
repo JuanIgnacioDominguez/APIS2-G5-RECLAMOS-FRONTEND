@@ -30,6 +30,25 @@ export interface CambioEstado {
   resolucion?: string | null;
 }
 
+// Mass activity (squad 3) a claim was related to by the backend; dates are UTC.
+export interface ActividadVinculada {
+  id: string;
+  titulo: string;
+  inicio: string;
+  fin: string;
+}
+
+export interface ActividadOut extends ActividadVinculada {
+  capacidad: number;
+  latitud: number;
+  longitud: number;
+  direccion: string | null;
+  espacio_nombre: string | null;
+  // Reported by Espacios: "PROGRAMADA", "CANCELADA", "SUSPENDIDA"...
+  estado: string;
+  reclamos_relacionados: number;
+}
+
 export interface ReclamoResumen {
   id: string;
   titulo: string;
@@ -43,6 +62,7 @@ export interface ReclamoResumen {
   // area of a live alert; alerta_nivel is that alert's severity, else null.
   bajo_alerta_climatica: boolean;
   alerta_nivel: NivelCriticidad | null;
+  actividad: ActividadVinculada | null;
   barrio: string | null;
   latitud: number | null;
   longitud: number | null;
@@ -169,6 +189,7 @@ export interface ReclamoBandeja {
   afecta_circulacion: boolean;
   bajo_alerta_climatica: boolean;
   alerta_nivel: NivelCriticidad | null;
+  actividad: ActividadVinculada | null;
   origen_clasificacion: OrigenClasificacion;
   prioridad: PrioridadReclamo;
   estado: EstadoReclamo;
@@ -203,6 +224,7 @@ export interface FiltroReclamos {
   texto?: string;
   orden?: string;
   ciudadano_id?: string;
+  actividad_id?: string;
   page?: number;
   size?: number;
 }

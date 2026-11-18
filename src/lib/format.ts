@@ -13,6 +13,36 @@ export function formatFecha(iso: string): string {
   }).format(date);
 }
 
+const ZONA_BUENOS_AIRES = "America/Argentina/Buenos_Aires";
+
+function partesBuenosAires(date: Date): Record<string, string> {
+  const partes = new Intl.DateTimeFormat("es-AR", {
+    timeZone: ZONA_BUENOS_AIRES,
+    day: "numeric",
+    month: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  return Object.fromEntries(partes.map((p) => [p.type, p.value]));
+}
+
+/**
+ * Event window in Buenos Aires time from two UTC ISO strings, e.g.
+ * "1/11 12:00 a 17:00" (same day) or "1/11 22:00 a 2/11 03:00".
+ */
+export function formatHorarioActividad(inicioIso: string, finIso: string): string {
+  const inicio = new Date(inicioIso);
+  const fin = new Date(finIso);
+  if (Number.isNaN(inicio.getTime()) || Number.isNaN(fin.getTime())) return "-";
+  const a = partesBuenosAires(inicio);
+  const b = partesBuenosAires(fin);
+  const dia = (p: Record<string, string>) => `${p.day}/${p.month}`;
+  const hora = (p: Record<string, string>) => `${p.hour}:${p.minute}`;
+  const mismoDia = dia(a) === dia(b);
+  return `${dia(a)} ${hora(a)} a ${mismoDia ? "" : `${dia(b)} `}${hora(b)}`;
+}
+
 /** Relative distance like "hace 3 h" / "hace 2 dias". */
 export function haceCuanto(iso: string, now: Date = new Date()): string {
   const date = new Date(iso);

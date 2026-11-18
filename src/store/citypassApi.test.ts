@@ -21,6 +21,7 @@ function resumen(id: string): ReclamoListado {
     afecta_circulacion: true,
     bajo_alerta_climatica: false,
     alerta_nivel: null,
+    actividad: null,
     prioridad: PrioridadReclamo.MEDIA,
     estado: EstadoReclamo.RECIBIDO,
     barrio: "Centro",

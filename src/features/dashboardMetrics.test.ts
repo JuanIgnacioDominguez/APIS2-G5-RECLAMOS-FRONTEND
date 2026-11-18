@@ -40,6 +40,7 @@ function reclamo(
     afecta_circulacion: afectaCirculacion(categoria),
     bajo_alerta_climatica: false,
     alerta_nivel: null,
+    actividad: null,
     prioridad,
     estado,
     barrio: "Centro",

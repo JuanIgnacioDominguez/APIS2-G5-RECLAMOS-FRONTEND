@@ -31,6 +31,7 @@ function reclamoBandeja(
     afecta_circulacion: true,
     bajo_alerta_climatica: false,
     alerta_nivel: null,
+    actividad: null,
     origen_clasificacion: origen,
     prioridad: PrioridadReclamo.MEDIA,
     estado,

@@ -27,6 +27,7 @@ import { useAdherirMutation, useObtenerReclamoQuery } from "@/store/citypassApi"
 import { esRateLimit } from "@/lib/erroresApi";
 import { useEsperaRateLimit } from "@/hooks/useEsperaRateLimit";
 import { esIncidenteActivo } from "@/domain/circulacion";
+import { AvisoActividadRelacionada } from "@/features/reclamos/ActividadRelacionada";
 import { AvisoAlertaClimatica } from "@/features/reclamos/AlertaClimatica";
 import { CanalOrigen } from "@/domain/enums";
 import {
@@ -431,6 +432,8 @@ function VistaGestionReclamo({ reclamo, refrescando, onRecargar, onVolver }: Vis
           />
         </div>
       </section>
+
+      {reclamo.actividad && <AvisoActividadRelacionada actividad={reclamo.actividad} />}
 
       {/* Masonry: management (col 1) and classification (col 2) up top, the
           description and comments spanning both below; the right column (col 3)

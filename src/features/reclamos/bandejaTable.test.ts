@@ -28,6 +28,7 @@ function reclamo(
     afecta_circulacion: true,
     bajo_alerta_climatica: false,
     alerta_nivel: null,
+    actividad: null,
     origen_clasificacion: OrigenClasificacion.MODELO,
     prioridad: PrioridadReclamo.ALTA,
     estado,

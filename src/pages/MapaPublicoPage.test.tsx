@@ -25,6 +25,7 @@ function reclamo(
     afecta_circulacion: afectaCirculacion(categoria),
     bajo_alerta_climatica: false,
     alerta_nivel: null,
+    actividad: null,
     barrio: null,
     latitud: lat,
     longitud: lat === null ? null : -58.4,

@@ -3,6 +3,7 @@ import { CheckCircle2, ClipboardList, Eye, Inbox, RefreshCw, Sparkles } from "lu
 
 import { KpiCard } from "@/components/KpiCard";
 import { Button } from "@/components/ui/button";
+import { ActividadesPanel } from "@/features/reclamos/ActividadesPanel";
 import { TablaBandeja } from "@/features/reclamos/TablaBandeja";
 import { calcularKpisBandeja } from "@/features/reclamos/bandejaTable";
 import { useBandejaQuery, useContarResueltosQuery } from "@/store/citypassApi";
@@ -63,6 +64,8 @@ export function BandejaPage() {
           tono="verde"
         />
       </div>
+
+      <ActividadesPanel />
 
       <div data-tour="bandeja-tabla">
         <TablaBandeja

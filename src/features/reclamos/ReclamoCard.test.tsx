@@ -15,6 +15,7 @@ const reclamo: ReclamoResumen = {
   afecta_circulacion: false,
   bajo_alerta_climatica: false,
   alerta_nivel: null,
+  actividad: null,
   barrio: "Centro",
   latitud: null,
   longitud: null,
@@ -57,6 +58,7 @@ describe("ReclamoCard", () => {
           afecta_circulacion: true,
           bajo_alerta_climatica: false,
           alerta_nivel: null,
+          actividad: null,
           estado: EstadoReclamo.RESUELTO,
         }}
       />,

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
+import * as actividadesApi from "@/api/actividades";
 import * as reclamosApi from "@/api/reclamos";
 import type { Page, ReclamoBandeja } from "@/api/types";
 import {
@@ -26,6 +27,7 @@ function reclamo(
     afecta_circulacion: true,
     bajo_alerta_climatica: false,
     alerta_nivel: null,
+    actividad: null,
     origen_clasificacion: origen,
     prioridad: PrioridadReclamo.ALTA,
     estado,
@@ -42,6 +44,47 @@ describe("BandejaPage", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     vi.spyOn(reclamosApi, "contarResueltos").mockResolvedValue(0);
+    vi.spyOn(actividadesApi, "listarActividades").mockResolvedValue([]);
+  });
+
+  it("marca los reclamos relacionados con una actividad y lista las actividades masivas", async () => {
+    const vinculada = {
+      id: "act-1",
+      titulo: "Festival de Primavera",
+      inicio: "2026-11-01T15:00:00Z",
+      fin: "2026-11-01T20:00:00Z",
+    };
+    vi.spyOn(reclamosApi, "bandeja").mockResolvedValue(
+      page([
+        {
+          ...reclamo("1", "Basura en la plaza", OrigenClasificacion.CIUDADANO),
+          actividad: vinculada,
+        },
+        reclamo("2", "Bache en la esquina", OrigenClasificacion.CIUDADANO),
+      ]),
+    );
+    vi.spyOn(actividadesApi, "listarActividades").mockResolvedValue([
+      {
+        ...vinculada,
+        capacidad: 5000,
+        latitud: -34.5994,
+        longitud: -58.3988,
+        direccion: null,
+        espacio_nombre: "Plaza Houssay",
+        estado: "SUSPENDIDA",
+        reclamos_relacionados: 1,
+      },
+    ]);
+
+    renderWithProviders(<BandejaPage />);
+
+    const fila = (await screen.findByText("Basura en la plaza")).closest("tr")!;
+    expect(within(fila).getByText("Relacionado con: Festival de Primavera")).toBeInTheDocument();
+    const otra = screen.getByText("Bache en la esquina").closest("tr")!;
+    expect(within(otra).queryByText(/relacionado con/i)).not.toBeInTheDocument();
+    expect(await screen.findByText("Actividades masivas")).toBeInTheDocument();
+    expect(screen.getByText("Suspendida")).toBeInTheDocument();
+    expect(screen.getByText("1 reclamo relacionado")).toBeInTheDocument();
   });
 
   it("lista los entrantes del endpoint de bandeja y marca los sugeridos por IA", async () => {
@@ -77,6 +120,7 @@ describe("BandejaPage", () => {
           afecta_circulacion: false,
           bajo_alerta_climatica: false,
           alerta_nivel: null,
+          actividad: null,
         },
       ]),
     );

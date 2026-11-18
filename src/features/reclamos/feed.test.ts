@@ -14,6 +14,7 @@ function reclamo(over: Partial<ReclamoResumen>): ReclamoResumen {
       over.afecta_circulacion ?? afectaCirculacion(over.categoria ?? CategoriaReclamo.ALUMBRADO),
     bajo_alerta_climatica: over.bajo_alerta_climatica ?? false,
     alerta_nivel: over.alerta_nivel ?? null,
+    actividad: null,
     prioridad: over.prioridad ?? PrioridadReclamo.MEDIA,
     estado: over.estado ?? EstadoReclamo.RECIBIDO,
     barrio: "barrio" in over ? (over.barrio ?? null) : "Centro",
