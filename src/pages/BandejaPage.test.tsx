@@ -3,11 +3,13 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import * as actividadesApi from "@/api/actividades";
+import * as alertasApi from "@/api/alertas";
 import * as reclamosApi from "@/api/reclamos";
 import type { Page, ReclamoBandeja } from "@/api/types";
 import {
   CategoriaReclamo,
   EstadoReclamo,
+  NivelCriticidad,
   OrigenClasificacion,
   PrioridadReclamo,
 } from "@/domain/enums";
@@ -45,6 +47,37 @@ describe("BandejaPage", () => {
     vi.restoreAllMocks();
     vi.spyOn(reclamosApi, "contarResueltos").mockResolvedValue(0);
     vi.spyOn(actividadesApi, "listarActividades").mockResolvedValue([]);
+    vi.spyOn(alertasApi, "listarAlertasActivas").mockResolvedValue([]);
+  });
+
+  it("muestra el panel de alertas vigentes cuando el backend las informa", async () => {
+    vi.spyOn(reclamosApi, "bandeja").mockResolvedValue(page([]));
+    vi.spyOn(alertasApi, "listarAlertasActivas").mockResolvedValue([
+      {
+        alerta_id: "31f158dc-9636-4305-a14a-9bf3f023d607",
+        nivel: NivelCriticidad.ALTA,
+        fenomeno: "TORMENTA_FUERTE",
+        barrios: ["BALVANERA"],
+        vigencia_desde: "2026-11-17T15:07:00Z",
+        vigencia_hasta: "2026-11-20T16:07:00Z",
+        estado: "CONFIRMADA",
+      },
+    ]);
+
+    renderWithProviders(<BandejaPage />);
+
+    expect(await screen.findByText(/alertas climáticas vigentes \(1\)/i)).toBeInTheDocument();
+    expect(screen.getByText("Tormenta fuerte")).toBeInTheDocument();
+    expect(screen.getByText("Balvanera")).toBeInTheDocument();
+  });
+
+  it("sin alertas vigentes no muestra el panel", async () => {
+    vi.spyOn(reclamosApi, "bandeja").mockResolvedValue(page([]));
+
+    renderWithProviders(<BandejaPage />);
+
+    await waitFor(() => expect(alertasApi.listarAlertasActivas).toHaveBeenCalled());
+    expect(screen.queryByText(/alertas climáticas vigentes/i)).not.toBeInTheDocument();
   });
 
   it("marca los reclamos relacionados con una actividad y lista las actividades masivas", async () => {

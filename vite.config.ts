@@ -11,6 +11,12 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
+  server: {
+    // Analytics is served by our backend on the frontend's own origin (the
+    // iframe and its cookie cannot cross origins). Production does the same
+    // through the rewrites in vercel.json.
+    proxy: { "/api/v1/admin/analitica": "http://localhost:8000" },
+  },
   test: {
     globals: true,
     environment: "jsdom",

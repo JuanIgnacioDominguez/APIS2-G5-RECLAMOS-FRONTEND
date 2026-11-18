@@ -33,6 +33,14 @@ describe("AvisoAlertaClimatica", () => {
     expect(screen.getByText("Nivel Alta")).toBeInTheDocument();
   });
 
+  it("para el staff habla del reclamo y no del vecino", () => {
+    render(<AvisoAlertaClimatica nivel={NivelCriticidad.ALTA} paraStaff />);
+    expect(screen.getByText(/reclamo bajo alerta clim[aá]tica/i)).toBeInTheDocument();
+    expect(screen.getByText("Nivel Alta")).toBeInTheDocument();
+    expect(screen.queryByText(/activa en tu zona/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(MENSAJE_ALERTA_CLIMATICA)).not.toBeInTheDocument();
+  });
+
   it("no muestra el nivel cuando no llega", () => {
     render(<AvisoAlertaClimatica nivel={null} />);
     expect(screen.queryByText(/^Nivel /)).not.toBeInTheDocument();
