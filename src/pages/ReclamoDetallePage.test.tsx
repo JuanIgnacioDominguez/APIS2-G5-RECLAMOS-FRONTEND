@@ -188,6 +188,32 @@ describe("ReclamoDetallePage", () => {
     expect(await screen.findByRole("note", { name: /alerta clim[aá]tica/i })).toBeInTheDocument();
   });
 
+  it("al operador le marca el reclamo bajo alerta con el nivel y un texto para el staff", async () => {
+    vi.spyOn(reclamosApi, "obtenerReclamo").mockResolvedValue({
+      ...detalle,
+      bajo_alerta_climatica: true,
+      alerta_nivel: NivelCriticidad.CRITICA,
+      actividad: null,
+    });
+    renderDetalle(OPERADOR);
+
+    expect(await screen.findByText(/reclamo bajo alerta clim[aá]tica/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: /alerta clim[aá]tica: cr[ií]tica/i }),
+    ).toBeInTheDocument();
+    // The neighbour's wording ("en tu zona") must not leak into the staff view.
+    expect(screen.queryByText(/activa en tu zona/i)).not.toBeInTheDocument();
+  });
+
+  it("al operador no le marca nada cuando el reclamo no esta bajo alerta", async () => {
+    vi.spyOn(reclamosApi, "obtenerReclamo").mockResolvedValue({ ...detalle, actividad: null });
+    renderDetalle(OPERADOR);
+
+    await screen.findByText(detalle.titulo as string);
+    expect(screen.queryByText(/reclamo bajo alerta clim[aá]tica/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: /alerta clim[aá]tica/i })).not.toBeInTheDocument();
+  });
+
   it("al staff le muestra con que actividad masiva esta relacionado el reclamo", async () => {
     vi.spyOn(reclamosApi, "obtenerReclamo").mockResolvedValue({
       ...detalle,

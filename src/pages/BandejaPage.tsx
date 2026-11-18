@@ -4,6 +4,7 @@ import { CheckCircle2, ClipboardList, Eye, Inbox, RefreshCw, Sparkles } from "lu
 import { KpiCard } from "@/components/KpiCard";
 import { Button } from "@/components/ui/button";
 import { ActividadesPanel } from "@/features/reclamos/ActividadesPanel";
+import { AlertasVigentesPanel } from "@/features/reclamos/AlertasVigentesPanel";
 import { TablaBandeja } from "@/features/reclamos/TablaBandeja";
 import { calcularKpisBandeja } from "@/features/reclamos/bandejaTable";
 import { ordenarPorAlerta } from "@/features/reclamos/nivelAlerta";
@@ -48,6 +49,8 @@ export function BandejaPage() {
           Actualizar
         </Button>
       </div>
+
+      <AlertasVigentesPanel />
 
       <div
         data-tour="bandeja-kpis"
