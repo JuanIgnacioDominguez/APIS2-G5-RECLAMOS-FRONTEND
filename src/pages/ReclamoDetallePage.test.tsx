@@ -185,7 +185,7 @@ describe("ReclamoDetallePage", () => {
     });
     renderDetalle(CIUDADANO);
 
-    expect(await screen.findByRole("note", { name: /alerta climatica/i })).toBeInTheDocument();
+    expect(await screen.findByRole("note", { name: /alerta clim[aá]tica/i })).toBeInTheDocument();
   });
 
   it("al staff le muestra con que actividad masiva esta relacionado el reclamo", async () => {
@@ -223,7 +223,7 @@ describe("ReclamoDetallePage", () => {
   it("sin alerta climatica no muestra el aviso", async () => {
     renderDetalle(CIUDADANO);
     await screen.findByText(detalle.titulo);
-    expect(screen.queryByRole("note", { name: /alerta climatica/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("note", { name: /alerta clim[aá]tica/i })).not.toBeInTheDocument();
   });
 
   it("muestra el objeto afectado traducido o 'Sin especificar' si no hay", async () => {

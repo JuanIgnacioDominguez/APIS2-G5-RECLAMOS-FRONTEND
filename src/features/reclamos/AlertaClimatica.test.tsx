@@ -11,7 +11,7 @@ import {
 describe("AvisoAlertaClimatica", () => {
   it("muestra el titulo y el mensaje sin prometer plazos", () => {
     render(<AvisoAlertaClimatica nivel={NivelCriticidad.MEDIA} />);
-    expect(screen.getByRole("note", { name: /alerta climatica/i })).toBeInTheDocument();
+    expect(screen.getByRole("note", { name: /alerta clim[aá]tica/i })).toBeInTheDocument();
     expect(screen.getByText(/activa en tu zona/i)).toBeInTheDocument();
     expect(screen.getByText(MENSAJE_ALERTA_CLIMATICA)).toBeInTheDocument();
     // Never promises to resolve or gives a deadline.
@@ -27,11 +27,42 @@ describe("AvisoAlertaClimatica", () => {
     rerender(<AvisoAlertaClimatica nivel={NivelCriticidad.BAJA} />);
     expect(container.querySelector(".text-warning")).toBeInTheDocument();
   });
+
+  it("muestra el nivel de la alerta cuando llega", () => {
+    render(<AvisoAlertaClimatica nivel={NivelCriticidad.ALTA} />);
+    expect(screen.getByText("Nivel Alta")).toBeInTheDocument();
+  });
+
+  it("no muestra el nivel cuando no llega", () => {
+    render(<AvisoAlertaClimatica nivel={null} />);
+    expect(screen.queryByText(/^Nivel /)).not.toBeInTheDocument();
+  });
 });
 
 describe("BadgeAlertaClimatica", () => {
-  it("es un chip accesible con el texto de alerta", () => {
+  it("es un chip accesible con el texto de alerta y el nivel", () => {
     render(<BadgeAlertaClimatica nivel={NivelCriticidad.ALTA} />);
-    expect(screen.getByRole("img", { name: /alerta climatica/i })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Alerta climática: Alta" })).toBeInTheDocument();
+    expect(screen.getByText("Alerta climática: Alta")).toBeInTheDocument();
+  });
+
+  it("muestra solo el titulo cuando no hay nivel", () => {
+    render(<BadgeAlertaClimatica />);
+    expect(screen.getByRole("img", { name: "Alerta climática" })).toBeInTheDocument();
+  });
+
+  it("cada nivel tiene un color distinto", () => {
+    const clases = Object.values(NivelCriticidad).map((nivel) => {
+      const { unmount } = render(<BadgeAlertaClimatica nivel={nivel} />);
+      const clase = screen.getByRole("img").className;
+      unmount();
+      return clase;
+    });
+    expect(new Set(clases).size).toBe(4);
+  });
+
+  it("CRITICA se pinta con el rojo solido del tema", () => {
+    render(<BadgeAlertaClimatica nivel={NivelCriticidad.CRITICA} />);
+    expect(screen.getByRole("img").className).toContain("bg-destructive ");
   });
 });
