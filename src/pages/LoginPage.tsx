@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { AvisoServidorLento } from "@/components/AvisoServidorLento";
 import { Logo } from "@/components/Logo";
 import { LoginAside } from "@/components/LoginAside";
 import { SESION_VENCIDA_KEY, useAuth } from "@/auth/AuthContext";
@@ -173,6 +174,7 @@ export function LoginPage() {
                   {cargando && <Loader2 className="size-4 animate-spin" />}
                   Ingresar
                 </Button>
+                <AvisoServidorLento activo={cargando} />
               </div>
             </form>
 

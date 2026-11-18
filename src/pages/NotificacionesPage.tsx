@@ -109,7 +109,10 @@ export function NotificacionesPage() {
   );
   const { data, error, isFetching, isLoading, refetch } = useListarNotificacionesQuery(
     PARAMETROS_NOTIFICACIONES,
-    { pollingInterval: sinEndpoint ? 0 : REFRESCO_NOTIFICACIONES_MS, skipPollingIfUnfocused: true },
+    {
+      pollingInterval: sinEndpoint ? 0 : REFRESCO_NOTIFICACIONES_MS,
+      skipPollingIfUnfocused: false,
+    },
   );
   const [marcarNotificacionLeida] = useMarcarNotificacionLeidaMutation();
   const [marcarTodas, { isLoading: marcandoTodas }] = useMarcarTodasNotificacionesLeidasMutation();

@@ -58,6 +58,7 @@ import {
   PrioridadLinea,
 } from "./EstadoBadges";
 import { BadgeActividadRelacionada } from "./ActividadRelacionada";
+import { BadgeAlertaClimatica } from "./AlertaClimatica";
 import { ICONO_ESTADO } from "./iconos";
 import {
   crearCsvBandeja,
@@ -474,12 +475,15 @@ export function TablaBandeja({ filas, loading, error, onRefresh }: TablaBandejaP
                         </p>
                       </TableCell>
                       <TableCell className="min-w-44 py-3.5">
-                        <div className="flex items-center gap-1.5 text-sm font-medium text-foreground/80">
+                        <div className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-foreground/80">
                           <CategoriaLinea categoria={reclamo.categoria} />
                           {reclamo.origen_clasificacion === OrigenClasificacion.MODELO && (
                             <IaBadge />
                           )}
                           {esIncidenteActivo(reclamo) && <CirculacionBadge compacto />}
+                          {reclamo.bajo_alerta_climatica && (
+                            <BadgeAlertaClimatica nivel={reclamo.alerta_nivel} />
+                          )}
                         </div>
                         {reclamo.actividad && (
                           <div className="mt-1">
