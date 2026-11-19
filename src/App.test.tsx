@@ -87,7 +87,7 @@ describe("App", () => {
   it("un admin accede al panel de metricas", async () => {
     renderWithProviders(<App />, { route: "/panel", usuario: ADMIN }); // admin
     expect(
-      await screen.findByRole("heading", { name: /panel de metricas/i }, esperaRuta),
+      await screen.findByRole("heading", { name: /panel de m[eé]tricas/i }, esperaRuta),
     ).toBeInTheDocument();
   });
 });

@@ -54,7 +54,7 @@ describe("navegacion del modulo de reclamos", () => {
     expect(migasPara("/feed", false)).toEqual([{ label: "Reclamos de la ciudad" }]);
     expect(migasPara("/dashboard", true)).toEqual([{ label: "Dashboard" }]);
     expect(migasPara("/backoffice", true)).toEqual([{ label: "Bandeja de reclamos" }]);
-    expect(migasPara("/panel", true)).toEqual([{ label: "Panel de metricas" }]);
+    expect(migasPara("/panel", true)).toEqual([{ label: "Panel de métricas" }]);
     expect(migasPara("/analitica", true)).toEqual([{ label: "Analitica" }]);
     expect(migasPara("/mapa", false)).toEqual([{ label: "Mapa de reclamos" }]);
     expect(migasPara("/desconocida", false)).toEqual([]);
