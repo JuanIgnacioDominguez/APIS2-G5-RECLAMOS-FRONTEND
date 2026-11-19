@@ -184,6 +184,9 @@ describe("BandejaPage", () => {
     });
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
 
+    // The search box renders before the rows arrive, while "Seleccionar" is still
+    // disabled: wait for the data so the click is not swallowed on a slow machine.
+    await screen.findByText("Bache en la esquina");
     await user.click(screen.getByRole("button", { name: "Seleccionar" }));
 
     const finalizar = screen.getByRole("button", { name: "Finalizar" });
