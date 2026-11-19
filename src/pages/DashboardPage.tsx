@@ -268,7 +268,9 @@ function PanelCategorias({
           }
         />
       </CardHeader>
-      <CardContent className="flex flex-col items-center justify-center gap-5 min-[430px]:flex-row">
+      {/* From xl up the card spans 4 of 12 columns: side by side, the legend collapsed to one
+          letter per category, so the donut and the legend stack there. */}
+      <CardContent className="flex flex-col items-center justify-center gap-5 min-[430px]:flex-row xl:flex-col">
         {resumen.total === 0 ? (
           <p className="py-12 text-center text-sm text-muted-foreground">
             Todavia no hay reclamos para mostrar.
@@ -311,7 +313,7 @@ function PanelCategorias({
                 <p className="text-xs text-muted-foreground">reclamos</p>
               </div>
             </div>
-            <div className="w-full max-w-64 space-y-2.5">
+            <div className="w-full min-w-0 max-w-64 space-y-2.5 xl:max-w-none">
               {categorias.map((categoria) => (
                 <div
                   key={categoria.clave}

@@ -100,7 +100,7 @@ export function migasPara(pathname: string, staff: boolean, origen?: Miga): Miga
   if (pathname === "/feed") return [{ label: "Reclamos de la ciudad" }];
   if (pathname === "/dashboard") return [{ label: "Dashboard" }];
   if (pathname === "/backoffice") return [{ label: "Bandeja de reclamos" }];
-  if (pathname === "/panel") return [{ label: "Panel de metricas" }];
+  if (pathname === "/panel") return [{ label: "Panel de métricas" }];
   if (pathname === "/analitica") return [{ label: "Analitica" }];
   if (pathname === "/mapa") return [{ label: "Mapa de reclamos" }];
   const personal = NAV_CUENTA.find((i) => i.to === pathname);
