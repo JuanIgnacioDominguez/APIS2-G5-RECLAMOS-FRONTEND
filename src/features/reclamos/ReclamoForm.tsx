@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   FileText,
@@ -95,6 +96,7 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
   const [values, setValues] = useState<ReclamoFormValues>(VALORES_INICIALES);
   const [touched, setTouched] = useState<Partial<Record<"titulo" | "descripcion", boolean>>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [eventoId, setEventoId] = useState("");
 
   function setValue<K extends keyof ReclamoFormValues>(key: K, value: ReclamoFormValues[K]) {
     setValues((v) => ({ ...v, [key]: value }));
@@ -237,9 +239,13 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
     e.preventDefault();
     setSubmitted(true);
     if (!esFormularioValido(values)) return;
+
+    const eventoIdLimpio = eventoId.trim();
+
     onSubmit({
       titulo: values.titulo.trim(),
       descripcion: values.descripcion.trim(),
+      ...(eventoIdLimpio ? { evento_id: eventoIdLimpio } : {}),
       categoria: (values.categoria as CategoriaReclamo | null) ?? null,
       prioridad: (values.prioridad as PrioridadReclamo | null) ?? null,
       objeto_afectado: (values.objetoAfectado as ObjetoAfectado | null) ?? null,
@@ -294,6 +300,23 @@ export function ReclamoForm({ onSubmit, loading }: Props) {
                 {errores.descripcion && (
                   <p className="text-xs text-destructive">{errores.descripcion}</p>
                 )}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="evento-id">
+                  ID del evento comunitario{" "}
+                  <span className="font-normal text-muted-foreground">(opcional)</span>
+                </Label>
+                <Input
+                  id="evento-id"
+                  placeholder="Ej.: evt-test-reclamos-001"
+                  value={eventoId}
+                  maxLength={64}
+                  onChange={(e) => setEventoId(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Completalo solo si este reclamo corresponde a un evento comunitario.
+                </p>
               </div>
             </CardContent>
           </Card>

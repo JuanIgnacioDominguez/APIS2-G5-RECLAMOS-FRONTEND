@@ -6,6 +6,9 @@ const MENSAJE_POR_CODIGO: Record<string, string> = {
   adhesion_duplicada: "Ya te sumaste a este reclamo.",
   adhesion_del_autor: "No podes sumarte a tu propio reclamo.",
   reclamo_cerrado: "El reclamo esta cerrado y no admite cambios.",
+    evento_no_finalizado: "El evento todavía no terminó o no se registró su finalización.",
+  evento_cancelado: "No se puede crear un reclamo sobre un evento cancelado.",
+  plazo_de_reclamo_vencido: "Ya venció el plazo de 7 días para reclamar sobre este evento.",
   validacion: "Revisa los datos del formulario, hay algo que no es valido.",
   email_ya_registrado: "Ese email ya tiene una cuenta. Proba iniciar sesion.",
   // Same generic message for wrong password, unknown email or disabled account:
