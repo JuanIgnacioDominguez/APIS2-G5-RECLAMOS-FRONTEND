@@ -11,6 +11,7 @@ import type {
 export interface ReclamoCrear {
   titulo: string;
   descripcion: string;
+  evento_id?: string;
   categoria?: CategoriaReclamo | null;
   prioridad?: PrioridadReclamo | null;
   objeto_afectado?: ObjetoAfectado | null;
