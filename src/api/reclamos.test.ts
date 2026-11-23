@@ -53,19 +53,19 @@ describe("endpoints de reclamos", () => {
   });
 
   it("crearReclamo hace POST con el body incluyendo evento_id", () => {
-  const datos = {
-    titulo: "t",
-    descripcion: "d",
-    evento_id: "evt-test-reclamos-001",
-  } as never;
+    const datos = {
+      titulo: "t",
+      descripcion: "d",
+      evento_id: "evt-test-reclamos-001",
+    } as never;
 
-  crearReclamo(datos);
+    crearReclamo(datos);
 
-  expect(requestSpy).toHaveBeenCalledWith("/reclamos", {
-    method: "POST",
-    body: datos,
+    expect(requestSpy).toHaveBeenCalledWith("/reclamos", {
+      method: "POST",
+      body: datos,
+    });
   });
-});
 
   it("cambiarEstado hace PATCH sobre /estado", () => {
     cambiarEstado("1", { estado: "ASIGNADO" } as never);

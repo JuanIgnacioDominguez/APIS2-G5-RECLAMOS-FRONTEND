@@ -13,16 +13,12 @@ describe("mensajeDeError", () => {
       /no esta permitido/i,
     );
   });
-    it("mapea los errores de elegibilidad de eventos comunitarios", () => {
+  it("mapea los errores de elegibilidad de eventos comunitarios", () => {
     expect(mensajeDeError({ status: 409, code: "evento_no_finalizado" })).toMatch(
       /todavía no terminó/i,
     );
-    expect(mensajeDeError({ status: 409, code: "evento_cancelado" })).toMatch(
-      /evento cancelado/i,
-    );
-    expect(mensajeDeError({ status: 409, code: "plazo_de_reclamo_vencido" })).toMatch(
-      /7 días/i,
-    );
+    expect(mensajeDeError({ status: 409, code: "evento_cancelado" })).toMatch(/evento cancelado/i);
+    expect(mensajeDeError({ status: 409, code: "plazo_de_reclamo_vencido" })).toMatch(/7 días/i);
   });
 
   it("usa el status cuando no hay un code conocido", () => {
